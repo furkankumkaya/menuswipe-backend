@@ -29,6 +29,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
 /* APP */
 #appScreen{display:none;height:100vh;overflow:hidden}
+#appScreen.visible{display:block !important;height:100vh;overflow:hidden}
 .app{display:grid;grid-template-columns:200px minmax(0,1fr);height:100vh}
 
 /* SIDEBAR */
@@ -481,7 +482,7 @@ function doLogout() {
 // ── BOOT ──
 function startApp() {
   document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display = '';
+  document.getElementById('appScreen').classList.add('visible');
   document.getElementById('bname').value = org.name || '';
   document.getElementById('prestName').textContent = (org.name || 'YOUR RESTAURANT').toUpperCase();
   const menuUrl = window.location.origin + '/menu/' + org.slug;
