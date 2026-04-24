@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MenuSwipe</title>
+<meta name="theme-color" content="#0f172a"/>
+<link rel="manifest" href="/manifest.json"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.logo{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.logo span{color:#6366f1}
+.tagline{font-size:15px;color:#94a3b8;margin-bottom:48px;text-align:center}
+.btn{display:block;width:100%;max-width:320px;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:12px}
+.btn-primary{background:#6366f1;color:#fff}
+.btn-secondary{background:transparent;color:#f1f5f9;border:1.5px solid #334155}
+</style>
+</head>
+<body>
+<div class="logo">Menu<span>Swipe</span></div>
+<div class="tagline">Visual menus for modern restaurants</div>
+<a href="/admin" class="btn btn-primary">Open Admin Panel</a>
+<script>
+// If already logged in, go straight to admin
+if(localStorage.getItem('ms_token')) window.location.href='/admin';
+</script>
+</body>
+</html>

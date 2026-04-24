@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>MenuSwipe</title>
+<meta name="theme-color" content="#000000"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-apple-system,sans-serif}
+#screen{width:100%;height:100%;position:relative;overflow:hidden}
+.top{position:absolute;top:0;left:0;right:0;z-index:20;padding:env(safe-area-inset-top,16px) 16px 0}
+.rname{font-size:10px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px}
+.cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.cats::-webkit-scrollbar{display:none}
+.cat{padding:4px 12px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);user-select:none}
+.cat.on{background:#fff;color:#111;border-color:#fff}
+.slides{position:absolute;inset:0}
+.slide{position:absolute;inset:0;transition:transform .4s cubic-bezier(.25,.46,.45,.94)}
+.slide-bg{width:100%;height:100%;object-fit:cover}
+.slide-bg-div{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.grad{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,0) 100%)}
+.info{position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px))}
+.cat-tag{font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
+.item-name{font-size:24px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:4px}
+.item-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item-price{font-size:20px;font-weight:700;color:#fff;margin-bottom:10px}
+.dots{display:flex;gap:4px}
+.dot{height:2px;border-radius:2px;background:rgba(255,255,255,.3);transition:.2s;width:16px}
+.dot.on{background:#fff;width:24px}
+.prog{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08)}
+.progf{height:100%;background:#6366f1;transition:width .35s}
+.swipe-hint{position:absolute;right:16px;bottom:120px;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:1;transition:opacity .5s}
+.swipe-hint.hidden{opacity:0}
+.hint-circle{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;animation:bob 2s infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.loading{display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,.4);font-size:14px}
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="loadingEl" class="loading">Loading menu...</div>
+  <div class="slides" id="slides" style="display:none"></div>
+  <div class="top" style="display:none" id="topBar">
+    <div class="rname" id="rname"></div>
+    <div class="cats" id="catBar"></div>
+  </div>
+  <div class="swipe-hint" id="swipeHint">
+    <div class="hint-circle">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v8M3.5 7.5l3.5 3.5 3.5-3.5" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+  <div class="prog"><div class="progf" id="progf"></div></div>
+</div>
+
+<script>
+const slug = window.location.pathname.split('/menu/')[1]?.split('?')[0] || '';
+const API_BASE = window.location.origin;
+let items = [], currentCat = 'all', currentIdx = 0, hintShown = false;
+
+async function loadMenu() {
+  try {
+    const r = await fetch(`${API_BASE}/api/public/${slug}`);
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    document.title = data.organization.name + ' — Menu';
+    document.getElementById('rname').textContent = data.organization.name.toUpperCase();
+    items = data.items;
+    document.getElementById('loadingEl').style.display = 'none';
+    document.getElementById('slides').style.display = '';
+    document.getElementById('topBar').style.display = '';
+    buildCats(); renderSlides(); updateProgress();
+    setupTouch();
+  } catch(e) {
+    document.getElementById('loadingEl').textContent = 'Menu not found.';
+  }
+}
+
+function getFiltered() {
+  if (currentCat === 'all') return items;
+  return items.filter(i => i.category === currentCat || i.cat === currentCat);
+}
+
+function buildCats() {
+  const catIds = [...new Set(items.map(i => i.category || i.cat || 'MAIN'))];
+  const catColors = { MAIN:'#993C1D', STARTER:'#0F6E56', DRINK:'#185FA5', DESSERT:'#534AB7' };
+  const catLabels = { MAIN:'Main', STARTER:'Starter', DRINK:'Drink', DESSERT:'Dessert', OTHER:'Other' };
+  const all = [{ id:'all', label:'All' }, ...catIds.map(id => ({ id, label: catLabels[id] || id }))];
+  document.getElementById('catBar').innerHTML = all.map(c =>
+    `<div class="cat${c.id===currentCat?' on':''}" onclick="selectCat('${c.id}')">${c.label}</div>`
+  ).join('');
+}
+
+function selectCat(cat) { currentCat = cat; currentIdx = 0; buildCats(); renderSlides(); updateProgress(); }
+
+function renderSlides() {
+  const filtered = getFiltered();
+  const catColors = { MAIN:'#993C1D', STARTER:'#0F6E56', DRINK:'#185FA5', DESSERT:'#534AB7' };
+  const catLabels = { MAIN:'Main', STARTER:'Starter', DRINK:'Drink', DESSERT:'Dessert' };
+  const wrap = document.getElementById('slides'); wrap.innerHTML = '';
+  filtered.forEach((item, i) => {
+    const catId = item.category || item.cat || 'MAIN';
+    const color = catColors[catId] || '#334155';
+    const label = catLabels[catId] || catId;
+    const photos = item.photos || [];
+    const slide = document.createElement('div'); slide.className = 'slide';
+    slide.style.transform = `translateY(${(i - currentIdx) * 100}%)`;
+    const bg = photos[0]
+      ? `<img class="slide-bg" src="${photos[0].url}" loading="lazy"/>`
+      : `<div class="slide-bg-div" style="background:${color}22"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" opacity=".15"><rect x="10" y="10" width="60" height="60" rx="10" stroke="${color}" stroke-width="3"/><circle cx="28" cy="30" r="8" stroke="${color}" stroke-width="3"/><path d="M10 58l18-18 14 14 14-18 14 22" stroke="${color}" stroke-width="3" fill="none"/></svg></div>`;
+    slide.innerHTML = `${bg}<div class="grad"></div><div class="info"><div class="cat-tag">${label}</div><div class="item-name">${item.name}</div>${item.description?`<div class="item-desc">${item.description}</div>`:''}<div class="item-price">₺${item.price}</div><div class="dots">${photos.map((_,d)=>`<div class="dot${d===0?' on':''}"></div>`).join('') || '<div class="dot on"></div><div class="dot"></div><div class="dot"></div>'}</div></div>`;
+    wrap.appendChild(slide);
+  });
+}
+
+function updateProgress() {
+  const f = getFiltered();
+  document.getElementById('progf').style.width = f.length ? ((currentIdx+1)/f.length*100)+'%' : '0%';
+}
+
+function goNext() { const f=getFiltered(); if(currentIdx<f.length-1){currentIdx++;renderSlides();updateProgress();showHint(false);} }
+function goPrev() { if(currentIdx>0){currentIdx--;renderSlides();updateProgress();} }
+
+function showHint(show) {
+  const hint = document.getElementById('swipeHint');
+  if (!show) { hint.classList.add('hidden'); hintShown = true; }
+  else if (!hintShown) hint.classList.remove('hidden');
+}
+
+function setupTouch() {
+  let startY = 0, startTime = 0;
+  const el = document.getElementById('screen');
+  el.addEventListener('touchstart', e => { startY = e.touches[0].clientY; startTime = Date.now(); }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const diff = startY - e.changedTouches[0].clientY;
+    const dt = Date.now() - startTime;
+    if (Math.abs(diff) > 40 && dt < 500) { diff > 0 ? goNext() : goPrev(); }
+  }, { passive: true });
+  el.addEventListener('click', e => { if (e.clientY > window.innerHeight * 0.6) goNext(); });
+  document.addEventListener('keydown', e => { if (e.key==='ArrowDown') goNext(); if (e.key==='ArrowUp') goPrev(); });
+}
+
+loadMenu();
+</script>
+</body>
+</html>

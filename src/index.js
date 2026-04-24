@@ -13,23 +13,40 @@ const publicRoutes = require("./routes/public");
 
 const app = express();
 
-// Stripe webhook needs raw body — mount BEFORE json middleware
+// Stripe webhook needs raw body
 app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 
-app.use(cors({ origin: process.env.APP_URL || "*" }));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// Routes
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, "../public")));
+
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/branches", branchRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/qr", qrRoutes);
-app.use("/api/public", publicRoutes); // unauthenticated — customer-facing menu
+app.use("/api/public", publicRoutes);
 
 // Health check
 app.get("/health", (_, res) => res.json({ ok: true }));
+
+// Serve admin panel
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/admin.html"));
+});
+
+// Serve customer menu
+app.get("/menu/:slug", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/menu.html"));
+});
+
+// Fallback
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
 
 // Global error handler
 app.use((err, req, res, next) => {
