@@ -4,26 +4,27 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
 <title>MenuSwipe — Dashboard</title>
-<meta name="theme-color" content="#0f172a"/>
+<meta name="theme-color" content="#8E1616"/>
 <link rel="manifest" href="/manifest.json"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--accent:#6366f1;--accent2:#4f46e5;--nav-h:64px}
+:root{--accent:#8E1616;--accent2:#7a1313;--nav-h:64px}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f8fafc;color:#1e293b}
 
 /* AUTH */
-#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0f172a}
-.auth-box{background:#1e293b;border-radius:20px;padding:32px;width:100%;max-width:360px}
+#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#1D1616}
+.auth-box{background:#2a1d1d;border-radius:20px;padding:32px;width:100%;max-width:360px;border:1px solid #3d2828}
 .auth-logo{font-size:26px;font-weight:800;color:#f1f5f9;letter-spacing:-0.5px;margin-bottom:4px}
 .auth-logo span{color:var(--accent)}
 .auth-sub{font-size:13px;color:#64748b;margin-bottom:24px}
-.auth-tabs{display:flex;gap:4px;background:#0f172a;border-radius:10px;padding:3px;margin-bottom:20px}
+.auth-tabs{display:flex;gap:4px;background:#1D1616;border-radius:10px;padding:3px;margin-bottom:20px}
 .auth-tab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
-.auth-tab.on{background:#1e293b;color:#f1f5f9}
+.auth-tab.on{background:#2a1d1d;color:#f1f5f9}
 .auth-lbl{font-size:11px;color:#64748b;margin-bottom:5px;margin-top:14px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-.auth-inp{width:100%;font-size:14px;color:#f1f5f9;background:#0f172a;border:1.5px solid #334155;border-radius:10px;padding:12px 14px;outline:none;transition:.15s}
+.auth-inp{width:100%;font-size:14px;color:#f1f5f9;background:#1D1616;border:1.5px solid #3d2828;border-radius:10px;padding:12px 14px;outline:none;transition:.15s}
 .auth-inp:focus{border-color:var(--accent)}
 .auth-btn{width:100%;margin-top:20px;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
 .auth-btn:hover{background:var(--accent2)}
@@ -225,7 +226,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 <!-- AUTH -->
 <div id="authScreen">
   <div class="auth-box">
-    <div class="auth-logo">Menu<span>Swipe</span></div>
+    <div class="auth-logo" style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="width:44px;height:44px;border-radius:10px;background:#8E1616;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 32 32" fill="none"><path d="M6 25.5 L6 6.5 L16 19 L26 6.5 L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div><div>Menu<span>Swipe</span></div></div>
     <div class="auth-sub">Visual menus for modern restaurants</div>
     <div class="auth-tabs">
       <button class="auth-tab on" id="tabLogin" onclick="switchTab('login')">Sign in</button>
