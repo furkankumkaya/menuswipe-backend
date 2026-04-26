@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 100">
+  <g transform="translate(20,22)">
+    <rect width="56" height="56" rx="12" fill="#1D1616"/>
+    <rect x="13" y="13" width="30" height="30" rx="7" fill="#8E1616"/>
+    <path d="M19 35 L19 21 L28 30 L37 21 L37 35" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <rect x="22" y="46" width="6" height="2" rx="1" fill="#D84040"/>
+    <circle cx="32" cy="47" r="1" fill="#D84040" fill-opacity="0.4"/>
+    <circle cx="36" cy="47" r="1" fill="#D84040" fill-opacity="0.25"/>
+  </g>
+  <text x="100" y="56" font-family="system-ui,sans-serif" font-size="24" font-weight="800" fill="#1D1616" letter-spacing="-0.6">Menu<tspan fill="#8E1616">Swipe</tspan></text>
+  <text x="100" y="72" font-family="system-ui,sans-serif" font-size="9" font-weight="500" fill="#8E1616" letter-spacing="0.8">VISUAL MENU PLATFORM</text>
+</svg>
