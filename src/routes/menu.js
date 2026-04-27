@@ -1,4 +1,3 @@
-// src/routes/menu.js
 const router = require("express").Router();
 const multer = require("multer");
 const { PrismaClient } = require("@prisma/client");
@@ -26,70 +25,111 @@ const upload = multer({
 function uploadToCloudinary(buffer, folder) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: `menuswipe/${folder}`,
+      { folder: `menuswipe/${folder}`,
         transformation: [
           { width: 1080, height: 1920, crop: "fill", gravity: "auto" },
           { quality: "auto:good", fetch_format: "auto" },
-        ],
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
+        ] },
+      (error, result) => { if (error) return reject(error); resolve(result); }
     );
     streamifier.createReadStream(buffer).pipe(stream);
   });
 }
 
-// GET /api/menu
+// GET /api/menu — tüm itemları branch ilişkisi ile döndür
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     const items = await prisma.menuItem.findMany({
-      where: { organizationId: req.org.id, branchId: null },
-      include: { photos: { orderBy: { sortOrder: "asc" } } },
-      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+      where: { organizationId: req.org.id },
+      include: {
+        photos: { orderBy: { sortOrder: "asc" } },
+        itemBranches: { select: { branchId: true } },
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     });
-    res.json(items);
+    // her item için branchIds array ekle
+    const result = items.map(i => ({
+      ...i,
+      branchIds: i.itemBranches.map(ib => ib.branchId),
+      itemBranches: undefined,
+    }));
+    res.json(result);
   } catch (err) { next(err); }
 });
 
-// POST /api/menu
+// POST /api/menu — yeni item, default tüm aktif şubelerde görünür
 router.post("/", requireAuth, async (req, res, next) => {
   try {
-    const { name, description, price, category } = req.body;
+    const { name, description, price, category, branchIds, isBestseller } = req.body;
     if (!name || price === undefined) return res.status(400).json({ error: "name and price required" });
+
+    let targetBranches = branchIds;
+    if (!Array.isArray(targetBranches) || targetBranches.length === 0) {
+      const all = await prisma.branch.findMany({
+        where: { organizationId: req.org.id },
+        select: { id: true },
+      });
+      targetBranches = all.map(b => b.id);
+    }
+
     const item = await prisma.menuItem.create({
-      data: { organizationId: req.org.id, name, description, price: parseFloat(price), category: category || "MAIN" },
-      include: { photos: true },
+      data: {
+        organizationId: req.org.id,
+        name, description: description || null,
+        price: parseFloat(price),
+        category: category || "MAIN",
+        isBestseller: !!isBestseller,
+        itemBranches: { create: targetBranches.map(bid => ({ branchId: bid })) },
+      },
+      include: { photos: true, itemBranches: true },
     });
-    res.status(201).json(item);
+    res.status(201).json({
+      ...item,
+      branchIds: item.itemBranches.map(ib => ib.branchId),
+      itemBranches: undefined,
+    });
   } catch (err) { next(err); }
 });
 
-// PATCH /api/menu/:id
 router.patch("/:id", requireAuth, async (req, res, next) => {
   try {
-    const item = await prisma.menuItem.findFirst({ where: { id: req.params.id, organizationId: req.org.id } });
+    const item = await prisma.menuItem.findFirst({
+      where: { id: req.params.id, organizationId: req.org.id },
+    });
     if (!item) return res.status(404).json({ error: "Item not found" });
-    const { name, description, price, category, active, sortOrder } = req.body;
+
+    const { name, description, price, category, active, sortOrder, isBestseller, branchIds } = req.body;
+    const data = {};
+    if (name !== undefined) data.name = name;
+    if (description !== undefined) data.description = description;
+    if (price !== undefined) data.price = parseFloat(price);
+    if (category !== undefined) data.category = category;
+    if (active !== undefined) data.active = active;
+    if (sortOrder !== undefined) data.sortOrder = sortOrder;
+    if (isBestseller !== undefined) data.isBestseller = !!isBestseller;
+
+    if (Array.isArray(branchIds)) {
+      // önce mevcut ilişkileri sil, sonra yenilerini ekle
+      await prisma.menuItemBranch.deleteMany({ where: { menuItemId: req.params.id } });
+      data.itemBranches = { create: branchIds.map(bid => ({ branchId: bid })) };
+    }
+
     const updated = await prisma.menuItem.update({
       where: { id: req.params.id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(description !== undefined && { description }),
-        ...(price !== undefined && { price: parseFloat(price) }),
-        ...(category !== undefined && { category }),
-        ...(active !== undefined && { active }),
-        ...(sortOrder !== undefined && { sortOrder }),
+      data,
+      include: {
+        photos: { orderBy: { sortOrder: "asc" } },
+        itemBranches: { select: { branchId: true } },
       },
-      include: { photos: { orderBy: { sortOrder: "asc" } } },
     });
-    res.json(updated);
+    res.json({
+      ...updated,
+      branchIds: updated.itemBranches.map(ib => ib.branchId),
+      itemBranches: undefined,
+    });
   } catch (err) { next(err); }
 });
 
-// DELETE /api/menu/:id
 router.delete("/:id", requireAuth, async (req, res, next) => {
   try {
     const item = await prisma.menuItem.findFirst({
@@ -105,7 +145,6 @@ router.delete("/:id", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/menu/:id/photos
 router.post("/:id/photos", requireAuth, upload.single("photo"), async (req, res, next) => {
   try {
     const item = await prisma.menuItem.findFirst({
@@ -115,9 +154,7 @@ router.post("/:id/photos", requireAuth, upload.single("photo"), async (req, res,
     if (!item) return res.status(404).json({ error: "Item not found" });
     if (item.photos.length >= 3) return res.status(400).json({ error: "Maximum 3 photos per item" });
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
     const result = await uploadToCloudinary(req.file.buffer, `${req.org.id}/${req.params.id}`);
-
     const photo = await prisma.menuPhoto.create({
       data: {
         menuItemId: item.id,
@@ -130,7 +167,6 @@ router.post("/:id/photos", requireAuth, upload.single("photo"), async (req, res,
   } catch (err) { next(err); }
 });
 
-// DELETE /api/menu/:id/photos/:photoId
 router.delete("/:id/photos/:photoId", requireAuth, async (req, res, next) => {
   try {
     const photo = await prisma.menuPhoto.findFirst({ where: { id: req.params.photoId, menuItemId: req.params.id } });
@@ -138,6 +174,19 @@ router.delete("/:id/photos/:photoId", requireAuth, async (req, res, next) => {
     if (photo.cloudinaryId) await cloudinary.uploader.destroy(photo.cloudinaryId).catch(() => {});
     await prisma.menuPhoto.delete({ where: { id: photo.id } });
     res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// Logo upload (organization)
+router.post("/_logo", requireAuth, upload.single("logo"), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    const result = await uploadToCloudinary(req.file.buffer, `${req.org.id}/logo`);
+    const updated = await prisma.organization.update({
+      where: { id: req.org.id },
+      data: { logoUrl: result.secure_url },
+    });
+    res.json({ logoUrl: updated.logoUrl });
   } catch (err) { next(err); }
 });
 

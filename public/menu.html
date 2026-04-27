@@ -4,301 +4,432 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
 <title>MenuSwipe</title>
-<meta name="theme-color" content="#8E1616"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#000000"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-apple-system,sans-serif}
 
 /* SPLASH */
-#splash{position:fixed;inset:0;background:#1D1616;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100;transition:opacity .5s}
+#splash{position:fixed;inset:0;background:#1D1616;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:100;transition:opacity .5s}
 #splash.hide{opacity:0;pointer-events:none}
-.splash-logo{width:80px;height:80px;border-radius:20px;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.splash-logo{width:96px;height:96px;border-radius:24px;background:#8E1616;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .splash-logo img{width:100%;height:100%;object-fit:cover}
-.splash-name{font-size:22px;font-weight:800;color:#fff}
+.splash-name{font-size:24px;font-weight:800;color:#fff}
 .splash-tag{font-size:13px;color:rgba(255,255,255,.4)}
 
-/* MAIN SCREEN */
+/* MAIN */
 #screen{width:100%;height:100%;position:relative;overflow:hidden}
 
-/* CATEGORY BAR */
-.cat-bar{position:absolute;top:0;left:0;right:0;z-index:20;padding:env(safe-area-inset-top,16px) 16px 12px;background:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,transparent 100%)}
-.cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+/* TOP BAR with logo button + cats */
+.top-bar{position:absolute;top:0;left:0;right:0;z-index:20;padding:env(safe-area-inset-top,16px) 14px 12px;background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);display:flex;align-items:center;gap:10px}
+.profile-btn{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);overflow:hidden;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.profile-btn img{width:100%;height:100%;object-fit:cover}
+.profile-btn-fallback{width:100%;height:100%;background:#8E1616;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
+.cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:1}
 .cats::-webkit-scrollbar{display:none}
-.cat{padding:8px 18px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75);background:rgba(255,255,255,.1);user-select:none;transition:.15s}
+.cat{padding:8px 18px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75);background:rgba(255,255,255,.1);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .cat.on{background:#fff;color:#111;border-color:#fff}
 
-/* SLIDES (vertical) */
+/* SLIDES */
 .slides-wrap{position:absolute;inset:0;overflow:hidden}
 .slide{position:absolute;inset:0;transition:transform .42s cubic-bezier(.25,.46,.45,.94)}
-
-/* PHOTOS inside slide (horizontal) */
 .photos-track{position:absolute;inset:0;display:flex;transition:transform .3s cubic-bezier(.25,.46,.45,.94)}
 .photo-frame{flex:0 0 100%;height:100%;position:relative}
 .photo-frame img{width:100%;height:100%;object-fit:cover;display:block}
 .photo-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 
-/* GRADIENT + INFO */
-.grad{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.96) 0%,rgba(0,0,0,0) 100%);pointer-events:none}
+.grad{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.96),rgba(0,0,0,0));pointer-events:none}
 .info{position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));pointer-events:none}
+.bestseller-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.7px;background:#f59e0b;color:#fff;padding:3px 9px;border-radius:6px;margin-bottom:8px}
 .cat-tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
 .item-name{font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:5px}
 .item-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .item-price{font-size:22px;font-weight:800;color:#fff;margin-bottom:10px}
 
-/* DOTS for photos */
 .photo-dots{display:flex;gap:5px;margin-bottom:6px}
 .pd{height:3px;border-radius:2px;background:rgba(255,255,255,.35);transition:.2s;width:18px}
 .pd.on{background:#fff;width:28px}
 
-/* PROGRESS BAR (items) */
 .prog{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1)}
-.progf{height:100%;background:#6366f1;transition:width .35s}
+.progf{height:100%;background:#8E1616;transition:width .35s}
 
-/* SWIPE HINT */
-.hint{position:absolute;right:18px;bottom:130px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:opacity .5s}
-.hint.hidden{opacity:0;pointer-events:none}
-.hint-ring{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;animation:bob 2s infinite}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
-.hint-lbl{font-size:10px;color:rgba(255,255,255,.4);font-weight:600}
+/* RESTAURANT INFO SHEET */
+.info-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:90;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.info-overlay.open{display:flex}
+.info-sheet{background:#1D1616;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));color:#fff}
+.info-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 18px}
+.info-header{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:20px;text-align:center}
+.info-logo{width:80px;height:80px;border-radius:20px;background:#8E1616;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.info-logo img{width:100%;height:100%;object-fit:cover}
+.info-name{font-size:22px;font-weight:800;color:#fff}
+.info-branch{font-size:13px;color:rgba(255,255,255,.5);margin-top:2px}
+.info-address{font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.5}
 
-.error-screen{display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,.5);font-size:15px;background:#0f172a}
+.action-btn-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.action-btn{padding:14px;border-radius:14px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;text-align:center}
+.action-btn:hover{background:rgba(255,255,255,.15)}
+.action-btn svg{opacity:.9}
+.action-btn-primary{background:#8E1616}
+.action-btn-primary:hover{background:#7a1313}
+
+.section-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:18px;margin-bottom:10px}
+.contact-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:8px;text-decoration:none;color:inherit;cursor:pointer}
+.contact-row:hover{background:rgba(255,255,255,.1)}
+.contact-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.contact-info{flex:1;min-width:0}
+.contact-label{font-size:11px;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.contact-value{font-size:14px;color:#fff;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+
+.hours-list{background:rgba(255,255,255,.06);border-radius:12px;padding:6px 14px}
+.hours-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px}
+.hours-row:last-child{border-bottom:none}
+.hours-day{color:rgba(255,255,255,.7);font-weight:600;min-width:50px}
+.hours-day.today{color:#f59e0b}
+.hours-time{color:rgba(255,255,255,.9)}
+.hours-time.closed{color:rgba(255,255,255,.4)}
+
+.branch-switch-list{margin-top:8px}
+.branch-switch-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:6px;cursor:pointer;text-decoration:none;color:inherit}
+.branch-switch-item.current{background:#8E1616}
+.branch-switch-item:hover{background:rgba(255,255,255,.1)}
+.branch-switch-item.current:hover{background:#7a1313}
+
+.close-btn{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+.error-screen{display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,.5);font-size:15px;background:#1D1616;text-align:center;padding:24px}
 </style>
 </head>
 <body>
 
-<!-- SPLASH -->
 <div id="splash">
   <div class="splash-logo" id="splashLogo">
-    <svg width="50" height="50" viewBox="0 0 80 80" fill="none"><rect width="80" height="80" rx="16" fill="#8E1616"/><path d="M16 64 L16 16 L40 48 L64 16 L64 64" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    <svg width="48" height="48" viewBox="0 0 80 80" fill="none"><path d="M16 64 L16 16 L40 48 L64 16 L64 64" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
   </div>
   <div class="splash-name" id="splashName">MenuSwipe</div>
   <div class="splash-tag">Loading menu...</div>
 </div>
 
-<!-- MAIN -->
 <div id="screen">
-  <div class="cat-bar"><div class="cats" id="catBar"></div></div>
+  <div class="top-bar">
+    <button class="profile-btn" id="profileBtn" onclick="openInfo()">
+      <div class="profile-btn-fallback" id="profileFallback">M</div>
+    </button>
+    <div class="cats" id="catBar"></div>
+  </div>
   <div class="slides-wrap" id="slidesWrap"></div>
   <div class="prog"><div class="progf" id="progf"></div></div>
-  <div class="hint" id="hint">
-    <div class="hint-ring">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4.5 9.5l3.5 3.5 3.5-3.5" stroke="rgba(255,255,255,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <div class="hint-lbl">SWIPE UP</div>
+</div>
+
+<!-- RESTAURANT INFO SHEET -->
+<div class="info-overlay" id="infoOverlay">
+  <div class="info-sheet" id="infoSheet">
+    <button class="close-btn" onclick="closeInfo()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <div class="info-handle"></div>
+    <div id="infoContent"></div>
   </div>
 </div>
 
 <script>
-const slug=window.location.pathname.split('/menu/')[1]?.split('?')[0]||'';
-const BASE=window.location.origin;
+const pathParts = window.location.pathname.split('/').filter(Boolean);
+const slug = pathParts[1] || '';
+const branchSlug = pathParts[2] || null;
+const BASE = window.location.origin;
+const fromQr = new URLSearchParams(window.location.search).get('qr') === '1';
+
 const CAT_COLORS={MAIN:'#993C1D',STARTER:'#0F6E56',DRINK:'#185FA5',DESSERT:'#534AB7'};
 const CAT_LABELS={MAIN:'Main',STARTER:'Starter',DRINK:'Drink',DESSERT:'Dessert'};
+const CURRENCIES_SYM={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',AED:'د.إ',SAR:'﷼',CAD:'$',AUD:'$',CHF:'Fr',INR:'₹',BRL:'R$',MXN:'$',KRW:'₩',SGD:'$',HKD:'$',NOK:'kr',SEK:'kr',DKK:'kr',PLN:'zł',RUB:'₽',ZAR:'R',THB:'฿',IDR:'Rp',MYR:'RM',PHP:'₱',VND:'₫',EGP:'£',ILS:'₪',NZD:'$',ARS:'$',CLP:'$',COP:'$',CZK:'Kč',HUF:'Ft',RON:'lei',PKR:'₨',BDT:'৳',NGN:'₦',KES:'KSh',GHS:'GH₵',MAD:'د.م.',QAR:'ر.ق'};
 
 let allItems=[],filteredItems=[],currentCat='all';
-let curItem=0; // current item index (vertical)
-let curPhoto={}; // {itemId: photoIndex}
-let orgData=null;
-let hintDone=false;
-
-// Touch state
-let touchStartX=0,touchStartY=0,touchStartTime=0;
-let trackingAxis=null; // 'h' or 'v'
+let curItem=0;
+let curPhoto={};
+let orgData=null,branchData=null,allBranches=[];
+let touchStartX=0,touchStartY=0,touchStartTime=0,trackingAxis=null;
 
 async function boot(){
   try{
-    const r=await fetch(`${BASE}/api/public/${slug}`);
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.error);
-    orgData=data.organization;
-    allItems=data.items;
+    const url = `${BASE}/api/public/${slug}${branchSlug?'/'+branchSlug:''}${fromQr?'?qr=1':''}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error);
+    orgData = data.organization;
+    branchData = data.branch;
+    allBranches = data.branches || [];
+    allItems = data.items;
 
-    // Update splash
-    document.getElementById('splashName').textContent=orgData.name;
+    document.getElementById('splashName').textContent = orgData.name;
     if(orgData.logoUrl){
-      document.getElementById('splashLogo').innerHTML=`<img src="${orgData.logoUrl}"/>`;
+      document.getElementById('splashLogo').innerHTML = `<img src="${orgData.logoUrl}"/>`;
+      document.getElementById('profileFallback').outerHTML = `<img src="${orgData.logoUrl}" alt="${orgData.name}"/>`;
+    } else {
+      document.getElementById('profileFallback').textContent = orgData.name.charAt(0).toUpperCase();
     }
-    document.title=orgData.name+' — Menu';
+    document.title = orgData.name + ' — Menu';
 
-    // Wait a moment on splash then go
     setTimeout(()=>{
       document.getElementById('splash').classList.add('hide');
       init();
-    },1200);
+    }, 1100);
   }catch(e){
-    document.getElementById('splash').innerHTML=`<div class="error-screen">${slug?'Menu not found.':'Invalid link.'}</div>`;
+    document.getElementById('splash').innerHTML = `<div class="error-screen">${slug?'Menu not found.':'Invalid link.'}</div>`;
   }
 }
 
+function getSym(){return CURRENCIES_SYM[orgData?.currency||'USD']||'$';}
+
 function getFiltered(){
-  if(currentCat==='all')return allItems;
-  return allItems.filter(i=>(i.category||i.cat||'MAIN')===currentCat);
+  if(currentCat==='all') return allItems;
+  return allItems.filter(i=>(i.category||'MAIN')===currentCat);
 }
 
 function init(){
   buildCatBar();
-  filteredItems=getFiltered();
+  filteredItems = getFiltered();
   buildSlides();
   updateProgress();
   setupTouch();
 }
 
 function buildCatBar(){
-  const catIds=[...new Set(allItems.map(i=>i.category||i.cat||'MAIN'))];
-  const all=[{id:'all',label:'All'},...catIds.map(id=>({id,label:CAT_LABELS[id]||id}))];
-  document.getElementById('catBar').innerHTML=all.map(c=>
+  // sadece içinde item olan kategoriler
+  const usedCats = [...new Set(allItems.map(i=>i.category||'MAIN'))];
+  const all = [{id:'all',label:'All'}, ...usedCats.map(id=>({id,label:CAT_LABELS[id]||id}))];
+  document.getElementById('catBar').innerHTML = all.map(c =>
     `<div class="cat${c.id===currentCat?' on':''}" onclick="selectCat('${c.id}')">${c.label}</div>`
   ).join('');
 }
 
 function selectCat(cat){
-  currentCat=cat;curItem=0;
+  currentCat = cat; curItem = 0;
   buildCatBar();
-  filteredItems=getFiltered();
+  filteredItems = getFiltered();
   buildSlides();
   updateProgress();
 }
 
 function buildSlides(){
-  const wrap=document.getElementById('slidesWrap');
-  wrap.innerHTML='';
+  const sym = getSym();
+  const wrap = document.getElementById('slidesWrap');
+  wrap.innerHTML = '';
   filteredItems.forEach((item,idx)=>{
-    const catId=item.category||item.cat||'MAIN';
-    const color=CAT_COLORS[catId]||'#334155';
-    const label=CAT_LABELS[catId]||catId;
-    const photos=item.photos||[];
-    if(!curPhoto[item.id])curPhoto[item.id]=0;
+    const catId = item.category||'MAIN';
+    const color = CAT_COLORS[catId]||'#334155';
+    const label = CAT_LABELS[catId]||catId;
+    const photos = item.photos||[];
+    if(!curPhoto[item.id]) curPhoto[item.id]=0;
 
-    const slide=document.createElement('div');
-    slide.className='slide';
-    slide.id='slide-'+item.id;
-    slide.style.transform=`translateY(${(idx-curItem)*100}%)`;
+    const slide = document.createElement('div');
+    slide.className = 'slide';
+    slide.id = 'slide-'+item.id;
+    slide.style.transform = `translateY(${(idx-curItem)*100}%)`;
 
-    // Photos track (horizontal)
-    const photosHtml=photos.length>0
+    const photosHtml = photos.length>0
       ? photos.map(p=>`<div class="photo-frame"><img src="${p.url}" loading="lazy"/></div>`).join('')
-      : `<div class="photo-frame"><div class="photo-placeholder" style="background:${color}22"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" opacity=".15"><rect x="10" y="10" width="60" height="60" rx="10" stroke="${color}" stroke-width="3"/><circle cx="28" cy="30" r="8" stroke="${color}" stroke-width="3"/><path d="M10 58l18-18 14 14 14-18 14 22" stroke="${color}" stroke-width="3" fill="none"/></svg></div></div>`;
+      : `<div class="photo-frame"><div class="photo-placeholder" style="background:${color}22"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" opacity=".15"><rect x="10" y="10" width="60" height="60" rx="10" stroke="${color}" stroke-width="3"/></svg></div></div>`;
 
-    const photoOffset=curPhoto[item.id]||0;
-    const dotsHtml=photos.length>1
+    const photoOffset = curPhoto[item.id]||0;
+    const dotsHtml = photos.length>1
       ? `<div class="photo-dots">${photos.map((_,d)=>`<div class="pd${d===photoOffset?' on':''}"></div>`).join('')}</div>`
       : '';
 
-    const desc=item.description||item.desc||'';
+    const desc = item.description||'';
+    const bestTag = item.isBestseller?'<div class="bestseller-tag">★ BESTSELLER</div>':'';
 
-    slide.innerHTML=`
+    slide.innerHTML = `
       <div class="photos-track" id="track-${item.id}" style="transform:translateX(${-photoOffset*100}%)">
         ${photosHtml}
       </div>
       <div class="grad"></div>
       <div class="info">
+        ${bestTag}
         <div class="cat-tag">${label}</div>
         <div class="item-name">${item.name}</div>
         ${desc?`<div class="item-desc">${desc}</div>`:''}
-        <div class="item-price">₺${item.price}</div>
+        <div class="item-price">${sym}${item.price}</div>
         ${dotsHtml}
       </div>`;
     wrap.appendChild(slide);
   });
+  trackItemView();
+}
+
+function trackItemView(){
+  const item = filteredItems[curItem];
+  if(!item) return;
+  fetch(`${BASE}/api/public/${slug}/track-item`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({itemId:item.id,branchSlug})}).catch(()=>{});
 }
 
 function updateSlidePositions(){
   filteredItems.forEach((item,idx)=>{
-    const slide=document.getElementById('slide-'+item.id);
-    if(slide)slide.style.transform=`translateY(${(idx-curItem)*100}%)`;
+    const slide = document.getElementById('slide-'+item.id);
+    if(slide) slide.style.transform = `translateY(${(idx-curItem)*100}%)`;
   });
   updateProgress();
-  // Show hint for a bit
-  if(!hintDone&&curItem===0){
-    setTimeout(()=>{document.getElementById('hint').classList.add('hidden');hintDone=true;},3000);
-  } else {
-    document.getElementById('hint').classList.add('hidden');hintDone=true;
-  }
+  trackItemView();
 }
 
 function updateProgress(){
-  const n=filteredItems.length;
-  document.getElementById('progf').style.width=n?((curItem+1)/n*100)+'%':'0%';
+  const n = filteredItems.length;
+  document.getElementById('progf').style.width = n?((curItem+1)/n*100)+'%':'0%';
 }
 
 function goNextItem(){if(curItem<filteredItems.length-1){curItem++;updateSlidePositions();}}
 function goPrevItem(){if(curItem>0){curItem--;updateSlidePositions();}}
 
 function goNextPhoto(){
-  const item=filteredItems[curItem];if(!item)return;
-  const photos=item.photos||[];
-  const cur=curPhoto[item.id]||0;
-  if(cur<photos.length-1){
-    curPhoto[item.id]=cur+1;
-    updatePhotoTrack(item);
-  }
+  const item = filteredItems[curItem]; if(!item) return;
+  const photos = item.photos||[];
+  const cur = curPhoto[item.id]||0;
+  if(cur<photos.length-1){curPhoto[item.id]=cur+1;updatePhotoTrack(item);}
 }
 function goPrevPhoto(){
-  const item=filteredItems[curItem];if(!item)return;
-  const cur=curPhoto[item.id]||0;
-  if(cur>0){
-    curPhoto[item.id]=cur-1;
-    updatePhotoTrack(item);
-  }
+  const item = filteredItems[curItem]; if(!item) return;
+  const cur = curPhoto[item.id]||0;
+  if(cur>0){curPhoto[item.id]=cur-1;updatePhotoTrack(item);}
 }
-
 function updatePhotoTrack(item){
-  const track=document.getElementById('track-'+item.id);
-  if(!track)return;
-  const offset=curPhoto[item.id]||0;
-  track.style.transform=`translateX(${-offset*100}%)`;
-  // Update dots
-  const slide=document.getElementById('slide-'+item.id);
-  if(!slide)return;
-  const dots=slide.querySelectorAll('.pd');
+  const track = document.getElementById('track-'+item.id); if(!track) return;
+  const offset = curPhoto[item.id]||0;
+  track.style.transform = `translateX(${-offset*100}%)`;
+  const slide = document.getElementById('slide-'+item.id);
+  if(!slide) return;
+  const dots = slide.querySelectorAll('.pd');
   dots.forEach((d,i)=>d.classList.toggle('on',i===offset));
 }
 
 function setupTouch(){
-  const el=document.getElementById('screen');
-
+  const el = document.getElementById('screen');
   el.addEventListener('touchstart',e=>{
-    touchStartX=e.touches[0].clientX;
-    touchStartY=e.touches[0].clientY;
-    touchStartTime=Date.now();
-    trackingAxis=null;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+    trackingAxis = null;
   },{passive:true});
-
   el.addEventListener('touchmove',e=>{
     if(!trackingAxis){
-      const dx=Math.abs(e.touches[0].clientX-touchStartX);
-      const dy=Math.abs(e.touches[0].clientY-touchStartY);
-      if(dx>8||dy>8)trackingAxis=dx>dy?'h':'v';
+      const dx = Math.abs(e.touches[0].clientX-touchStartX);
+      const dy = Math.abs(e.touches[0].clientY-touchStartY);
+      if(dx>8||dy>8) trackingAxis = dx>dy?'h':'v';
     }
   },{passive:true});
-
   el.addEventListener('touchend',e=>{
-    const dx=touchStartX-e.changedTouches[0].clientX;
-    const dy=touchStartY-e.changedTouches[0].clientY;
-    const dt=Date.now()-touchStartTime;
-    const adx=Math.abs(dx),ady=Math.abs(dy);
-
-    if(dt>500)return; // too slow
-
-    // Determine axis from tracked direction
-    if(trackingAxis==='h'&&adx>40){
-      if(dx>0)goNextPhoto(); else goPrevPhoto();
-    } else if(trackingAxis==='v'&&ady>40){
-      if(dy>0)goNextItem(); else goPrevItem();
-    } else if(adx<10&&ady<10){
-      // Tap — bottom half goes next item
-      if(e.changedTouches[0].clientY>window.innerHeight*0.55)goNextItem();
-    }
+    const dx = touchStartX-e.changedTouches[0].clientX;
+    const dy = touchStartY-e.changedTouches[0].clientY;
+    const dt = Date.now()-touchStartTime;
+    const adx = Math.abs(dx), ady = Math.abs(dy);
+    if(dt>500) return;
+    if(trackingAxis==='h'&&adx>40){dx>0?goNextPhoto():goPrevPhoto();}
+    else if(trackingAxis==='v'&&ady>40){dy>0?goNextItem():goPrevItem();}
+    else if(adx<10&&ady<10){if(e.changedTouches[0].clientY>window.innerHeight*0.55) goNextItem();}
   },{passive:true});
-
   document.addEventListener('keydown',e=>{
-    if(e.key==='ArrowDown')goNextItem();
-    if(e.key==='ArrowUp')goPrevItem();
-    if(e.key==='ArrowRight')goNextPhoto();
-    if(e.key==='ArrowLeft')goPrevPhoto();
+    if(e.key==='ArrowDown') goNextItem();
+    if(e.key==='ArrowUp') goPrevItem();
+    if(e.key==='ArrowRight') goNextPhoto();
+    if(e.key==='ArrowLeft') goPrevPhoto();
   });
+}
+
+/* INFO SHEET */
+function openInfo(){
+  buildInfoContent();
+  document.getElementById('infoOverlay').classList.add('open');
+}
+function closeInfo(){
+  document.getElementById('infoOverlay').classList.remove('open');
+}
+document.getElementById('infoOverlay').addEventListener('click',(e)=>{
+  if(e.target===document.getElementById('infoOverlay')) closeInfo();
+});
+
+function buildInfoContent(){
+  const o = orgData, b = branchData;
+  const today = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
+  
+  const addr = [b.address||o.address, b.city||o.city, b.country||o.country].filter(Boolean).join(', ');
+  const mapsUrl = b.googleMapsUrl || o.googleMapsUrl || (addr?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.name+' '+addr)}`:null);
+  const reviewUrl = (b.googlePlaceId||o.googlePlaceId)?`https://search.google.com/local/writereview?placeid=${b.googlePlaceId||o.googlePlaceId}`:mapsUrl;
+  
+  const phone = b.phone||o.phone;
+  const wh = b.workingHours || o.workingHours || {};
+  
+  let html = `
+    <div class="info-header">
+      <div class="info-logo">${o.logoUrl?`<img src="${o.logoUrl}"/>`:`<svg width="40" height="40" viewBox="0 0 80 80" fill="none"><path d="M16 64 L16 16 L40 48 L64 16 L64 64" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`}</div>
+      <div>
+        <div class="info-name">${o.name}</div>
+        ${b.name && b.name !== o.name?`<div class="info-branch">${b.name}</div>`:''}
+      </div>
+      ${addr?`<div class="info-address">${addr}</div>`:''}
+    </div>`;
+  
+  // Action buttons
+  html += '<div class="action-btn-row">';
+  if(mapsUrl){
+    html += `<a href="${mapsUrl}" target="_blank" class="action-btn action-btn-primary">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 18s7-6.4 7-11A7 7 0 003 7c0 4.6 7 11 7 11z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="10" cy="7" r="2.5" stroke="#fff" stroke-width="1.6"/></svg>
+      Get directions
+    </a>`;
+  }
+  if(reviewUrl){
+    html += `<a href="${reviewUrl}" target="_blank" class="action-btn">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 1.5l2.6 5.5 6 .9-4.4 4.2 1 5.9L10 15.2l-5.2 2.8 1-5.9L1.4 7.9l6-.9L10 1.5z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      Leave a review
+    </a>`;
+  }
+  html += '</div>';
+  
+  // Contact
+  const contacts = [];
+  if(phone) contacts.push({icon:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3h3l1.5 3.5L6 8a8 8 0 003 3l1.5-1.5L14 11v3l-1.5 1.5C7.5 15 1 8.5 1 4l1.5-1L3 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></svg>', label:'Phone', value:phone, href:'tel:'+phone});
+  if(o.website) contacts.push({icon:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 8h13M8 1.5c2 2 2 11 0 13M8 1.5c-2 2-2 11 0 13" stroke="currentColor" stroke-width="1.2"/></svg>', label:'Website', value:o.website, href:o.website});
+  if(o.instagram) contacts.push({icon:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><circle cx="11.5" cy="4.5" r=".8" fill="currentColor"/></svg>', label:'Instagram', value:'@'+o.instagram.replace('@',''), href:`https://instagram.com/${o.instagram.replace('@','')}`});
+  if(o.facebook) contacts.push({icon:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M9 14V8h2l.5-2.5H9V4c0-.7.3-1 1-1h1.5V.5C11.5.5 10.5 0 9.5 0 8 0 7 1 7 3v2.5H5V8h2v6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>', label:'Facebook', value:o.facebook, href:`https://facebook.com/${o.facebook}`});
+  
+  if(contacts.length){
+    html += '<div class="section-title">Contact</div>';
+    contacts.forEach(c=>{
+      html += `<a href="${c.href}" target="_blank" class="contact-row"><div class="contact-icon">${c.icon}</div><div class="contact-info"><div class="contact-label">${c.label}</div><div class="contact-value">${c.value}</div></div></a>`;
+    });
+  }
+  
+  // Working hours
+  const hasHours = Object.keys(wh).length>0;
+  if(hasHours){
+    const days = [['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
+    html += '<div class="section-title">Working hours</div><div class="hours-list">';
+    for(const [code,label] of days){
+      const d = wh[code];
+      let timeStr = '<span class="hours-time closed">Closed</span>';
+      if(d && d.open && d.close) timeStr = `<span class="hours-time">${d.open} – ${d.close}</span>`;
+      html += `<div class="hours-row"><span class="hours-day ${code===today?'today':''}">${label}</span>${timeStr}</div>`;
+    }
+    html += '</div>';
+  }
+  
+  // Branch switch
+  if(allBranches.length>1){
+    html += '<div class="section-title">Other locations</div><div class="branch-switch-list">';
+    for(const br of allBranches){
+      const isCurrent = br.id===b.id;
+      const url = `${BASE}/menu/${slug}/${br.slug}`;
+      html += `<a href="${isCurrent?'#':url}" class="branch-switch-item ${isCurrent?'current':''}" ${isCurrent?'onclick="event.preventDefault();closeInfo();"':''}>
+        <div class="contact-icon" style="background:${isCurrent?'rgba(255,255,255,.2)':'rgba(255,255,255,.08)'}">📍</div>
+        <div class="contact-info">
+          <div class="contact-value">${br.name}</div>
+          <div class="contact-label">${br.city||''}${isCurrent?' · Current':''}</div>
+        </div>
+      </a>`;
+    }
+    html += '</div>';
+  }
+  
+  document.getElementById('infoContent').innerHTML = html;
 }
 
 boot();

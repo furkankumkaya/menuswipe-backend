@@ -1,114 +1,135 @@
-// src/routes/public.js
-// No auth — these endpoints are hit by the customer menu page
 const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
+const crypto = require("crypto");
 
 const prisma = new PrismaClient();
 
-// ─── GET /api/public/:orgSlug ────────────────────────
-// Full menu for the organization (main branch or shared)
-router.get("/:orgSlug", async (req, res, next) => {
+function hashIp(ip) {
+  return crypto.createHash("sha256").update(ip + (process.env.JWT_SECRET || "salt")).digest("hex").slice(0, 32);
+}
+
+// GET /api/public/:orgSlug — ana menü (default ilk şube)
+// GET /api/public/:orgSlug/:branchSlug — şubeye özel menü
+router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
   try {
+    const { orgSlug, branchSlug } = req.params;
+    const fromQr = req.query.qr === "1";
+
     const org = await prisma.organization.findUnique({
-      where: { slug: req.params.orgSlug },
-      select: {
-        id: true, name: true, slug: true,
-        logoUrl: true, accentColor: true,
-        plan: true, planStatus: true,
+      where: { slug: orgSlug },
+      include: {
+        branches: { where: { active: true }, orderBy: { createdAt: "asc" } },
       },
     });
-
     if (!org) return res.status(404).json({ error: "Restaurant not found" });
-    if (org.planStatus === "CANCELLED") {
-      return res.status(403).json({ error: "This menu is no longer active" });
-    }
 
-    const items = await prisma.menuItem.findMany({
-      where: { organizationId: org.id, branchId: null, active: true },
-      include: { photos: { orderBy: { sortOrder: "asc" } } },
-      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
-    });
+    const activeBranches = org.branches;
+    if (activeBranches.length === 0) return res.status(404).json({ error: "No active branches" });
 
-    res.json({ organization: org, items });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ─── GET /api/public/:orgSlug/:branchSlug ───────────
-// Branch-specific menu (respects price overrides)
-router.get("/:orgSlug/:branchSlug", async (req, res, next) => {
-  try {
-    const org = await prisma.organization.findUnique({
-      where: { slug: req.params.orgSlug },
-    });
-    if (!org) return res.status(404).json({ error: "Restaurant not found" });
-    if (org.planStatus === "CANCELLED") {
-      return res.status(403).json({ error: "This menu is no longer active" });
-    }
-
-    const branch = await prisma.branch.findFirst({
-      where: { organizationId: org.id, slug: req.params.branchSlug, active: true },
-    });
-    if (!branch) return res.status(404).json({ error: "Branch not found or inactive" });
-
-    // Track QR scan if ?ref=qr
-    if (req.query.ref === "qr") {
-      prisma.branch.update({
-        where: { id: branch.id },
-        data: { qrScans: { increment: 1 } },
-      }).catch(() => {});
-    }
-
-    // Track view
-    prisma.branch.update({
-      where: { id: branch.id },
-      data: { views: { increment: 1 } },
-    }).catch(() => {});
-
-    // Get menu items — shared or branch-specific
-    let items;
-    if (org.shareMenu) {
-      // Shared menu: org-level items + branch price overrides applied
-      const raw = await prisma.menuItem.findMany({
-        where: { organizationId: org.id, branchId: null, active: true },
-        include: {
-          photos: { orderBy: { sortOrder: "asc" } },
-          priceOverrides: { where: { branchId: branch.id } },
-        },
-        orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
-      });
-
-      items = raw.map((item) => {
-        const override = item.priceOverrides[0];
-        return {
-          ...item,
-          price: override ? override.price : item.price,
-          priceOverrides: undefined,
-        };
-      });
+    let selectedBranch = null;
+    if (branchSlug) {
+      selectedBranch = activeBranches.find(b => b.slug === branchSlug);
+      if (!selectedBranch) return res.status(404).json({ error: "Branch not found" });
     } else {
-      // Branch-specific menu
-      items = await prisma.menuItem.findMany({
-        where: { branchId: branch.id, active: true },
-        include: { photos: { orderBy: { sortOrder: "asc" } } },
-        orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
-      });
+      selectedBranch = activeBranches[0];
     }
+
+    // Bu şubede görünen item'ları getir
+    const items = await prisma.menuItem.findMany({
+      where: {
+        organizationId: org.id,
+        active: true,
+        itemBranches: { some: { branchId: selectedBranch.id } },
+      },
+      include: { photos: { orderBy: { sortOrder: "asc" } } },
+      orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+
+    // Boş kategorileri filtrele - kategori bazında dağılım
+    const cats = {};
+    for (const it of items) {
+      cats[it.category] = (cats[it.category] || 0) + 1;
+    }
+
+    // View kaydı (async, response'u bekletmesin)
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.ip || "unknown";
+    prisma.menuView.create({
+      data: {
+        organizationId: org.id,
+        branchId: selectedBranch.id,
+        fromQr,
+        userAgent: (req.headers["user-agent"] || "").slice(0, 200),
+        ipHash: hashIp(ip),
+      },
+    }).catch(() => {});
 
     res.json({
       organization: {
-        id: org.id, name: org.name, slug: org.slug,
-        logoUrl: org.logoUrl, accentColor: org.accentColor,
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+        logoUrl: org.logoUrl,
+        accentColor: org.accentColor,
+        currency: org.currency || "USD",
+        phone: org.phone,
+        website: org.website,
+        instagram: org.instagram,
+        facebook: org.facebook,
+        country: org.country,
+        city: org.city,
+        address: org.address,
+        postalCode: org.postalCode,
+        googleMapsUrl: org.googleMapsUrl,
+        googlePlaceId: org.googlePlaceId,
+        latitude: org.latitude,
+        longitude: org.longitude,
+        workingHours: org.workingHours,
       },
       branch: {
-        id: branch.id, name: branch.name, city: branch.city,
+        id: selectedBranch.id,
+        name: selectedBranch.name,
+        slug: selectedBranch.slug,
+        phone: selectedBranch.phone,
+        country: selectedBranch.country,
+        city: selectedBranch.city,
+        address: selectedBranch.address,
+        postalCode: selectedBranch.postalCode,
+        googleMapsUrl: selectedBranch.googleMapsUrl,
+        googlePlaceId: selectedBranch.googlePlaceId,
+        latitude: selectedBranch.latitude,
+        longitude: selectedBranch.longitude,
+        workingHours: selectedBranch.workingHours,
       },
+      branches: activeBranches.map(b => ({
+        id: b.id, name: b.name, slug: b.slug, city: b.city,
+      })),
       items,
+      categoryCounts: cats,
     });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
+});
+
+// POST /api/public/:orgSlug/track-item — item view tracking
+router.post("/:orgSlug/track-item", async (req, res, next) => {
+  try {
+    const { itemId, branchSlug } = req.body;
+    const org = await prisma.organization.findUnique({ where: { slug: req.params.orgSlug } });
+    if (!org) return res.json({ ok: false });
+    let branchId = null;
+    if (branchSlug) {
+      const b = await prisma.branch.findFirst({ where: { organizationId: org.id, slug: branchSlug } });
+      if (b) branchId = b.id;
+    }
+    await prisma.menuView.create({
+      data: {
+        organizationId: org.id,
+        branchId,
+        itemId: itemId || null,
+        userAgent: (req.headers["user-agent"] || "").slice(0, 200),
+      },
+    }).catch(() => {});
+    res.json({ ok: true });
+  } catch (err) { res.json({ ok: false }); }
 });
 
 module.exports = router;

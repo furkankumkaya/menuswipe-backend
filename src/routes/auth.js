@@ -1,4 +1,3 @@
-// src/routes/auth.js
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -34,7 +33,6 @@ async function uniqueSlug(base) {
   return slug;
 }
 
-// POST /api/auth/register
 router.post("/register", async (req, res, next) => {
   try {
     const { restaurantName, email, password } = req.body;
@@ -53,6 +51,7 @@ router.post("/register", async (req, res, next) => {
       data: {
         name: restaurantName,
         slug,
+        currency: "USD",
         users: {
           create: { email, passwordHash, name: restaurantName, role: "OWNER" },
         },
@@ -60,23 +59,21 @@ router.post("/register", async (req, res, next) => {
           create: { name: restaurantName, slug: "main", active: true },
         },
       },
-      include: { users: true },
+      include: { users: true, branches: true },
     });
 
     const token = signToken(org.users[0].id);
     res.status(201).json({
       token,
-      organization: { id: org.id, name: org.name, slug: org.slug },
+      organization: orgPublic(org),
     });
   } catch (err) { next(err); }
 });
 
-// POST /api/auth/login
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ error: "Email and password required" });
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -87,49 +84,52 @@ router.post("/login", async (req, res, next) => {
       return res.status(401).json({ error: "Invalid email or password" });
 
     const token = signToken(user.id);
-    res.json({
-      token,
-      organization: {
-        id: user.organization.id,
-        name: user.organization.name,
-        slug: user.organization.slug,
-        logoUrl: user.organization.logoUrl,
-        accentColor: user.organization.accentColor,
-        plan: user.organization.plan,
-      },
-    });
+    res.json({ token, organization: orgPublic(user.organization) });
   } catch (err) { next(err); }
 });
 
-// GET /api/auth/me
 router.get("/me", requireAuth, (req, res) => {
-  const { passwordHash, ...user } = req.user;
   res.json({
-    ...user,
-    organization: {
-      id: req.org.id,
-      name: req.org.name,
-      slug: req.org.slug,
-      logoUrl: req.org.logoUrl,
-      accentColor: req.org.accentColor,
-      plan: req.org.plan,
-    },
+    id: req.user.id,
+    email: req.user.email,
+    name: req.user.name,
+    organization: orgPublic(req.org),
   });
 });
 
-// PATCH /api/auth/organization
+// Profil güncelleme - tüm alanları kabul et
 router.patch("/organization", requireAuth, async (req, res, next) => {
   try {
-    const { name, accentColor } = req.body;
+    const allowed = [
+      "name", "logoUrl", "accentColor", "currency",
+      "phone", "website", "instagram", "facebook",
+      "country", "city", "address", "postalCode",
+      "googleMapsUrl", "googlePlaceId", "latitude", "longitude",
+      "workingHours"
+    ];
     const data = {};
-    if (name) data.name = name;
-    if (accentColor) data.accentColor = accentColor;
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) data[key] = req.body[key];
+    }
     const org = await prisma.organization.update({
       where: { id: req.org.id },
       data,
     });
-    res.json({ id: org.id, name: org.name, slug: org.slug, logoUrl: org.logoUrl, accentColor: org.accentColor });
+    res.json(orgPublic(org));
   } catch (err) { next(err); }
 });
+
+function orgPublic(o) {
+  return {
+    id: o.id, name: o.name, slug: o.slug,
+    logoUrl: o.logoUrl, accentColor: o.accentColor, currency: o.currency || "USD",
+    phone: o.phone, website: o.website, instagram: o.instagram, facebook: o.facebook,
+    country: o.country, city: o.city, address: o.address, postalCode: o.postalCode,
+    googleMapsUrl: o.googleMapsUrl, googlePlaceId: o.googlePlaceId,
+    latitude: o.latitude, longitude: o.longitude,
+    workingHours: o.workingHours,
+    plan: o.plan,
+  };
+}
 
 module.exports = router;

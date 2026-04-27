@@ -1,5 +1,4 @@
-// prisma/schema.prisma
-
+// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,189 +8,152 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─────────────────────────────────────────
-// ORGANIZATIONS (top-level account / chain)
-// ─────────────────────────────────────────
 model Organization {
   id              String       @id @default(uuid())
   name            String
-  slug            String       @unique   // used in menu URL: menu-swipe.com/{slug}
+  slug            String       @unique
   logoUrl         String?
-  accentColor     String       @default("#1a1a1a")
-  shareMenu       Boolean      @default(true)
-  branchPriceOverride Boolean  @default(false)
-
-  // Stripe
-  stripeCustomerId     String?  @unique
-  stripeSubscriptionId String?  @unique
-  stripePriceId        String?
-  plan                 Plan     @default(STARTER)
-  planStatus           PlanStatus @default(ACTIVE)
-  billingCycle         BillingCycle @default(MONTHLY)
-  currentPeriodEnd     DateTime?
-
-  branches        Branch[]
-  menuItems       MenuItem[]   // shared menu items (if shareMenu=true)
-  users           User[]
-  transactions    Transaction[]
-
+  accentColor     String       @default("#8E1616")
+  currency        String       @default("USD")
+  
+  // Contact
+  phone           String?
+  website         String?
+  instagram       String?
+  facebook        String?
+  
+  // Address
+  country         String?
+  city            String?
+  address         String?
+  postalCode      String?
+  
+  // Maps
+  googleMapsUrl   String?
+  googlePlaceId   String?
+  latitude        Float?
+  longitude       Float?
+  
+  // Working hours (JSON: {"mon": {"open": "09:00", "close": "22:00"}, ...})
+  workingHours    Json?
+  
+  // Plan
+  plan            String       @default("FREE")
+  stripeCustomerId String?
+  
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  
+  users           User[]
+  branches        Branch[]
+  menuItems       MenuItem[]
+  views           MenuView[]
 }
 
-// ─────────────────────────────────────────
-// BRANCHES
-// ─────────────────────────────────────────
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  passwordHash   String
+  name           String
+  role           String       @default("OWNER")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+}
+
 model Branch {
   id              String       @id @default(uuid())
   organizationId  String
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
+  
   name            String
+  slug            String
+  active          Boolean      @default(true)
+  
+  // Contact
+  phone           String?
+  
+  // Address
+  country         String?
   city            String?
   address         String?
-  phone           String?
-  active          Boolean      @default(true)
-
-  slug            String       // menu-swipe.com/{org-slug}/{branch-slug}
-  qrCodeUrl       String?      // stored QR PNG path
-
-  // Branch-specific menu (used only when shareMenu=false or priceOverride=true)
-  menuItems       MenuItem[]   @relation("BranchMenuItems")
-  priceOverrides  PriceOverride[]
-
-  views           Int          @default(0)
-  qrScans         Int          @default(0)
-
+  postalCode      String?
+  
+  // Maps
+  googleMapsUrl   String?
+  googlePlaceId   String?
+  latitude        Float?
+  longitude       Float?
+  
+  // Working hours
+  workingHours    Json?
+  
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-
+  
+  itemBranches    MenuItemBranch[]
+  views           MenuView[]
+  
   @@unique([organizationId, slug])
 }
 
-// ─────────────────────────────────────────
-// MENU ITEMS
-// ─────────────────────────────────────────
 model MenuItem {
   id              String       @id @default(uuid())
   organizationId  String
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  // If item belongs to a specific branch (shareMenu=false)
-  branchId        String?
-  branch          Branch?      @relation("BranchMenuItems", fields: [branchId], references: [id])
-
+  
   name            String
   description     String?
   price           Float
-  category        Category     @default(MAIN)
+  category        String       @default("MAIN")
+  
   active          Boolean      @default(true)
+  isBestseller    Boolean      @default(false)
   sortOrder       Int          @default(0)
-
-  photos          MenuPhoto[]
-  priceOverrides  PriceOverride[]
-
+  
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  
+  photos          MenuPhoto[]
+  itemBranches    MenuItemBranch[]
+}
+
+model MenuItemBranch {
+  id          String    @id @default(uuid())
+  menuItemId  String
+  menuItem    MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  
+  @@unique([menuItemId, branchId])
 }
 
 model MenuPhoto {
-  id          String     @id @default(uuid())
-  menuItemId  String
-  menuItem    MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
-  url         String
+  id           String   @id @default(uuid())
+  menuItemId   String
+  menuItem     MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  url          String
   cloudinaryId String?
-  sortOrder   Int        @default(0)  // max 3 per item enforced in API
-
-  createdAt   DateTime   @default(now())
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
 }
 
-// Branch-level price override for a shared menu item
-model PriceOverride {
-  id          String    @id @default(uuid())
-  branchId    String
-  branch      Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  menuItemId  String
-  menuItem    MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
-  price       Float
-
-  @@unique([branchId, menuItemId])
-}
-
-// ─────────────────────────────────────────
-// USERS (restaurant admins)
-// ─────────────────────────────────────────
-model User {
+model MenuView {
   id              String       @id @default(uuid())
   organizationId  String
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  email           String       @unique
-  passwordHash    String
-  name            String?
-  role            UserRole     @default(ADMIN)
-
+  branchId        String?
+  branch          Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  
+  fromQr          Boolean      @default(false)
+  itemId          String?      // hangi item'a en çok bakıldı
+  category        String?
+  
+  userAgent       String?
+  ipHash          String?      // unique visitor için hash'lenmiş IP
+  
   createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-}
-
-// ─────────────────────────────────────────
-// TRANSACTIONS (for local record-keeping)
-// ─────────────────────────────────────────
-model Transaction {
-  id              String       @id @default(uuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-
-  stripeInvoiceId String?      @unique
-  amount          Int          // in kuruş (cents)
-  currency        String       @default("try")
-  status          TxStatus
-  description     String?
-  periodStart     DateTime?
-  periodEnd       DateTime?
-
-  createdAt       DateTime     @default(now())
-}
-
-// ─────────────────────────────────────────
-// ENUMS
-// ─────────────────────────────────────────
-enum Plan {
-  STARTER
-  PRO
-  CHAIN
-}
-
-enum PlanStatus {
-  ACTIVE
-  PAST_DUE
-  CANCELLED
-  TRIALING
-}
-
-enum BillingCycle {
-  MONTHLY
-  ANNUAL
-}
-
-enum Category {
-  MAIN
-  STARTER
-  DRINK
-  DESSERT
-  OTHER
-}
-
-enum UserRole {
-  OWNER
-  ADMIN
-  VIEWER
-}
-
-enum TxStatus {
-  PAID
-  FAILED
-  REFUNDED
-  PENDING
+  
+  @@index([organizationId, createdAt])
+  @@index([branchId, createdAt])
 }
