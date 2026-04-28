@@ -36,7 +36,16 @@ function uploadToCloudinary(buffer, folder) {
   });
 }
 
-// GET /api/menu — tüm itemları branch ilişkisi ile döndür
+const VALID_MARKETING = ["NEW", "BESTSELLER", "OFFER", null];
+const VALID_DIETARY = ["SPICY", "VEGAN", "GLUTEN_FREE", null];
+
+function sanitizeTag(tag, validList) {
+  if (tag === undefined) return undefined;
+  if (tag === null || tag === "" || tag === "NONE") return null;
+  if (validList.includes(tag)) return tag;
+  return null;
+}
+
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     const items = await prisma.menuItem.findMany({
@@ -47,7 +56,6 @@ router.get("/", requireAuth, async (req, res, next) => {
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     });
-    // her item için branchIds array ekle
     const result = items.map(i => ({
       ...i,
       branchIds: i.itemBranches.map(ib => ib.branchId),
@@ -57,10 +65,9 @@ router.get("/", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// POST /api/menu — yeni item, default tüm aktif şubelerde görünür
 router.post("/", requireAuth, async (req, res, next) => {
   try {
-    const { name, description, price, category, branchIds, isBestseller } = req.body;
+    const { name, description, price, category, branchIds, isBestseller, tagMarketing, tagDietary } = req.body;
     if (!name || price === undefined) return res.status(400).json({ error: "name and price required" });
 
     let targetBranches = branchIds;
@@ -79,6 +86,8 @@ router.post("/", requireAuth, async (req, res, next) => {
         price: parseFloat(price),
         category: category || "MAIN",
         isBestseller: !!isBestseller,
+        tagMarketing: sanitizeTag(tagMarketing, VALID_MARKETING) ?? null,
+        tagDietary: sanitizeTag(tagDietary, VALID_DIETARY) ?? null,
         itemBranches: { create: targetBranches.map(bid => ({ branchId: bid })) },
       },
       include: { photos: true, itemBranches: true },
@@ -98,7 +107,7 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
     });
     if (!item) return res.status(404).json({ error: "Item not found" });
 
-    const { name, description, price, category, active, sortOrder, isBestseller, branchIds } = req.body;
+    const { name, description, price, category, active, sortOrder, isBestseller, branchIds, tagMarketing, tagDietary } = req.body;
     const data = {};
     if (name !== undefined) data.name = name;
     if (description !== undefined) data.description = description;
@@ -106,10 +115,23 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
     if (category !== undefined) data.category = category;
     if (active !== undefined) data.active = active;
     if (sortOrder !== undefined) data.sortOrder = sortOrder;
-    if (isBestseller !== undefined) data.isBestseller = !!isBestseller;
+    if (isBestseller !== undefined) {
+      data.isBestseller = !!isBestseller;
+      // Eski API uyumluluğu: yıldız işaretlenirse marketing tag de güncellensin
+      if (isBestseller && !item.tagMarketing) data.tagMarketing = "BESTSELLER";
+      if (!isBestseller && item.tagMarketing === "BESTSELLER") data.tagMarketing = null;
+    }
+    
+    const sm = sanitizeTag(tagMarketing, VALID_MARKETING);
+    if (sm !== undefined) {
+      data.tagMarketing = sm;
+      // Marketing tag senkronize: BESTSELLER seçilince isBestseller=true
+      data.isBestseller = sm === "BESTSELLER";
+    }
+    const sd = sanitizeTag(tagDietary, VALID_DIETARY);
+    if (sd !== undefined) data.tagDietary = sd;
 
     if (Array.isArray(branchIds)) {
-      // önce mevcut ilişkileri sil, sonra yenilerini ekle
       await prisma.menuItemBranch.deleteMany({ where: { menuItemId: req.params.id } });
       data.itemBranches = { create: branchIds.map(bid => ({ branchId: bid })) };
     }
@@ -177,7 +199,6 @@ router.delete("/:id/photos/:photoId", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Logo upload (organization)
 router.post("/_logo", requireAuth, upload.single("logo"), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });

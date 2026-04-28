@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>MenuSwipe</title>
 <meta name="theme-color" content="#000000"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -16,21 +16,41 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 #splash{position:fixed;inset:0;background:#1D1616;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:100;transition:opacity .5s}
 #splash.hide{opacity:0;pointer-events:none}
 .splash-logo{width:96px;height:96px;border-radius:24px;background:#8E1616;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.splash-logo img{width:100%;height:100%;object-fit:cover}
+.splash-logo img{width:100%;height:100%;object-fit:cover;display:block}
 .splash-name{font-size:24px;font-weight:800;color:#fff}
 .splash-tag{font-size:13px;color:rgba(255,255,255,.4)}
 
 /* MAIN */
 #screen{width:100%;height:100%;position:relative;overflow:hidden}
 
-/* TOP BAR with logo button + cats */
-.top-bar{position:absolute;top:0;left:0;right:0;z-index:20;padding:env(safe-area-inset-top,16px) 14px 12px;background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);display:flex;align-items:center;gap:10px}
-.profile-btn{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);overflow:hidden;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.profile-btn img{width:100%;height:100%;object-fit:cover}
-.profile-btn-fallback{width:100%;height:100%;background:#8E1616;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
-.cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:1}
+/* TOP BAR */
+.top-bar{
+  position:absolute;top:0;left:0;right:0;z-index:20;
+  padding-top:max(env(safe-area-inset-top,0px), 24px);
+  padding-left:14px;padding-right:14px;padding-bottom:12px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.75) 0%,rgba(0,0,0,.4) 70%,transparent 100%);
+  display:flex;align-items:center;gap:10px;
+}
+.profile-btn{
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(255,255,255,.15);
+  border:2px solid rgba(255,255,255,.4);
+  overflow:hidden;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:0;
+}
+.profile-btn img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.profile-btn-fallback{
+  width:100%;height:100%;background:#8E1616;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;
+}
+.cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:1;-webkit-overflow-scrolling:touch}
 .cats::-webkit-scrollbar{display:none}
-.cat{padding:8px 18px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75);background:rgba(255,255,255,.1);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.cat{padding:9px 18px;border-radius:22px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);background:rgba(255,255,255,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .cat.on{background:#fff;color:#111;border-color:#fff}
 
 /* SLIDES */
@@ -42,8 +62,29 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .photo-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 
 .grad{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.96),rgba(0,0,0,0));pointer-events:none}
+
+/* TAGS — sol üst (marketing), sağ üst (dietary) */
+.tags-row{
+  position:absolute;top:0;left:0;right:0;
+  padding:max(calc(env(safe-area-inset-top,0px) + 86px), 110px) 16px 0;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  pointer-events:none;z-index:5;
+}
+.tag-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:20px;
+  font-size:11px;font-weight:800;letter-spacing:.4px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid;
+}
+.tag-NEW{background:rgba(59,130,246,.18);color:#60A5FA;border-color:rgba(59,130,246,.4)}
+.tag-BESTSELLER{background:rgba(245,158,11,.2);color:#FCD34D;border-color:rgba(245,158,11,.45)}
+.tag-OFFER{background:rgba(139,92,246,.2);color:#C4B5FD;border-color:rgba(139,92,246,.45)}
+.tag-SPICY{background:rgba(239,68,68,.2);color:#FCA5A5;border-color:rgba(239,68,68,.45)}
+.tag-VEGAN{background:rgba(16,185,129,.2);color:#6EE7B7;border-color:rgba(16,185,129,.45)}
+.tag-GLUTEN_FREE{background:rgba(6,182,212,.2);color:#67E8F9;border-color:rgba(6,182,212,.45)}
+
 .info{position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));pointer-events:none}
-.bestseller-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.7px;background:#f59e0b;color:#fff;padding:3px 9px;border-radius:6px;margin-bottom:8px}
 .cat-tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
 .item-name{font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:5px}
 .item-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -59,25 +100,21 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 /* RESTAURANT INFO SHEET */
 .info-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:90;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .info-overlay.open{display:flex}
-.info-sheet{background:#1D1616;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));color:#fff}
+.info-sheet{background:#1D1616;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));color:#fff;position:relative}
 .info-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 18px}
 .info-header{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:20px;text-align:center}
 .info-logo{width:80px;height:80px;border-radius:20px;background:#8E1616;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.info-logo img{width:100%;height:100%;object-fit:cover}
+.info-logo img{width:100%;height:100%;object-fit:cover;display:block}
 .info-name{font-size:22px;font-weight:800;color:#fff}
 .info-branch{font-size:13px;color:rgba(255,255,255,.5);margin-top:2px}
 .info-address{font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.5}
 
 .action-btn-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
 .action-btn{padding:14px;border-radius:14px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;text-align:center}
-.action-btn:hover{background:rgba(255,255,255,.15)}
-.action-btn svg{opacity:.9}
 .action-btn-primary{background:#8E1616}
-.action-btn-primary:hover{background:#7a1313}
 
 .section-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:18px;margin-bottom:10px}
 .contact-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:8px;text-decoration:none;color:inherit;cursor:pointer}
-.contact-row:hover{background:rgba(255,255,255,.1)}
 .contact-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
 .contact-info{flex:1;min-width:0}
 .contact-label{font-size:11px;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
@@ -94,10 +131,8 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .branch-switch-list{margin-top:8px}
 .branch-switch-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:6px;cursor:pointer;text-decoration:none;color:inherit}
 .branch-switch-item.current{background:#8E1616}
-.branch-switch-item:hover{background:rgba(255,255,255,.1)}
-.branch-switch-item.current:hover{background:#7a1313}
 
-.close-btn{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.close-btn{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;z-index:5}
 
 .error-screen{display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,.5);font-size:15px;background:#1D1616;text-align:center;padding:24px}
 </style>
@@ -123,7 +158,6 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   <div class="prog"><div class="progf" id="progf"></div></div>
 </div>
 
-<!-- RESTAURANT INFO SHEET -->
 <div class="info-overlay" id="infoOverlay">
   <div class="info-sheet" id="infoSheet">
     <button class="close-btn" onclick="closeInfo()">
@@ -141,14 +175,17 @@ const branchSlug = pathParts[2] || null;
 const BASE = window.location.origin;
 const fromQr = new URLSearchParams(window.location.search).get('qr') === '1';
 
-const CAT_COLORS={MAIN:'#993C1D',STARTER:'#0F6E56',DRINK:'#185FA5',DESSERT:'#534AB7'};
-const CAT_LABELS={MAIN:'Main',STARTER:'Starter',DRINK:'Drink',DESSERT:'Dessert'};
 const CURRENCIES_SYM={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',AED:'د.إ',SAR:'﷼',CAD:'$',AUD:'$',CHF:'Fr',INR:'₹',BRL:'R$',MXN:'$',KRW:'₩',SGD:'$',HKD:'$',NOK:'kr',SEK:'kr',DKK:'kr',PLN:'zł',RUB:'₽',ZAR:'R',THB:'฿',IDR:'Rp',MYR:'RM',PHP:'₱',VND:'₫',EGP:'£',ILS:'₪',NZD:'$',ARS:'$',CLP:'$',COP:'$',CZK:'Kč',HUF:'Ft',RON:'lei',PKR:'₨',BDT:'৳',NGN:'₦',KES:'KSh',GHS:'GH₵',MAD:'د.م.',QAR:'ر.ق'};
+
+const TAG_LABELS = {
+  NEW:'NEW', BESTSELLER:'BESTSELLER', OFFER:'OFFER',
+  SPICY:'SPICY', VEGAN:'VEGAN', GLUTEN_FREE:'GLUTEN-FREE'
+};
 
 let allItems=[],filteredItems=[],currentCat='all';
 let curItem=0;
 let curPhoto={};
-let orgData=null,branchData=null,allBranches=[];
+let orgData=null,branchData=null,allBranches=[],categoriesMeta=[];
 let touchStartX=0,touchStartY=0,touchStartTime=0,trackingAxis=null;
 
 async function boot(){
@@ -160,12 +197,14 @@ async function boot(){
     orgData = data.organization;
     branchData = data.branch;
     allBranches = data.branches || [];
+    categoriesMeta = data.categories || [];
     allItems = data.items;
 
     document.getElementById('splashName').textContent = orgData.name;
     if(orgData.logoUrl){
-      document.getElementById('splashLogo').innerHTML = `<img src="${orgData.logoUrl}"/>`;
-      document.getElementById('profileFallback').outerHTML = `<img src="${orgData.logoUrl}" alt="${orgData.name}"/>`;
+      document.getElementById('splashLogo').innerHTML = `<img src="${orgData.logoUrl}" alt=""/>`;
+      const fb = document.getElementById('profileFallback');
+      if(fb) fb.outerHTML = `<img src="${orgData.logoUrl}" alt="${orgData.name}"/>`;
     } else {
       document.getElementById('profileFallback').textContent = orgData.name.charAt(0).toUpperCase();
     }
@@ -181,6 +220,9 @@ async function boot(){
 }
 
 function getSym(){return CURRENCIES_SYM[orgData?.currency||'USD']||'$';}
+function catMeta(code){
+  return categoriesMeta.find(c=>c.code===code) || {code, label:code, color:'#334155'};
+}
 
 function getFiltered(){
   if(currentCat==='all') return allItems;
@@ -196,11 +238,12 @@ function init(){
 }
 
 function buildCatBar(){
-  // sadece içinde item olan kategoriler
-  const usedCats = [...new Set(allItems.map(i=>i.category||'MAIN'))];
-  const all = [{id:'all',label:'All'}, ...usedCats.map(id=>({id,label:CAT_LABELS[id]||id}))];
+  // Sadece içinde item olan kategorileri göster
+  const usedCats = new Set(allItems.map(i=>i.category||'MAIN'));
+  const visibleCats = categoriesMeta.filter(c => usedCats.has(c.code));
+  const all = [{code:'all',label:'All'}, ...visibleCats];
   document.getElementById('catBar').innerHTML = all.map(c =>
-    `<div class="cat${c.id===currentCat?' on':''}" onclick="selectCat('${c.id}')">${c.label}</div>`
+    `<div class="cat${c.code===currentCat?' on':''}" onclick="selectCat('${c.code}')">${c.label}</div>`
   ).join('');
 }
 
@@ -212,14 +255,18 @@ function selectCat(cat){
   updateProgress();
 }
 
+function buildTagPill(tagCode){
+  if(!tagCode) return '';
+  const label = TAG_LABELS[tagCode] || tagCode;
+  return `<div class="tag-pill tag-${tagCode}">${label}</div>`;
+}
+
 function buildSlides(){
   const sym = getSym();
   const wrap = document.getElementById('slidesWrap');
   wrap.innerHTML = '';
   filteredItems.forEach((item,idx)=>{
-    const catId = item.category||'MAIN';
-    const color = CAT_COLORS[catId]||'#334155';
-    const label = CAT_LABELS[catId]||catId;
+    const cm = catMeta(item.category||'MAIN');
     const photos = item.photos||[];
     if(!curPhoto[item.id]) curPhoto[item.id]=0;
 
@@ -229,8 +276,8 @@ function buildSlides(){
     slide.style.transform = `translateY(${(idx-curItem)*100}%)`;
 
     const photosHtml = photos.length>0
-      ? photos.map(p=>`<div class="photo-frame"><img src="${p.url}" loading="lazy"/></div>`).join('')
-      : `<div class="photo-frame"><div class="photo-placeholder" style="background:${color}22"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" opacity=".15"><rect x="10" y="10" width="60" height="60" rx="10" stroke="${color}" stroke-width="3"/></svg></div></div>`;
+      ? photos.map(p=>`<div class="photo-frame"><img src="${p.url}" loading="lazy" alt=""/></div>`).join('')
+      : `<div class="photo-frame"><div class="photo-placeholder" style="background:${cm.color}22"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" opacity=".15"><rect x="10" y="10" width="60" height="60" rx="10" stroke="${cm.color}" stroke-width="3"/></svg></div></div>`;
 
     const photoOffset = curPhoto[item.id]||0;
     const dotsHtml = photos.length>1
@@ -238,16 +285,25 @@ function buildSlides(){
       : '';
 
     const desc = item.description||'';
-    const bestTag = item.isBestseller?'<div class="bestseller-tag">★ BESTSELLER</div>':'';
+
+    // Tag system: marketing left, dietary right (max 1 each)
+    let mTag = item.tagMarketing;
+    // Backward compat: isBestseller varsa ve tagMarketing yoksa BESTSELLER göster
+    if(!mTag && item.isBestseller) mTag = 'BESTSELLER';
+    const dTag = item.tagDietary;
+    
+    const tagsRow = (mTag || dTag) 
+      ? `<div class="tags-row"><div>${buildTagPill(mTag)}</div><div>${buildTagPill(dTag)}</div></div>`
+      : '';
 
     slide.innerHTML = `
       <div class="photos-track" id="track-${item.id}" style="transform:translateX(${-photoOffset*100}%)">
         ${photosHtml}
       </div>
       <div class="grad"></div>
+      ${tagsRow}
       <div class="info">
-        ${bestTag}
-        <div class="cat-tag">${label}</div>
+        <div class="cat-tag">${cm.label}</div>
         <div class="item-name">${item.name}</div>
         ${desc?`<div class="item-desc">${desc}</div>`:''}
         <div class="item-price">${sym}${item.price}</div>
@@ -336,13 +392,8 @@ function setupTouch(){
 }
 
 /* INFO SHEET */
-function openInfo(){
-  buildInfoContent();
-  document.getElementById('infoOverlay').classList.add('open');
-}
-function closeInfo(){
-  document.getElementById('infoOverlay').classList.remove('open');
-}
+function openInfo(){buildInfoContent();document.getElementById('infoOverlay').classList.add('open');}
+function closeInfo(){document.getElementById('infoOverlay').classList.remove('open');}
 document.getElementById('infoOverlay').addEventListener('click',(e)=>{
   if(e.target===document.getElementById('infoOverlay')) closeInfo();
 });
@@ -360,7 +411,7 @@ function buildInfoContent(){
   
   let html = `
     <div class="info-header">
-      <div class="info-logo">${o.logoUrl?`<img src="${o.logoUrl}"/>`:`<svg width="40" height="40" viewBox="0 0 80 80" fill="none"><path d="M16 64 L16 16 L40 48 L64 16 L64 64" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`}</div>
+      <div class="info-logo">${o.logoUrl?`<img src="${o.logoUrl}" alt=""/>`:`<svg width="40" height="40" viewBox="0 0 80 80" fill="none"><path d="M16 64 L16 16 L40 48 L64 16 L64 64" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`}</div>
       <div>
         <div class="info-name">${o.name}</div>
         ${b.name && b.name !== o.name?`<div class="info-branch">${b.name}</div>`:''}
@@ -368,7 +419,6 @@ function buildInfoContent(){
       ${addr?`<div class="info-address">${addr}</div>`:''}
     </div>`;
   
-  // Action buttons
   html += '<div class="action-btn-row">';
   if(mapsUrl){
     html += `<a href="${mapsUrl}" target="_blank" class="action-btn action-btn-primary">
@@ -384,7 +434,6 @@ function buildInfoContent(){
   }
   html += '</div>';
   
-  // Contact
   const contacts = [];
   if(phone) contacts.push({icon:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3h3l1.5 3.5L6 8a8 8 0 003 3l1.5-1.5L14 11v3l-1.5 1.5C7.5 15 1 8.5 1 4l1.5-1L3 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></svg>', label:'Phone', value:phone, href:'tel:'+phone});
   if(o.website) contacts.push({icon:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 8h13M8 1.5c2 2 2 11 0 13M8 1.5c-2 2-2 11 0 13" stroke="currentColor" stroke-width="1.2"/></svg>', label:'Website', value:o.website, href:o.website});
@@ -398,7 +447,6 @@ function buildInfoContent(){
     });
   }
   
-  // Working hours
   const hasHours = Object.keys(wh).length>0;
   if(hasHours){
     const days = [['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
@@ -412,7 +460,6 @@ function buildInfoContent(){
     html += '</div>';
   }
   
-  // Branch switch
   if(allBranches.length>1){
     html += '<div class="section-title">Other locations</div><div class="branch-switch-list">';
     for(const br of allBranches){

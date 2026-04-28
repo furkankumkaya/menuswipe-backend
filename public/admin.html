@@ -71,13 +71,21 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
 /* ITEM TABLE */
 .itable-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:14px;background:#fff}
-.itable{min-width:580px;width:100%}
+.itable{min-width:660px;width:100%}
 .irow{background:#fff;border-bottom:1px solid #f1f5f9}
 .irow:last-child{border-bottom:none}
-.irow-main{display:grid;grid-template-columns:32px minmax(130px,1fr) 90px 72px 80px 64px;align-items:center}
+.irow-main{display:grid;grid-template-columns:88px 88px minmax(140px,1fr) 80px 70px 76px 60px;align-items:center}
 .irow.hdr .irow-main{background:#f8fafc;border-radius:14px 14px 0 0}
 .irow.hdr span{font-size:10px;color:#64748b;font-weight:700;padding:10px 12px;display:block;text-transform:uppercase;letter-spacing:.4px}
-.icell{padding:10px 12px;display:flex;align-items:center;min-height:54px}
+.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px}
+.tag-cell{padding:8px 6px;display:flex;align-items:center;min-height:54px}
+.tag-select{font-size:10px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:5px 6px;cursor:pointer;width:100%;font-weight:600}
+.tag-select.t-NEW{background:rgba(59,130,246,.12);color:#3B82F6;border-color:rgba(59,130,246,.3)}
+.tag-select.t-BESTSELLER{background:rgba(245,158,11,.12);color:#92400e;border-color:rgba(245,158,11,.3)}
+.tag-select.t-OFFER{background:rgba(139,92,246,.12);color:#8B5CF6;border-color:rgba(139,92,246,.3)}
+.tag-select.t-SPICY{background:rgba(239,68,68,.12);color:#EF4444;border-color:rgba(239,68,68,.3)}
+.tag-select.t-VEGAN{background:rgba(16,185,129,.12);color:#10B981;border-color:rgba(16,185,129,.3)}
+.tag-select.t-GLUTEN_FREE{background:rgba(6,182,212,.12);color:#06B6D4;border-color:rgba(6,182,212,.3)}
 .star-cell{padding:10px 6px;display:flex;align-items:center;justify-content:center}
 .star-btn{width:26px;height:26px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#cbd5e1;transition:.15s}
 .star-btn:hover{background:#fef3c7;color:var(--gold)}
@@ -111,7 +119,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .ok-btn{width:28px;height:28px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* ADD ROW */
-.add-row{display:none;grid-template-columns:32px minmax(130px,1fr) 90px 72px 80px 64px;border-top:1px dashed #e2e8f0;background:#f8fafc}
+.add-row{display:none;grid-template-columns:88px 88px minmax(140px,1fr) 80px 70px 76px 60px;border-top:1px dashed #e2e8f0;background:#f8fafc}
 .add-row.show{display:grid}
 .add-cell{padding:8px 12px;display:flex;align-items:center}
 .add-inp{border:none;background:transparent;font-size:12px;color:#1e293b;outline:none;width:100%;font-weight:500}
@@ -374,9 +382,10 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="catPills"></div>
       <div class="itable-wrap">
         <div class="itable">
-          <div class="irow hdr"><div class="irow-main"><span></span><span>Name</span><span>Category</span><span>Price</span><span>Photos</span><span style="text-align:center">Edit</span></div></div>
+          <div class="irow hdr"><div class="irow-main"><span>Marketing</span><span>Dietary</span><span>Name</span><span>Category</span><span>Price</span><span>Photos</span><span style="text-align:center">Edit</span></div></div>
           <div id="itemRows"><div class="loading-msg">Loading...</div></div>
           <div class="add-row" id="addRow">
+            <div class="add-cell"></div>
             <div class="add-cell"></div>
             <div class="add-cell"><input class="add-inp" id="newName" placeholder="Item name..." onkeydown="if(event.key==='Enter')confirmAdd()"/></div>
             <div class="add-cell"><select class="cat-sel" id="newCat" style="font-size:11px"></select></div>
@@ -698,14 +707,19 @@ async function doRegister(){
 }
 function doLogout(){localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');location.reload();}
 
-function startApp(){
+async function startApp(){
   document.getElementById('authScreen').style.display='none';
   document.getElementById('appScreen').classList.add('visible');
   populateCurrencies();
   loadProfile();
-  loadCats();
-  loadBranches().then(()=>{loadMenu();qrGenerate();});
   buildHoursGrid();
+  // Kategorileri ve şubeleri önce yükle (renderItems bunlara bağımlı)
+  await loadCats();
+  await loadBranches();
+  populateAddSel();
+  buildCatPills();
+  loadMenu();
+  qrGenerate();
 }
 
 /* NAV */
@@ -845,42 +859,102 @@ function handleLogo(e){
   }).catch(err=>toast('Upload failed: '+err.message));
 }
 
-/* CATEGORIES */
-function loadCats(){
-  // localStorage'da sakla, kullanıcı bazlı
-  const saved=localStorage.getItem('ms_cats_'+(org?.id||''));
-  if(saved){try{cats=JSON.parse(saved);}catch(e){cats=[];}}
-  if(!cats.length)cats=[
-    {id:'MAIN',label:'Main',color:'#993C1D',visible:true},
-    {id:'STARTER',label:'Starter',color:'#0F6E56',visible:true},
-    {id:'DRINK',label:'Drink',color:'#185FA5',visible:true},
-    {id:'DESSERT',label:'Dessert',color:'#534AB7',visible:true},
-  ];
+/* CATEGORIES — backend'den yüklenir */
+async function loadCats(){
+  try{
+    const data = await api('GET','/api/categories');
+    cats = data.map(c => ({ id: c.id, code: c.code, label: c.label, color: c.color, visible: c.visible }));
+  }catch(e){
+    console.error('loadCats failed', e);
+    cats = [];
+  }
 }
-function saveCats(){if(org)localStorage.setItem('ms_cats_'+org.id,JSON.stringify(cats));}
-function catById(id){return cats.find(c=>c.id===id)||{label:id,color:'#888',visible:true};}
+function catById(code){
+  // Hem code hem id ile arama (geriye dönük uyumluluk)
+  return cats.find(c=>c.code===code) || cats.find(c=>c.id===code) || {code:code, label:code, color:'#888', visible:true};
+}
 function visCats(){return cats.filter(c=>c.visible);}
 
 function openCatsOverlay(){renderCatMgmt();document.getElementById('catsOverlay').classList.add('open');}
-function closeCatsOverlay(){document.getElementById('catsOverlay').classList.remove('open');}
+function closeCatsOverlay(){document.getElementById('catsOverlay').classList.remove('open');loadMenu();}
 function renderCatMgmt(){
   document.getElementById('catMgmtList').innerHTML=cats.map(c=>`
     <div class="cat-mgmt-item">
-      <input type="color" value="${c.color}" onchange="updateCatColor('${c.id}',this.value)" style="width:24px;height:24px;border:none;background:none;cursor:pointer;padding:0"/>
-      <input class="cat-name-inp" value="${c.label}" oninput="updateCatLabel('${c.id}',this.value)"/>
-      <label class="tog"><input type="checkbox" ${c.visible?'checked':''} onchange="toggleCatVisible('${c.id}',this)"/><div class="tog-t"></div><div class="tog-th"></div></label>
+      <input type="color" value="${c.color}" oninput="onCatColorInput('${c.id}',this.value)" onchange="onCatColorChange('${c.id}',this.value)" style="width:24px;height:24px;border:none;background:none;cursor:pointer;padding:0"/>
+      <input class="cat-name-inp" value="${c.label}" oninput="onCatLabelInput('${c.id}',this.value)" onblur="onCatLabelBlur('${c.id}',this.value)"/>
+      <label class="tog"><input type="checkbox" ${c.visible?'checked':''} onchange="onCatVisibleToggle('${c.id}',this)"/><div class="tog-t"></div><div class="tog-th"></div></label>
       <button onclick="deleteCat('${c.id}')" style="width:30px;height:30px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#ef4444">${TRASH}</button>
     </div>`).join('');
 }
-function updateCatLabel(id,val){const c=cats.find(x=>x.id===id);if(c){c.label=val;saveCats();buildCatPills();populateAddSel();}}
-function updateCatColor(id,val){const c=cats.find(x=>x.id===id);if(c){c.color=val;saveCats();}}
-function toggleCatVisible(id,cb){const c=cats.find(x=>x.id===id);if(c){c.visible=cb.checked;saveCats();buildCatPills();}}
-function deleteCat(id){if(cats.length<=1)return;cats=cats.filter(c=>c.id!==id);saveCats();renderCatMgmt();buildCatPills();populateAddSel();}
-function addCategory(){const colors=['#BA7517','#993556','#1D9E75','#378ADD','#A855F7'];cats.push({id:'C'+Date.now(),label:'New category',color:colors[cats.length%5],visible:true});saveCats();renderCatMgmt();buildCatPills();populateAddSel();}
+
+const catUpdateTimers = {};
+function onCatLabelInput(id, val){
+  const c = cats.find(x=>x.id===id); if(!c) return;
+  c.label = val;
+  buildCatPills();
+  populateAddSel();
+  clearTimeout(catUpdateTimers[id]);
+  catUpdateTimers[id] = setTimeout(()=>saveCatRemote(id,{label:val}), 600);
+}
+function onCatLabelBlur(id, val){
+  clearTimeout(catUpdateTimers[id]);
+  saveCatRemote(id,{label:val});
+}
+function onCatColorInput(id, val){
+  const c = cats.find(x=>x.id===id); if(!c) return;
+  c.color = val;
+  buildCatPills();
+}
+function onCatColorChange(id, val){
+  saveCatRemote(id,{color:val});
+}
+function onCatVisibleToggle(id, cb){
+  const c = cats.find(x=>x.id===id); if(!c) return;
+  c.visible = cb.checked;
+  buildCatPills();
+  saveCatRemote(id,{visible:cb.checked});
+}
+
+async function saveCatRemote(id, data){
+  try{
+    const updated = await api('PATCH','/api/categories/'+id, data);
+    const c = cats.find(x=>x.id===id);
+    if(c) Object.assign(c, { label: updated.label, color: updated.color, visible: updated.visible });
+    renderItems();
+  }catch(e){toast('Save failed: '+e.message);}
+}
+
+async function deleteCat(id){
+  if(cats.length<=1) return toast('Cannot delete the only category');
+  try{
+    await api('DELETE','/api/categories/'+id);
+    cats = cats.filter(c=>c.id!==id);
+    renderCatMgmt();
+    buildCatPills();
+    populateAddSel();
+    loadMenu(); // çünkü silinen kategorideki itemlar fallback'a taşındı
+    toast('Category deleted');
+  }catch(e){toast('Delete failed: '+e.message);}
+}
+
+async function addCategory(){
+  const colors=['#BA7517','#993556','#1D9E75','#378ADD','#A855F7'];
+  try{
+    const created = await api('POST','/api/categories', {
+      label: 'New category',
+      color: colors[cats.length%5],
+    });
+    cats.push({ id: created.id, code: created.code, label: created.label, color: created.color, visible: created.visible });
+    renderCatMgmt();
+    buildCatPills();
+    populateAddSel();
+    toast('Category added');
+  }catch(e){toast('Failed: '+e.message);}
+}
 
 function buildCatPills(){
-  const all=[{id:'all',label:'All'},...cats];
-  document.getElementById('catPills').innerHTML=all.map(c=>`<button class="pill${currentFilter===c.id?' on':''}" onclick="filterItems('${c.id}')">${c.label}</button>`).join('');
+  const all=[{code:'all',label:'All'},...cats];
+  document.getElementById('catPills').innerHTML=all.map(c=>`<button class="pill${currentFilter===c.code?' on':''}" onclick="filterItems('${c.code}')">${c.label}</button>`).join('');
 }
 
 /* MENU */
@@ -894,6 +968,16 @@ function updateStats(){
   document.getElementById('statBest').textContent=items.filter(i=>i.isBestseller).length;
 }
 
+function tagSelectHTML(itemId, type, current){
+  const groups = type === 'marketing'
+    ? [{val:'',label:'— None —'},{val:'NEW',label:'NEW'},{val:'BESTSELLER',label:'BESTSELLER'},{val:'OFFER',label:'OFFER'}]
+    : [{val:'',label:'— None —'},{val:'SPICY',label:'SPICY'},{val:'VEGAN',label:'VEGAN'},{val:'GLUTEN_FREE',label:'GLUTEN-FREE'}];
+  const cur = current || '';
+  const cls = cur ? ' t-'+cur : '';
+  const opts = groups.map(g => `<option value="${g.val}"${g.val===cur?' selected':''}>${g.label}</option>`).join('');
+  return `<select class="tag-select${cls}" onchange="updateTag('${itemId}','${type}',this.value)">${opts}</select>`;
+}
+
 function renderItems(){
   const sym=getCurrencySymbol();
   const list=currentFilter==='all'?items:items.filter(i=>i.category===currentFilter);
@@ -903,24 +987,27 @@ function renderItems(){
     const descOpen=openDescId===item.id;
     const photos=item.photos||[];
     const desc=item.description||'';
-    const star=item.isBestseller?STAR_FILL:STAR_OUTLINE;
+
+    const tagM = tagSelectHTML(item.id, 'marketing', item.tagMarketing);
+    const tagD = tagSelectHTML(item.id, 'dietary', item.tagDietary);
 
     const mainRow=isEd
       ?`<div class="irow-main" style="background:#f8fafc">
-          <div class="star-cell"><button class="star-btn ${item.isBestseller?'on':''}" onclick="toggleStar('${item.id}')">${star}</button></div>
+          <div class="tag-cell">${tagM}</div>
+          <div class="tag-cell">${tagD}</div>
           <div class="icell"><input class="edit-inp" id="en-${item.id}" value="${item.name}"/></div>
-          <div class="icell"><select class="cat-sel" id="ec-${item.id}">${cats.map(c=>`<option value="${c.id}"${c.id===(item.category||'MAIN')?' selected':''}>${c.label}</option>`).join('')}</select></div>
+          <div class="icell"><select class="cat-sel" id="ec-${item.id}">${cats.map(c=>`<option value="${c.code}"${c.code===(item.category||'MAIN')?' selected':''}>${c.label}</option>`).join('')}</select></div>
           <div class="icell"><input class="price-inp" id="ep-${item.id}" type="number" step="0.01" value="${item.price}"/></div>
           <div class="icell"><button class="photo-ibtn" onclick="openPhoto('${item.id}')">${PHOTO_ICO} ${photos.length}/3</button></div>
           <div class="act-cell"><button class="ib save" onclick="saveEdit('${item.id}')">${CHECK}</button><button class="ib cx" onclick="cancelEdit()">${XMARK}</button></div>
         </div>`
       :`<div class="irow-main">
-          <div class="star-cell"><button class="star-btn ${item.isBestseller?'on':''}" onclick="toggleStar('${item.id}')" title="Mark as bestseller">${star}</button></div>
+          <div class="tag-cell">${tagM}</div>
+          <div class="tag-cell">${tagD}</div>
           <div class="icell" style="cursor:pointer" onclick="toggleDesc('${item.id}')">
             <div class="iname-area">
               <div class="iname-row">
                 <span class="iname-text">${item.name}</span>
-                ${item.isBestseller?'<span class="bestseller-badge">BEST</span>':''}
               </div>
               <div class="idesc-text${desc?'':' empty'}">${desc||'Tap to add description...'}</div>
             </div>
@@ -936,17 +1023,30 @@ function renderItems(){
   updateStats();buildCatPills();
 }
 
+async function updateTag(id, type, value){
+  const item = items.find(i=>i.id===id);
+  if(!item) return;
+  const field = type === 'marketing' ? 'tagMarketing' : 'tagDietary';
+  const newVal = value || null;
+  try{
+    const updated = await api('PATCH','/api/menu/'+id, { [field]: newVal });
+    Object.assign(item, updated);
+    renderItems();
+    if(newVal) toast('Tag updated');
+  }catch(e){toast('Update failed: '+e.message);}
+}
+
 async function toggleStar(id){
   const item=items.find(i=>i.id===id);if(!item)return;
+  const newMarketing = item.tagMarketing === 'BESTSELLER' ? null : 'BESTSELLER';
   try{
-    const updated=await api('PATCH','/api/menu/'+id,{isBestseller:!item.isBestseller});
+    const updated=await api('PATCH','/api/menu/'+id,{tagMarketing:newMarketing});
     Object.assign(item,updated);renderItems();
-    toast(updated.isBestseller?'Marked as bestseller':'Removed from bestsellers');
   }catch(e){toast('Failed: '+e.message);}
 }
 
 function filterItems(cat){currentFilter=cat;editingId=null;openDescId=null;renderItems();}
-function populateAddSel(){document.getElementById('newCat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');}
+function populateAddSel(){document.getElementById('newCat').innerHTML=cats.map(c=>`<option value="${c.code}">${c.label}</option>`).join('');}
 
 function startEdit(id){editingId=id;openDescId=null;renderItems();}
 function cancelEdit(){editingId=null;renderItems();}
