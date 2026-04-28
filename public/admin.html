@@ -79,13 +79,22 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .irow.hdr span{font-size:10px;color:#64748b;font-weight:700;padding:10px 12px;display:block;text-transform:uppercase;letter-spacing:.4px}
 .icell{padding:10px 8px;display:flex;align-items:center;min-height:54px}
 .tag-cell{padding:8px 6px;display:flex;align-items:center;min-height:54px}
-.tag-select{font-size:10px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:5px 6px;cursor:pointer;width:100%;font-weight:600}
-.tag-select.t-NEW{background:rgba(59,130,246,.12);color:#3B82F6;border-color:rgba(59,130,246,.3)}
-.tag-select.t-BESTSELLER{background:rgba(245,158,11,.12);color:#92400e;border-color:rgba(245,158,11,.3)}
-.tag-select.t-OFFER{background:rgba(139,92,246,.12);color:#8B5CF6;border-color:rgba(139,92,246,.3)}
-.tag-select.t-SPICY{background:rgba(239,68,68,.12);color:#EF4444;border-color:rgba(239,68,68,.3)}
-.tag-select.t-VEGAN{background:rgba(16,185,129,.12);color:#10B981;border-color:rgba(16,185,129,.3)}
-.tag-select.t-GLUTEN_FREE{background:rgba(6,182,212,.12);color:#06B6D4;border-color:rgba(6,182,212,.3)}
+.tag-select{font-size:10px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:5px 6px;cursor:pointer;width:100%;font-weight:700}
+/* Marketing tags */
+.tag-select.t-NEW{background:#3B82F6;color:#fff;border-color:#3B82F6}
+.tag-select.t-BESTSELLER{background:#F59E0B;color:#fff;border-color:#F59E0B}
+.tag-select.t-OFFER{background:#8B5CF6;color:#fff;border-color:#8B5CF6}
+.tag-select.t-LIMITED{background:#F43F5E;color:#fff;border-color:#F43F5E}
+.tag-select.t-SEASONAL{background:#D97706;color:#fff;border-color:#D97706}
+.tag-select.t-LOCAL_FOOD{background:#047857;color:#fff;border-color:#047857}
+.tag-select.t-SOLD_OUT{background:#374151;color:#fff;border-color:#374151}
+/* Dietary tags */
+.tag-select.t-SPICY{background:#EF4444;color:#fff;border-color:#EF4444}
+.tag-select.t-VEGAN{background:#22C55E;color:#fff;border-color:#22C55E}
+.tag-select.t-GLUTEN_FREE{background:#06B6D4;color:#fff;border-color:#06B6D4}
+.tag-select.t-HALAL{background:#84CC16;color:#fff;border-color:#84CC16}
+.tag-select.t-DAIRY_FREE{background:#64748B;color:#fff;border-color:#64748B}
+.tag-select.t-PROTEIN_PLUS{background:#EC4899;color:#fff;border-color:#EC4899}
 .star-cell{padding:10px 6px;display:flex;align-items:center;justify-content:center}
 .star-btn{width:26px;height:26px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#cbd5e1;transition:.15s}
 .star-btn:hover{background:#fef3c7;color:var(--gold)}
@@ -970,8 +979,25 @@ function updateStats(){
 
 function tagSelectHTML(itemId, type, current){
   const groups = type === 'marketing'
-    ? [{val:'',label:'— None —'},{val:'NEW',label:'NEW'},{val:'BESTSELLER',label:'BESTSELLER'},{val:'OFFER',label:'OFFER'}]
-    : [{val:'',label:'— None —'},{val:'SPICY',label:'SPICY'},{val:'VEGAN',label:'VEGAN'},{val:'GLUTEN_FREE',label:'GLUTEN-FREE'}];
+    ? [
+        {val:'',label:'— None —'},
+        {val:'NEW',label:'NEW'},
+        {val:'BESTSELLER',label:'BESTSELLER'},
+        {val:'OFFER',label:'OFFER'},
+        {val:'LIMITED',label:'LIMITED'},
+        {val:'SEASONAL',label:'SEASONAL'},
+        {val:'LOCAL_FOOD',label:'LOCAL FOOD'},
+        {val:'SOLD_OUT',label:'SOLD OUT'},
+      ]
+    : [
+        {val:'',label:'— None —'},
+        {val:'SPICY',label:'SPICY'},
+        {val:'VEGAN',label:'VEGAN'},
+        {val:'GLUTEN_FREE',label:'GLUTEN-FREE'},
+        {val:'HALAL',label:'HALAL'},
+        {val:'DAIRY_FREE',label:'DAIRY-FREE'},
+        {val:'PROTEIN_PLUS',label:'PROTEIN+'},
+      ];
   const cur = current || '';
   const cls = cur ? ' t-'+cur : '';
   const opts = groups.map(g => `<option value="${g.val}"${g.val===cur?' selected':''}>${g.label}</option>`).join('');
@@ -1215,19 +1241,20 @@ function buildPreview(){
   if(pCur>=filtered.length)pCur=0;
   const wrap=document.getElementById('pslides');wrap.innerHTML='';
   
-  const TAG_LABELS = {NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE'};
+  const TAG_LABELS = {
+    NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',LIMITED:'LIMITED',SEASONAL:'SEASONAL',LOCAL_FOOD:'LOCAL FOOD',SOLD_OUT:'SOLD OUT',
+    SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'
+  };
   const TAG_COLORS = {
-    NEW:{bg:'rgba(59,130,246,.18)',col:'#60A5FA',br:'rgba(59,130,246,.4)'},
-    BESTSELLER:{bg:'rgba(245,158,11,.2)',col:'#FCD34D',br:'rgba(245,158,11,.45)'},
-    OFFER:{bg:'rgba(139,92,246,.2)',col:'#C4B5FD',br:'rgba(139,92,246,.45)'},
-    SPICY:{bg:'rgba(239,68,68,.2)',col:'#FCA5A5',br:'rgba(239,68,68,.45)'},
-    VEGAN:{bg:'rgba(16,185,129,.2)',col:'#6EE7B7',br:'rgba(16,185,129,.45)'},
-    GLUTEN_FREE:{bg:'rgba(6,182,212,.2)',col:'#67E8F9',br:'rgba(6,182,212,.45)'},
+    NEW:'#3B82F6', BESTSELLER:'#F59E0B', OFFER:'#8B5CF6', LIMITED:'#F43F5E',
+    SEASONAL:'#D97706', LOCAL_FOOD:'#047857', SOLD_OUT:'#374151',
+    SPICY:'#EF4444', VEGAN:'#22C55E', GLUTEN_FREE:'#06B6D4',
+    HALAL:'#84CC16', DAIRY_FREE:'#64748B', PROTEIN_PLUS:'#EC4899'
   };
   function tagHTML(t){
     if(!t) return '';
-    const c = TAG_COLORS[t]||{bg:'#fff2',col:'#fff',br:'#fff4'};
-    return `<div style="display:inline-flex;padding:3px 8px;border-radius:14px;font-size:9px;font-weight:800;letter-spacing:.4px;background:${c.bg};color:${c.col};border:1px solid ${c.br}">${TAG_LABELS[t]||t}</div>`;
+    const c = TAG_COLORS[t]||'#fff';
+    return `<div style="display:inline-flex;padding:3px 8px;border-radius:14px;font-size:9px;font-weight:800;letter-spacing:.4px;background:${c};color:#fff">${TAG_LABELS[t]||t}</div>`;
   }
   
   filtered.forEach((item,i)=>{
@@ -1239,9 +1266,9 @@ function buildPreview(){
     let mTag = item.tagMarketing;
     if(!mTag && item.isBestseller) mTag = 'BESTSELLER';
     const dTag = item.tagDietary;
-    const tagsRow = (mTag||dTag) ? `<div style="position:absolute;top:48px;left:0;right:0;padding:0 14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:5"><div>${tagHTML(mTag)}</div><div>${tagHTML(dTag)}</div></div>` : '';
+    const tagsRow = (mTag||dTag) ? `<div style="display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap">${tagHTML(mTag)}${tagHTML(dTag)}</div>` : '';
     
-    slide.innerHTML=`<div style="width:100%;height:100%;background:${cat.color}22;display:flex;align-items:center;justify-content:center">${photos[0]?`<img src="${photos[0].url}" style="width:100%;height:100%;object-fit:cover"/>`:`<svg width="60" height="60" viewBox="0 0 60 60" fill="none" opacity=".2"><rect x="8" y="8" width="44" height="44" rx="8" stroke="${cat.color}" stroke-width="2"/></svg>`}</div><div class="sgrad"></div>${tagsRow}<div class="sinfo"><div class="scat-tag">${cat.label}</div><div class="sname">${item.name}</div>${desc?`<div class="sdesc">${desc}</div>`:''}<div class="sprice">${sym}${item.price}</div></div>`;
+    slide.innerHTML=`<div style="width:100%;height:100%;background:${cat.color}22;display:flex;align-items:center;justify-content:center">${photos[0]?`<img src="${photos[0].url}" style="width:100%;height:100%;object-fit:cover"/>`:`<svg width="60" height="60" viewBox="0 0 60 60" fill="none" opacity=".2"><rect x="8" y="8" width="44" height="44" rx="8" stroke="${cat.color}" stroke-width="2"/></svg>`}</div><div class="sgrad"></div><div class="sinfo">${tagsRow}<div class="scat-tag">${cat.label}</div><div class="sname">${item.name}</div>${desc?`<div class="sdesc">${desc}</div>`:''}<div class="sprice">${sym}${item.price}</div></div>`;
     wrap.appendChild(slide);
   });
   document.getElementById('pprogf').style.width=filtered.length?Math.round((pCur+1)/filtered.length*100)+'%':'0%';

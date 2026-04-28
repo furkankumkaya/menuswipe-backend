@@ -63,26 +63,68 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 
 .grad{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.96),rgba(0,0,0,0));pointer-events:none}
 
-/* TAGS — sol üst (marketing), sağ üst (dietary) */
-.tags-row{
-  position:absolute;top:0;left:0;right:0;
-  padding:max(calc(env(safe-area-inset-top,0px) + 86px), 110px) 16px 0;
-  display:flex;justify-content:space-between;align-items:flex-start;
-  pointer-events:none;z-index:5;
-}
+/* TAGS — info bölgesinde, kategori üstünde */
+.tags-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
 .tag-pill{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:5px 11px;border-radius:20px;
+  display:inline-flex;align-items:center;
+  padding:4px 10px;border-radius:20px;
   font-size:11px;font-weight:800;letter-spacing:.4px;
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid;
+  color:#fff;
 }
-.tag-NEW{background:rgba(59,130,246,.18);color:#60A5FA;border-color:rgba(59,130,246,.4)}
-.tag-BESTSELLER{background:rgba(245,158,11,.2);color:#FCD34D;border-color:rgba(245,158,11,.45)}
-.tag-OFFER{background:rgba(139,92,246,.2);color:#C4B5FD;border-color:rgba(139,92,246,.45)}
-.tag-SPICY{background:rgba(239,68,68,.2);color:#FCA5A5;border-color:rgba(239,68,68,.45)}
-.tag-VEGAN{background:rgba(16,185,129,.2);color:#6EE7B7;border-color:rgba(16,185,129,.45)}
-.tag-GLUTEN_FREE{background:rgba(6,182,212,.2);color:#67E8F9;border-color:rgba(6,182,212,.45)}
+/* Marketing */
+.tag-NEW{background:#3B82F6}
+.tag-BESTSELLER{background:#F59E0B}
+.tag-OFFER{background:#8B5CF6}
+.tag-LIMITED{background:#F43F5E}
+.tag-SEASONAL{background:#D97706}
+.tag-LOCAL_FOOD{background:#047857}
+.tag-SOLD_OUT{background:#374151}
+/* Dietary */
+.tag-SPICY{background:#EF4444}
+.tag-VEGAN{background:#22C55E}
+.tag-GLUTEN_FREE{background:#06B6D4}
+.tag-HALAL{background:#84CC16}
+.tag-DAIRY_FREE{background:#64748B}
+.tag-PROTEIN_PLUS{background:#EC4899}
+
+/* FILTER BUTTON */
+.filter-btn{
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(255,255,255,.15);
+  border:2px solid rgba(255,255,255,.4);
+  cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:0;color:#fff;
+  position:relative;
+}
+.filter-btn.has-active{background:#8E1616;border-color:#8E1616}
+.filter-badge{
+  position:absolute;top:-2px;right:-2px;
+  width:16px;height:16px;border-radius:50%;
+  background:#fff;color:#8E1616;
+  font-size:10px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid #1D1616;
+}
+
+/* FILTER SHEET */
+.filter-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:90;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.filter-overlay.open{display:flex}
+.filter-sheet{background:#1D1616;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));color:#fff;position:relative}
+.filter-title{font-size:18px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px}
+.filter-sub{font-size:12px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:18px}
+.filter-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.filter-chip{
+  padding:9px 16px;border-radius:24px;
+  border:1.5px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.06);
+  color:#fff;font-size:13px;font-weight:700;cursor:pointer;
+}
+.filter-chip.on{background:#fff;color:#1D1616;border-color:#fff}
+.filter-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.filter-clear{padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+.filter-apply{padding:13px;border-radius:14px;border:none;background:#8E1616;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
 
 .info{position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));pointer-events:none}
 .cat-tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
@@ -152,10 +194,27 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
     <button class="profile-btn" id="profileBtn" onclick="openInfo()">
       <div class="profile-btn-fallback" id="profileFallback">M</div>
     </button>
+    <button class="filter-btn" id="filterBtn" onclick="openFilter()">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M5 10h10M8 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="filter-badge" id="filterBadge" style="display:none">0</div>
+    </button>
     <div class="cats" id="catBar"></div>
   </div>
   <div class="slides-wrap" id="slidesWrap"></div>
   <div class="prog"><div class="progf" id="progf"></div></div>
+</div>
+
+<div class="filter-overlay" id="filterOverlay">
+  <div class="filter-sheet">
+    <div class="info-handle"></div>
+    <div class="filter-title">Filter menu</div>
+    <div class="filter-sub">Show only items with these properties</div>
+    <div class="filter-grid" id="filterGrid"></div>
+    <div class="filter-actions">
+      <button class="filter-clear" onclick="clearFilter()">Clear</button>
+      <button class="filter-apply" onclick="applyFilter()">Apply</button>
+    </div>
+  </div>
 </div>
 
 <div class="info-overlay" id="infoOverlay">
@@ -178,11 +237,14 @@ const fromQr = new URLSearchParams(window.location.search).get('qr') === '1';
 const CURRENCIES_SYM={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',AED:'د.إ',SAR:'﷼',CAD:'$',AUD:'$',CHF:'Fr',INR:'₹',BRL:'R$',MXN:'$',KRW:'₩',SGD:'$',HKD:'$',NOK:'kr',SEK:'kr',DKK:'kr',PLN:'zł',RUB:'₽',ZAR:'R',THB:'฿',IDR:'Rp',MYR:'RM',PHP:'₱',VND:'₫',EGP:'£',ILS:'₪',NZD:'$',ARS:'$',CLP:'$',COP:'$',CZK:'Kč',HUF:'Ft',RON:'lei',PKR:'₨',BDT:'৳',NGN:'₦',KES:'KSh',GHS:'GH₵',MAD:'د.م.',QAR:'ر.ق'};
 
 const TAG_LABELS = {
-  NEW:'NEW', BESTSELLER:'BESTSELLER', OFFER:'OFFER',
-  SPICY:'SPICY', VEGAN:'VEGAN', GLUTEN_FREE:'GLUTEN-FREE'
+  NEW:'NEW', BESTSELLER:'BESTSELLER', OFFER:'OFFER', LIMITED:'LIMITED',
+  SEASONAL:'SEASONAL', LOCAL_FOOD:'LOCAL FOOD', SOLD_OUT:'SOLD OUT',
+  SPICY:'SPICY', VEGAN:'VEGAN', GLUTEN_FREE:'GLUTEN-FREE',
+  HALAL:'HALAL', DAIRY_FREE:'DAIRY-FREE', PROTEIN_PLUS:'PROTEIN+'
 };
+const DIETARY_TAGS = ['SPICY','VEGAN','GLUTEN_FREE','HALAL','DAIRY_FREE','PROTEIN_PLUS'];
 
-let allItems=[],filteredItems=[],currentCat='all';
+let allItems=[],filteredItems=[],currentCat='all',activeDietaryFilters=new Set();
 let curItem=0;
 let curPhoto={};
 let orgData=null,branchData=null,allBranches=[],categoriesMeta=[];
@@ -225,8 +287,16 @@ function catMeta(code){
 }
 
 function getFiltered(){
-  if(currentCat==='all') return allItems;
-  return allItems.filter(i=>(i.category||'MAIN')===currentCat);
+  let list = allItems;
+  if(currentCat !== 'all') list = list.filter(i => (i.category||'MAIN') === currentCat);
+  // Dietary filter: seçili olan TÜM tag'ler item'da olmalı (AND)
+  if(activeDietaryFilters.size > 0){
+    list = list.filter(i => {
+      // Item'ın dietary tag'i seçili filtrelerden BİRİNDE olmalı (OR mantığı daha kullanıcı dostu)
+      return activeDietaryFilters.has(i.tagDietary);
+    });
+  }
+  return list;
 }
 
 function init(){
@@ -286,14 +356,13 @@ function buildSlides(){
 
     const desc = item.description||'';
 
-    // Tag system: marketing left, dietary right (max 1 each)
+    // Tag system: marketing + dietary, max 2 tag
     let mTag = item.tagMarketing;
-    // Backward compat: isBestseller varsa ve tagMarketing yoksa BESTSELLER göster
     if(!mTag && item.isBestseller) mTag = 'BESTSELLER';
     const dTag = item.tagDietary;
     
     const tagsRow = (mTag || dTag) 
-      ? `<div class="tags-row"><div>${buildTagPill(mTag)}</div><div>${buildTagPill(dTag)}</div></div>`
+      ? `<div class="tags-row">${mTag?`<div class="tag-pill tag-${mTag}">${TAG_LABELS[mTag]||mTag}</div>`:''}${dTag?`<div class="tag-pill tag-${dTag}">${TAG_LABELS[dTag]||dTag}</div>`:''}</div>`
       : '';
 
     slide.innerHTML = `
@@ -301,8 +370,8 @@ function buildSlides(){
         ${photosHtml}
       </div>
       <div class="grad"></div>
-      ${tagsRow}
       <div class="info">
+        ${tagsRow}
         <div class="cat-tag">${cm.label}</div>
         <div class="item-name">${item.name}</div>
         ${desc?`<div class="item-desc">${desc}</div>`:''}
@@ -312,6 +381,71 @@ function buildSlides(){
     wrap.appendChild(slide);
   });
   trackItemView();
+}
+
+/* FILTER */
+function openFilter(){
+  buildFilterChips();
+  document.getElementById('filterOverlay').classList.add('open');
+}
+function closeFilter(){
+  document.getElementById('filterOverlay').classList.remove('open');
+}
+document.getElementById('filterOverlay').addEventListener('click',(e)=>{
+  if(e.target===document.getElementById('filterOverlay')) closeFilter();
+});
+function buildFilterChips(){
+  // Sadece menüdeki itemların sahip olduğu dietary tag'leri göster
+  const usedTags = new Set();
+  for(const item of allItems){
+    if(item.tagDietary) usedTags.add(item.tagDietary);
+  }
+  const tagList = DIETARY_TAGS.filter(t => usedTags.has(t));
+  
+  if(tagList.length === 0){
+    document.getElementById('filterGrid').innerHTML = '<div style="color:rgba(255,255,255,.5);font-size:13px;text-align:center;width:100%;padding:20px">No dietary properties available</div>';
+    return;
+  }
+  
+  document.getElementById('filterGrid').innerHTML = tagList.map(t => {
+    const isActive = activeDietaryFilters.has(t);
+    return `<div class="filter-chip${isActive?' on':''}" onclick="toggleFilterChip('${t}')">${TAG_LABELS[t]||t}</div>`;
+  }).join('');
+}
+function toggleFilterChip(tag){
+  if(activeDietaryFilters.has(tag)) activeDietaryFilters.delete(tag);
+  else activeDietaryFilters.add(tag);
+  buildFilterChips();
+}
+function clearFilter(){
+  activeDietaryFilters.clear();
+  updateFilterBadge();
+  filteredItems = getFiltered();
+  curItem = 0;
+  buildSlides();
+  updateProgress();
+  closeFilter();
+}
+function applyFilter(){
+  updateFilterBadge();
+  filteredItems = getFiltered();
+  curItem = 0;
+  buildSlides();
+  updateProgress();
+  closeFilter();
+}
+function updateFilterBadge(){
+  const btn = document.getElementById('filterBtn');
+  const badge = document.getElementById('filterBadge');
+  const count = activeDietaryFilters.size;
+  if(count > 0){
+    btn.classList.add('has-active');
+    badge.style.display = 'flex';
+    badge.textContent = count;
+  } else {
+    btn.classList.remove('has-active');
+    badge.style.display = 'none';
+  }
 }
 
 function trackItemView(){

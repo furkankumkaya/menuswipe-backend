@@ -36,8 +36,8 @@ function uploadToCloudinary(buffer, folder) {
   });
 }
 
-const VALID_MARKETING = ["NEW", "BESTSELLER", "OFFER", null];
-const VALID_DIETARY = ["SPICY", "VEGAN", "GLUTEN_FREE", null];
+const VALID_MARKETING = ["NEW", "BESTSELLER", "OFFER", "LIMITED", "SEASONAL", "LOCAL_FOOD", "SOLD_OUT", null];
+const VALID_DIETARY = ["SPICY", "VEGAN", "GLUTEN_FREE", "HALAL", "DAIRY_FREE", "PROTEIN_PLUS", null];
 
 function sanitizeTag(tag, validList) {
   if (tag === undefined) return undefined;
