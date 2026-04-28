@@ -203,8 +203,8 @@ async function boot(){
     document.getElementById('splashName').textContent = orgData.name;
     if(orgData.logoUrl){
       document.getElementById('splashLogo').innerHTML = `<img src="${orgData.logoUrl}" alt=""/>`;
-      const fb = document.getElementById('profileFallback');
-      if(fb) fb.outerHTML = `<img src="${orgData.logoUrl}" alt="${orgData.name}"/>`;
+      // Profile button içine direkt img koy, outerHTML ile DOM'u koru
+      document.getElementById('profileBtn').innerHTML = `<img src="${orgData.logoUrl}" alt="${orgData.name}"/>`;
     } else {
       document.getElementById('profileFallback').textContent = orgData.name.charAt(0).toUpperCase();
     }

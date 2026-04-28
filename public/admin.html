@@ -236,7 +236,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .pscreen{width:100%;aspect-ratio:9/19;background:#000;border-radius:28px;overflow:hidden;position:relative}
 .ptop{position:absolute;top:0;left:0;right:0;z-index:10;padding:14px 14px 0;display:flex;align-items:center;gap:8px}
 .ptop-logo{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.ptop-logo img{width:100%;height:100%;object-fit:cover}
+.ptop-logo img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .pcats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1}
 .pcats::-webkit-scrollbar{display:none}
 .pcat{padding:5px 13px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);background:rgba(255,255,255,.1)}
@@ -1207,33 +1207,56 @@ function deleteBranch(){
 /* PREVIEW */
 function buildPreview(){
   const sym=getCurrencySymbol();
-  const vc=visCats().map(c=>c.id);
+  const vc=visCats().map(c=>c.code);
   // Boş kategori filtresi
   const usedCats=new Set(items.map(i=>i.category));
-  const visibleCatsForPreview=visCats().filter(c=>usedCats.has(c.id));
+  const visibleCatsForPreview=visCats().filter(c=>usedCats.has(c.code));
   const filtered=(pCat==='all'?items:items.filter(i=>i.category===pCat)).filter(i=>vc.includes(i.category));
   if(pCur>=filtered.length)pCur=0;
   const wrap=document.getElementById('pslides');wrap.innerHTML='';
+  
+  const TAG_LABELS = {NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE'};
+  const TAG_COLORS = {
+    NEW:{bg:'rgba(59,130,246,.18)',col:'#60A5FA',br:'rgba(59,130,246,.4)'},
+    BESTSELLER:{bg:'rgba(245,158,11,.2)',col:'#FCD34D',br:'rgba(245,158,11,.45)'},
+    OFFER:{bg:'rgba(139,92,246,.2)',col:'#C4B5FD',br:'rgba(139,92,246,.45)'},
+    SPICY:{bg:'rgba(239,68,68,.2)',col:'#FCA5A5',br:'rgba(239,68,68,.45)'},
+    VEGAN:{bg:'rgba(16,185,129,.2)',col:'#6EE7B7',br:'rgba(16,185,129,.45)'},
+    GLUTEN_FREE:{bg:'rgba(6,182,212,.2)',col:'#67E8F9',br:'rgba(6,182,212,.45)'},
+  };
+  function tagHTML(t){
+    if(!t) return '';
+    const c = TAG_COLORS[t]||{bg:'#fff2',col:'#fff',br:'#fff4'};
+    return `<div style="display:inline-flex;padding:3px 8px;border-radius:14px;font-size:9px;font-weight:800;letter-spacing:.4px;background:${c.bg};color:${c.col};border:1px solid ${c.br}">${TAG_LABELS[t]||t}</div>`;
+  }
+  
   filtered.forEach((item,i)=>{
     const cat=catById(item.category||'MAIN');
     const photos=item.photos||[];
     const slide=document.createElement('div');slide.className='slide';
     slide.style.transform=`translateY(${(i-pCur)*100}%)`;
     const desc=item.description||'';
-    slide.innerHTML=`<div style="width:100%;height:100%;background:${cat.color}22;display:flex;align-items:center;justify-content:center">${photos[0]?`<img src="${photos[0].url}" style="width:100%;height:100%;object-fit:cover"/>`:`<svg width="60" height="60" viewBox="0 0 60 60" fill="none" opacity=".2"><rect x="8" y="8" width="44" height="44" rx="8" stroke="${cat.color}" stroke-width="2"/></svg>`}</div><div class="sgrad"></div><div class="sinfo">${item.isBestseller?'<div class="sbest-tag">★ BESTSELLER</div>':''}<div class="scat-tag">${cat.label}</div><div class="sname">${item.name}</div>${desc?`<div class="sdesc">${desc}</div>`:''}<div class="sprice">${sym}${item.price}</div></div>`;
+    let mTag = item.tagMarketing;
+    if(!mTag && item.isBestseller) mTag = 'BESTSELLER';
+    const dTag = item.tagDietary;
+    const tagsRow = (mTag||dTag) ? `<div style="position:absolute;top:48px;left:0;right:0;padding:0 14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:5"><div>${tagHTML(mTag)}</div><div>${tagHTML(dTag)}</div></div>` : '';
+    
+    slide.innerHTML=`<div style="width:100%;height:100%;background:${cat.color}22;display:flex;align-items:center;justify-content:center">${photos[0]?`<img src="${photos[0].url}" style="width:100%;height:100%;object-fit:cover"/>`:`<svg width="60" height="60" viewBox="0 0 60 60" fill="none" opacity=".2"><rect x="8" y="8" width="44" height="44" rx="8" stroke="${cat.color}" stroke-width="2"/></svg>`}</div><div class="sgrad"></div>${tagsRow}<div class="sinfo"><div class="scat-tag">${cat.label}</div><div class="sname">${item.name}</div>${desc?`<div class="sdesc">${desc}</div>`:''}<div class="sprice">${sym}${item.price}</div></div>`;
     wrap.appendChild(slide);
   });
   document.getElementById('pprogf').style.width=filtered.length?Math.round((pCur+1)/filtered.length*100)+'%':'0%';
   document.getElementById('pcount').textContent=filtered.length?`${pCur+1} / ${filtered.length}`:'0 / 0';
-  // Top logo
+  // Top logo - tam ortala, kırpma yok
   const lg=document.getElementById('pTopLogo');
-  if(org&&org.logoUrl){lg.innerHTML=`<img src="${org.logoUrl}"/>`;}
+  if(org&&org.logoUrl){
+    lg.innerHTML=`<img src="${org.logoUrl}" style="width:100%;height:100%;object-fit:cover;display:block"/>`;
+  }
   // Cats - only with content
-  const allC=[{id:'all',label:'All'},...visibleCatsForPreview];
-  document.getElementById('pcatBar').innerHTML=allC.map(c=>`<div class="pcat${c.id===pCat?' on':''}" onclick="setPCat('${c.id}')">${c.label}</div>`).join('');
+  const allC=[{code:'all',label:'All'},...visibleCatsForPreview];
+  document.getElementById('pcatBar').innerHTML=allC.map(c=>`<div class="pcat${c.code===pCat?' on':''}" onclick="setPCat('${c.code}')">${c.label}</div>`).join('');
 }
 function setPCat(c){pCat=c;pCur=0;buildPreview();}
-function pnext(){const f=(pCat==='all'?items:items.filter(i=>i.category===pCat)).filter(i=>visCats().map(c=>c.id).includes(i.category));if(pCur<f.length-1){pCur++;buildPreview();}}
+function pnext(){const f=(pCat==='all'?items:items.filter(i=>i.category===pCat)).filter(i=>visCats().map(c=>c.code).includes(i.category));if(pCur<f.length-1){pCur++;buildPreview();}}
 function pprev(){if(pCur>0){pCur--;buildPreview();}}
 
 /* QR */
