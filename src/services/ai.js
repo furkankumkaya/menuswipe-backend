@@ -4,8 +4,8 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const MODEL_PARSER = "claude-sonnet-4-20250514";
-const MODEL_DESC = "claude-sonnet-4-20250514";
+const MODEL_PARSER = "claude-sonnet-4-6";
+const MODEL_DESC = "claude-sonnet-4-6";
 const MODEL_TRANSLATE = "claude-haiku-4-5-20251001";
 
 /**
