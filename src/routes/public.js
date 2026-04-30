@@ -53,12 +53,56 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         active: true,
         itemBranches: { some: { branchId: selectedBranch.id } },
       },
-      include: { photos: { orderBy: { sortOrder: "asc" } } },
+      include: {
+        photos: { orderBy: { sortOrder: "asc" } },
+        translations: true,
+      },
       orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
     });
 
+    // Dil seçimi
+    const requestedLang = req.query.lang;
+    const defaultLang = org.defaultLanguage || "en";
+    const enabledLangs = org.enabledLanguages || [];
+    const allLangs = [defaultLang, ...enabledLangs];
+    const selectedLang = (requestedLang && allLangs.includes(requestedLang)) ? requestedLang : defaultLang;
+
+    // Item'ları seçili dile göre map et
+    const localizedItems = items.map(it => {
+      const tr = it.translations.find(t => t.language === selectedLang);
+      const useTranslation = selectedLang !== defaultLang && tr;
+      return {
+        id: it.id,
+        name: useTranslation ? tr.name : it.name,
+        description: useTranslation ? (tr.description || it.description) : it.description,
+        price: it.price,
+        category: it.category,
+        isBestseller: it.isBestseller,
+        tagMarketing: it.tagMarketing,
+        tagDietary: it.tagDietary,
+        sortOrder: it.sortOrder,
+        photos: it.photos,
+      };
+    });
+
+    // Kategorileri de localize et
+    const catsWithTranslations = await prisma.category.findMany({
+      where: { organizationId: org.id, visible: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      include: { translations: true },
+    });
+    const localizedCats = catsWithTranslations.map(c => {
+      const tr = c.translations.find(t => t.language === selectedLang);
+      const useTranslation = selectedLang !== defaultLang && tr;
+      return {
+        code: c.code,
+        label: useTranslation ? tr.label : c.label,
+        color: c.color,
+      };
+    });
+
     const cats = {};
-    for (const it of items) cats[it.category] = (cats[it.category] || 0) + 1;
+    for (const it of localizedItems) cats[it.category] = (cats[it.category] || 0) + 1;
 
     const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.ip || "unknown";
     prisma.menuView.create({
@@ -96,11 +140,12 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
       branches: activeBranches.map(b => ({
         id: b.id, name: b.name, slug: b.slug, city: b.city,
       })),
-      categories: org.categories.map(c => ({
-        code: c.code, label: c.label, color: c.color,
-      })),
-      items,
+      categories: localizedCats,
+      items: localizedItems,
       categoryCounts: cats,
+      currentLanguage: selectedLang,
+      defaultLanguage: defaultLang,
+      availableLanguages: allLangs,
     });
   } catch (err) { next(err); }
 });

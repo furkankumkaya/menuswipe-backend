@@ -106,7 +106,7 @@ model Category {
   organizationId  String
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   
-  code            String       // MAIN, STARTER, vb. ya da kullanıcı tanımlı
+  code            String
   label           String
   color           String       @default("#8E1616")
   visible         Boolean      @default(true)
@@ -115,7 +115,23 @@ model Category {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   
+  translations    CategoryTranslation[]
+  
   @@unique([organizationId, code])
+}
+
+model CategoryTranslation {
+  id          String   @id @default(uuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  language    String
+  label       String
+  isManualOverride Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([categoryId, language])
+  @@index([categoryId])
 }
 
 model MenuItem {
@@ -130,10 +146,11 @@ model MenuItem {
   
   active          Boolean      @default(true)
   isBestseller    Boolean      @default(false)
+  isProperName    Boolean      @default(false)
   
   // Tag sistemi
-  tagMarketing    String?      // NEW, BESTSELLER, OFFER, null
-  tagDietary      String?      // SPICY, VEGAN, GLUTEN_FREE, null
+  tagMarketing    String?
+  tagDietary      String?
   
   sortOrder       Int          @default(0)
   
@@ -142,6 +159,22 @@ model MenuItem {
   
   photos          MenuPhoto[]
   itemBranches    MenuItemBranch[]
+  translations    MenuItemTranslation[]
+}
+
+model MenuItemTranslation {
+  id              String   @id @default(uuid())
+  menuItemId      String
+  menuItem        MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  language        String
+  name            String
+  description     String?
+  isManualOverride Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([menuItemId, language])
+  @@index([menuItemId])
 }
 
 model MenuItemBranch {

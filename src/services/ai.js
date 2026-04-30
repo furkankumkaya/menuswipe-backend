@@ -155,80 +155,113 @@ Respond with ONLY the description text, nothing else.`,
 }
 
 /**
- * Item çevirisi - özel isimleri korur, açıklamayı çevirir
+ * Tek bir item için çeviri yapar, retry logic ile
+ * 1. ve 2. denemede direkt çeviri
+ * 3. denemede AI kendi araştırıp yazar
+ * Tümü başarısızsa null döner (caller orijinal dilini kullanır)
  */
-async function translateItems(items, sourceLanguage, targetLanguage) {
+async function translateItem(item, sourceLanguage, targetLanguage) {
   const sourceLang = getLanguageName(sourceLanguage);
   const targetLang = getLanguageName(targetLanguage);
+  
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      let prompt;
+      if (attempt < 3) {
+        // İlk iki deneme: direkt çeviri
+        prompt = `Translate this menu item from ${sourceLang} to ${targetLang}.
 
-  const itemsForAI = items.map(i => ({
-    id: i.id,
-    name: i.name,
-    description: i.description || "",
-    isProperName: i.isProperName || false,
-  }));
-
-  const response = await client.messages.create({
-    model: MODEL_TRANSLATE,
-    max_tokens: 8000,
-    messages: [{
-      role: "user",
-      content: `Translate these menu items from ${sourceLang} to ${targetLang}.
+Item:
+- Name: ${item.name}
+- Description: ${item.description || "(no description)"}
+- isProperName: ${item.isProperName ? "true" : "false"}
 
 Rules:
-- If isProperName is true, KEEP the original name unchanged
-- For non-proper names, translate to ${targetLang} naturally
-- Always translate descriptions (keep under 200 characters)
-- Do not add any explanations or notes in the name field
+- If isProperName is true, KEEP the original name unchanged in the translation
+- For non-proper names, translate naturally to ${targetLang}
+- Translate the description naturally (max 200 characters)
+- Don't add notes, explanations, or quotes
 - Output JSON only, no markdown
 
-Items: ${JSON.stringify(itemsForAI)}
+Respond with this exact JSON format:
+{"name": "translated or original", "description": "translated description"}`;
+      } else {
+        // 3. deneme: AI araştırıp kendi yazsın
+        prompt = `You are translating a restaurant menu item from ${sourceLang} to ${targetLang}.
 
-Respond with ONLY this JSON format:
-{
-  "translations": [
-    {"id": "...", "name": "translated or original", "description": "translated description"}
-  ]
-}`,
-    }],
-  });
+Item name: ${item.name}
+Category: ${item.category || "Main"}
+Original description: ${item.description || "(none provided)"}
+isProperName: ${item.isProperName ? "true" : "false"}
 
-  const textBlock = response.content.find(b => b.type === "text");
-  let jsonText = textBlock.text.trim();
-  if (jsonText.startsWith("```")) {
-    jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+Your task:
+- If isProperName is true, keep the name as is
+- Otherwise translate the name naturally
+- Even if the original description is poor or empty, write a NEW appetizing description in ${targetLang} (max 200 chars) based on what you know about this dish
+
+Respond with ONLY this JSON:
+{"name": "...", "description": "..."}`;
+      }
+
+      const response = await client.messages.create({
+        model: MODEL_TRANSLATE,
+        max_tokens: 500,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const textBlock = response.content.find(b => b.type === "text");
+      if (!textBlock) continue;
+      
+      let jsonText = textBlock.text.trim();
+      if (jsonText.startsWith("```")) {
+        jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      }
+      
+      const parsed = JSON.parse(jsonText);
+      if (parsed.name) {
+        return {
+          name: parsed.name,
+          description: (parsed.description || "").slice(0, 250),
+        };
+      }
+    } catch (e) {
+      console.warn(`Translation attempt ${attempt} failed for item "${item.name}" → ${targetLanguage}:`, e.message);
+      if (attempt === 3) return null;
+    }
   }
-  const parsed = JSON.parse(jsonText);
-  return parsed.translations || [];
+  return null;
 }
 
 /**
  * Kategori çevirisi
  */
-async function translateCategories(categories, sourceLanguage, targetLanguage) {
+async function translateCategory(label, sourceLanguage, targetLanguage) {
   const sourceLang = getLanguageName(sourceLanguage);
   const targetLang = getLanguageName(targetLanguage);
+  
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const response = await client.messages.create({
+        model: MODEL_TRANSLATE,
+        max_tokens: 100,
+        messages: [{
+          role: "user",
+          content: `Translate this menu category name from ${sourceLang} to ${targetLang}: "${label}"
 
-  const response = await client.messages.create({
-    model: MODEL_TRANSLATE,
-    max_tokens: 1000,
-    messages: [{
-      role: "user",
-      content: `Translate these menu category names from ${sourceLang} to ${targetLang}.
-
-Categories: ${JSON.stringify(categories.map(c => ({ id: c.id, label: c.label })))}
-
-Respond with ONLY this JSON:
-{"translations":[{"id":"...","label":"translated label"}]}`,
-    }],
-  });
-
-  const textBlock = response.content.find(b => b.type === "text");
-  let jsonText = textBlock.text.trim();
-  if (jsonText.startsWith("```")) {
-    jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+Respond with ONLY the translated label, nothing else. No quotes, no explanations.`,
+        }],
+      });
+      
+      const textBlock = response.content.find(b => b.type === "text");
+      if (textBlock) {
+        const result = textBlock.text.trim().replace(/^["']|["']$/g, "").slice(0, 100);
+        if (result) return result;
+      }
+    } catch (e) {
+      if (attempt === 2) return null;
+    }
   }
-  return JSON.parse(jsonText).translations || [];
+  return null;
 }
 
 function getLanguageName(code) {
@@ -249,7 +282,7 @@ function getLanguageName(code) {
 module.exports = {
   extractMenuFromFiles,
   generateDescription,
-  translateItems,
-  translateCategories,
+  translateItem,
+  translateCategory,
   getLanguageName,
 };

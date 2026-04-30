@@ -67,7 +67,7 @@ router.get("/", requireAuth, async (req, res, next) => {
 
 router.post("/", requireAuth, async (req, res, next) => {
   try {
-    const { name, description, price, category, branchIds, isBestseller, tagMarketing, tagDietary } = req.body;
+    const { name, description, price, category, branchIds, isBestseller, tagMarketing, tagDietary, isProperName } = req.body;
     if (!name || price === undefined) return res.status(400).json({ error: "name and price required" });
 
     let targetBranches = branchIds;
@@ -86,12 +86,17 @@ router.post("/", requireAuth, async (req, res, next) => {
         price: parseFloat(price),
         category: category || "MAIN",
         isBestseller: !!isBestseller,
+        isProperName: !!isProperName,
         tagMarketing: sanitizeTag(tagMarketing, VALID_MARKETING) ?? null,
         tagDietary: sanitizeTag(tagDietary, VALID_DIETARY) ?? null,
         itemBranches: { create: targetBranches.map(bid => ({ branchId: bid })) },
       },
       include: { photos: true, itemBranches: true },
     });
+
+    // Async: aktif diller için açıklama + çeviri tetikle (background, response'u beklemiyor)
+    triggerAutoTranslate(item.id, req.org).catch(e => console.error("Auto-translate failed:", e.message));
+
     res.status(201).json({
       ...item,
       branchIds: item.itemBranches.map(ib => ib.branchId),
@@ -99,6 +104,63 @@ router.post("/", requireAuth, async (req, res, next) => {
     });
   } catch (err) { next(err); }
 });
+
+// Background: yeni item için açıklama oluştur + tüm aktif dillere çevir
+async function triggerAutoTranslate(itemId, org) {
+  try {
+    const enabled = org.enabledLanguages || [];
+    if (enabled.length === 0) return;
+
+    const item = await prisma.menuItem.findUnique({ where: { id: itemId } });
+    if (!item) return;
+
+    // Eğer açıklama yoksa ana dilde oluştur
+    let workingItem = item;
+    if (!item.description || item.description.trim() === "") {
+      try {
+        const { generateDescription } = require("../services/ai");
+        const cat = await prisma.category.findFirst({
+          where: { organizationId: org.id, code: item.category },
+        });
+        const desc = await generateDescription(item.name, cat?.label || "Main", org.defaultLanguage || "en");
+        if (desc) {
+          workingItem = await prisma.menuItem.update({
+            where: { id: itemId },
+            data: { description: desc },
+          });
+        }
+      } catch (e) { console.warn("Description generation failed:", e.message); }
+    }
+
+    // Çevirileri yap
+    const { translateItem } = require("../services/ai");
+    const sourceLanguage = org.defaultLanguage || "en";
+    for (const lang of enabled) {
+      try {
+        const result = await translateItem(
+          { name: workingItem.name, description: workingItem.description, isProperName: workingItem.isProperName, category: workingItem.category },
+          sourceLanguage,
+          lang
+        );
+        if (result) {
+          await prisma.menuItemTranslation.upsert({
+            where: { menuItemId_language: { menuItemId: itemId, language: lang } },
+            create: {
+              menuItemId: itemId,
+              language: lang,
+              name: result.name,
+              description: result.description,
+              isManualOverride: false,
+            },
+            update: { name: result.name, description: result.description, isManualOverride: false },
+          });
+        }
+      } catch (e) { console.warn(`Translate to ${lang} failed:`, e.message); }
+    }
+  } catch (err) {
+    console.error("triggerAutoTranslate error:", err);
+  }
+}
 
 router.patch("/:id", requireAuth, async (req, res, next) => {
   try {

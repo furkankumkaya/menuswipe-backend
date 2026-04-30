@@ -765,6 +765,23 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         </div>
       </div>
 
+      <!-- Languages section -->
+      <div class="profile-section-title" style="margin-top:16px">Languages & translations</div>
+      <div class="profile-section">
+        <div class="profile-row clickable" onclick="toggleSection('langSection',this);if(!event.target.closest('.collapsible-content'))loadLanguages();">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b" id="langSectionTitle">Menu translations</div>
+            <div style="font-size:11px;color:#64748b" id="langSectionSub">Show your menu in multiple languages</div>
+          </div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="collapsible-content" id="langSection">
+          <div id="langContent" style="padding:8px 0">
+            <div style="font-size:12px;color:#94a3b8;text-align:center;padding:20px">Loading...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Branches -->
       <div class="profile-section-title">Branches</div>
       <div class="profile-section" style="background:transparent;border:none;padding:0">
@@ -873,6 +890,7 @@ const PHOTO_ICO='<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><re
 const STAR_FILL='<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l1.94 4.07 4.49.65-3.25 3.16.77 4.46L8 11.74l-4.01 2.1.77-4.46L1.51 6.22l4.49-.65L8 1.5z"/></svg>';
 const STAR_OUTLINE='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.94 4.07 4.49.65-3.25 3.16.77 4.46L8 11.74l-4.01 2.1.77-4.46L1.51 6.22l4.49-.65L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
 const SPARK='<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 4 4 1.5-4 1.5L7 12l-1.5-4-4-1.5 4-1.5L7 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>';
+const TRANSLATE_ICO='<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 4h6M5 2v8M2 10l3-6 3 6M9 11l3-3 3 3M11 8v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 async function api(method,path,body){
   const opts={method,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}};
@@ -1668,7 +1686,7 @@ function renderItems(){
           <div class="icell"><span class="ctag" style="border-left:3px solid ${cat.color}">${cat.label}</span></div>
           <div class="icell" style="font-size:13px;font-weight:700;color:#1e293b">${sym}${item.price}</div>
           <div class="icell"><button class="photo-ibtn" onclick="openPhoto('${item.id}')">${PHOTO_ICO} ${photos.length}/3</button></div>
-          <div class="act-cell"><button class="ib" onclick="startEdit('${item.id}')">${PENCIL}</button><button class="ib" onclick="askDelete('${item.id}','${(item.name||'').replace(/'/g,"\\'")}',\'item\')">${TRASH}</button></div>
+          <div class="act-cell"><button class="ib" onclick="openItemTranslations('${item.id}')" title="Translations" style="${(org?.enabledLanguages||[]).length===0?'display:none':''}">${TRANSLATE_ICO}</button><button class="ib" onclick="startEdit('${item.id}')">${PENCIL}</button><button class="ib" onclick="askDelete('${item.id}','${(item.name||'').replace(/'/g,"\\'")}',\'item\')">${TRASH}</button></div>
         </div>`;
     const descSec=`<div class="desc-ed${descOpen?' open':''}"><div class="desc-inner"><textarea class="desc-ta" id="dt-${item.id}" maxlength="${DESC_MAX}" placeholder="Describe this dish..." oninput="descCount('${item.id}')">${desc}</textarea><div class="desc-right"><div class="desc-cnt" id="dc-${item.id}">${desc.length}/${DESC_MAX}</div><button class="ai-gen-btn" id="ai-${item.id}" onclick="aiGenerateDesc('${item.id}')" title="Generate with AI">${SPARK}</button><button class="ok-btn" onclick="saveDesc('${item.id}')">${CHECK}</button></div></div></div>`;
     return `<div class="irow${isEd?' editing':''}">${mainRow}${descSec}</div>`;
@@ -1758,6 +1776,317 @@ async function aiGenerateDesc(id){
   }finally{
     btn.disabled=false;btn.classList.remove('spinning');
   }
+}
+
+/* ============== TRANSLATIONS ============== */
+let translationData = null;
+let translationJobId = null;
+let translationPolling = null;
+
+async function loadLanguages(){
+  try{
+    translationData = await api('GET','/api/translations');
+    renderLanguages();
+  }catch(e){
+    document.getElementById('langContent').innerHTML = `<div style="color:#ef4444;font-size:12px;padding:12px">Failed to load: ${e.message}</div>`;
+  }
+}
+
+function renderLanguages(){
+  if(!translationData) return;
+  const d = translationData;
+  const defaultLangName = (LANGUAGES.find(l=>l.code===d.defaultLanguage)?.name)||d.defaultLanguage;
+  const enabled = d.enabledLanguages || [];
+  const maxLangs = d.maxLanguages;
+  
+  let limitText = '';
+  if(maxLangs === -1) limitText = 'Unlimited languages';
+  else limitText = `${enabled.length} / ${maxLangs} additional languages`;
+  
+  let html = `
+    <div style="font-size:11px;color:#64748b;margin-bottom:10px;font-weight:600">${limitText}</div>
+    
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <div style="width:28px;height:28px;border-radius:7px;background:#8E1616;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${d.defaultLanguage.toUpperCase()}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#1e293b">${defaultLangName}</div>
+        <div style="font-size:10px;color:#64748b">Main language · ${d.totalItems} items</div>
+      </div>
+      <div style="font-size:10px;color:#64748b;font-weight:600">DEFAULT</div>
+    </div>`;
+  
+  // Aktif diller
+  for(const lang of enabled){
+    const langName = (LANGUAGES.find(l=>l.code===lang)?.name)||lang;
+    const cov = (d.coverage||[]).find(c=>c.language===lang);
+    const pct = cov?.percentage||0;
+    html += `
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="width:28px;height:28px;border-radius:7px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${lang.toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#1e293b">${langName}</div>
+          <div style="font-size:10px;color:#64748b">${cov?.translatedCount||0} / ${cov?.totalItems||0} translated · ${pct}%</div>
+        </div>
+        <button onclick="removeLanguage('${lang}')" style="width:28px;height:28px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center" title="Remove">${TRASH}</button>
+      </div>`;
+  }
+  
+  // Add language butonu
+  if(maxLangs === -1 || enabled.length < maxLangs){
+    html += `<button class="btn-gh" onclick="openAddLanguage()" style="width:100%;justify-content:center;margin-top:6px">+ Add language</button>`;
+  } else {
+    html += `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:6px">
+      <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:2px">Plan limit reached</div>
+      <div style="font-size:10px;color:#92400e">Upgrade to Pro for unlimited languages</div>
+    </div>`;
+  }
+  
+  // Translate all butonu
+  if(enabled.length > 0 && d.totalItems > 0){
+    html += `<button class="btn-dk" onclick="startTranslateAll()" style="width:100%;margin-top:10px">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="margin-right:6px"><path d="M2 4h6M5 2v8M2 10l3-6 3 6M9 11l3-3 3 3M11 8v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Re-translate all items
+    </button>`;
+    html += `<div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:6px;line-height:1.4">Manually edited translations will not be overwritten.</div>`;
+  }
+  
+  document.getElementById('langContent').innerHTML = html;
+  document.getElementById('langSectionSub').textContent = enabled.length === 0 
+    ? 'Show your menu in multiple languages' 
+    : `${enabled.length} additional language${enabled.length===1?'':'s'} active`;
+}
+
+async function openAddLanguage(){
+  const enabled = (translationData?.enabledLanguages)||[];
+  const defaultLang = translationData?.defaultLanguage||'en';
+  const available = LANGUAGES.filter(l => l.code !== defaultLang && !enabled.includes(l.code));
+  
+  // Mini overlay
+  const html = `
+    <div id="langPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:380px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px">
+          <div style="flex:1;font-size:14px;font-weight:700;color:#1e293b">Add a language</div>
+          <button onclick="document.getElementById('langPickerOverlay').remove()" style="width:28px;height:28px;border-radius:6px;border:none;background:#f1f5f9;cursor:pointer;color:#475569">${XMARK}</button>
+        </div>
+        <input type="text" id="langSearchInput" placeholder="Search..." oninput="filterLangPicker(this.value)" style="margin:10px 14px;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"/>
+        <div id="langPickerList" style="flex:1;overflow-y:auto;padding:0 6px 14px">
+          ${available.map(l=>`<button onclick="addLanguage('${l.code}')" data-name="${l.name.toLowerCase()}" style="width:100%;padding:10px 12px;border:none;background:transparent;cursor:pointer;text-align:left;border-radius:8px;display:flex;align-items:center;gap:10px;font-size:13px" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <span style="width:26px;height:26px;border-radius:6px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">${l.code.toUpperCase()}</span>
+            <span style="color:#1e293b;font-weight:600">${l.name}</span>
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(()=>document.getElementById('langSearchInput').focus(), 50);
+}
+
+function filterLangPicker(query){
+  const q = query.toLowerCase();
+  document.querySelectorAll('#langPickerList button').forEach(btn=>{
+    const name = btn.getAttribute('data-name');
+    btn.style.display = name.includes(q) ? 'flex' : 'none';
+  });
+}
+
+async function addLanguage(code){
+  document.getElementById('langPickerOverlay')?.remove();
+  try{
+    await api('POST','/api/translations/languages',{add:[code]});
+    await loadLanguages();
+    toast('Language added. Translating in background...');
+    // Otomatik translate-all başlat
+    startTranslateAll(true);
+  }catch(e){
+    toast('Failed: '+e.message);
+  }
+}
+
+async function removeLanguage(code){
+  if(!confirm(`Remove ${code.toUpperCase()}? Translations will be deleted.`)) return;
+  try{
+    await api('POST','/api/translations/languages',{remove:[code]});
+    await loadLanguages();
+    toast('Language removed');
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+async function startTranslateAll(silent=false){
+  try{
+    const res = await api('POST','/api/translations/translate-all',{});
+    translationJobId = res.jobId;
+    if(!silent) toast('Translation started...');
+    pollTranslationJob();
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+async function pollTranslationJob(){
+  if(!translationJobId) return;
+  if(translationPolling) clearInterval(translationPolling);
+  
+  const updateUI = (job) => {
+    const btn = document.querySelector('[onclick="startTranslateAll()"]');
+    if(!btn) return;
+    if(job.status === 'processing'){
+      const pct = job.total > 0 ? Math.round((job.done/job.total)*100) : 0;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="margin-right:6px;animation:spin 1s linear infinite"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="20 8" fill="none"/></svg> Translating ${pct}% (${job.done}/${job.total})`;
+      btn.disabled = true;
+    } else if(job.status === 'done'){
+      btn.innerHTML = `Re-translate all items`;
+      btn.disabled = false;
+      loadLanguages();
+      toast(`Translation complete${job.failed>0?' ('+job.failed+' failed)':''}`);
+    } else if(job.status === 'failed'){
+      btn.innerHTML = `Re-translate all items`;
+      btn.disabled = false;
+      toast('Translation failed: '+(job.error||''));
+    }
+  };
+  
+  translationPolling = setInterval(async ()=>{
+    try{
+      const job = await api('GET','/api/translations/job/'+translationJobId);
+      updateUI(job);
+      if(job.status !== 'processing'){
+        clearInterval(translationPolling);
+        translationPolling = null;
+        translationJobId = null;
+      }
+    }catch(e){}
+  }, 2500);
+  
+  // İlk hemen kontrol
+  setTimeout(async ()=>{
+    try{
+      const job = await api('GET','/api/translations/job/'+translationJobId);
+      updateUI(job);
+    }catch(e){}
+  }, 800);
+}
+
+/* Item translation editor modal */
+let currentTranslationItem = null;
+let currentTranslationLang = null;
+
+async function openItemTranslations(itemId){
+  try{
+    const data = await api('GET','/api/translations/item/'+itemId);
+    currentTranslationItem = data;
+    
+    if((data.enabledLanguages||[]).length === 0){
+      toast('No additional languages enabled. Add languages in Profile > Languages.');
+      return;
+    }
+    
+    currentTranslationLang = data.enabledLanguages[0];
+    renderItemTranslationModal();
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+function renderItemTranslationModal(){
+  const d = currentTranslationItem;
+  if(!d) return;
+  
+  const lang = currentTranslationLang;
+  const tr = d.translations.find(t=>t.language===lang) || {language:lang, name:'', description:'', isManualOverride:false};
+  
+  const langSelect = d.enabledLanguages.map(l=>{
+    const ln = (LANGUAGES.find(x=>x.code===l)?.name)||l;
+    return `<option value="${l}"${l===lang?' selected':''}>${ln}</option>`;
+  }).join('');
+  
+  // Source dilini göster
+  const sourceLangName = (LANGUAGES.find(l=>l.code===d.sourceLanguage)?.name)||d.sourceLanguage;
+  
+  let existing = document.getElementById('itemTransOverlay');
+  if(existing) existing.remove();
+  
+  const html = `
+    <div id="itemTransOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:250;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)" onclick="if(event.target===this)closeItemTranslations()">
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:800;color:#1e293b">Translations</div>
+            <div style="font-size:11px;color:#64748b">${d.name}</div>
+          </div>
+          <button onclick="closeItemTranslations()" style="width:30px;height:30px;border-radius:7px;border:none;background:#f1f5f9;cursor:pointer;color:#475569">${XMARK}</button>
+        </div>
+        
+        <div style="padding:14px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+          <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Original (${sourceLangName})</div>
+          <div style="font-size:13px;font-weight:700;color:#1e293b">${d.name}</div>
+          <div style="font-size:12px;color:#475569;margin-top:3px">${d.description||'<em style="color:#94a3b8">No description</em>'}</div>
+        </div>
+        
+        <div style="padding:14px 18px;flex:1;overflow-y:auto">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <label style="font-size:11px;color:#64748b;font-weight:600">Translate to:</label>
+            <select onchange="switchTranslationLang(this.value)" style="flex:1;padding:7px 9px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600">
+              ${langSelect}
+            </select>
+            ${tr.isManualOverride?'<span style="font-size:9px;font-weight:800;color:#8E1616;background:#fef2f2;padding:3px 8px;border-radius:10px">EDITED</span>':''}
+          </div>
+          
+          <div style="margin-bottom:10px">
+            <label style="font-size:11px;color:#64748b;font-weight:600;display:block;margin-bottom:4px">Name</label>
+            <input id="itemTransName" type="text" value="${escapeAttr(tr.name||'')}" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"/>
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="font-size:11px;color:#64748b;font-weight:600;display:block;margin-bottom:4px">Description</label>
+            <textarea id="itemTransDesc" rows="3" maxlength="250" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;resize:none;font-family:inherit">${escapeHtml(tr.description||'')}</textarea>
+          </div>
+        </div>
+        
+        <div style="padding:12px 18px;border-top:1px solid #e2e8f0;display:flex;gap:8px;justify-content:space-between">
+          <button class="btn-gh" onclick="resetItemTranslation()" style="font-size:12px">Reset to AI</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn-gh" onclick="closeItemTranslations()">Cancel</button>
+            <button class="btn-dk" onclick="saveItemTranslation()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function switchTranslationLang(lang){
+  currentTranslationLang = lang;
+  renderItemTranslationModal();
+}
+
+function closeItemTranslations(){
+  document.getElementById('itemTransOverlay')?.remove();
+  currentTranslationItem = null;
+}
+
+async function saveItemTranslation(){
+  const name = document.getElementById('itemTransName').value.trim();
+  const description = document.getElementById('itemTransDesc').value.trim();
+  if(!name) return toast('Name required');
+  
+  try{
+    await api('PATCH','/api/translations/item/'+currentTranslationItem.itemId+'/'+currentTranslationLang, { name, description });
+    toast('Translation saved');
+    // Re-fetch
+    const data = await api('GET','/api/translations/item/'+currentTranslationItem.itemId);
+    currentTranslationItem = data;
+    renderItemTranslationModal();
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+async function resetItemTranslation(){
+  if(!confirm('Reset to AI translation? Your manual edits will be lost.')) return;
+  try{
+    await api('DELETE','/api/translations/item/'+currentTranslationItem.itemId+'/'+currentTranslationLang);
+    // Re-translate this single item to this language
+    await api('POST','/api/translations/item/'+currentTranslationItem.itemId+'/translate', { languages: [currentTranslationLang] });
+    const data = await api('GET','/api/translations/item/'+currentTranslationItem.itemId);
+    currentTranslationItem = data;
+    renderItemTranslationModal();
+    toast('Reset done');
+  }catch(e){toast('Failed: '+e.message);}
 }
 function showAddRow(){populateAddSel();document.getElementById('addRow').classList.add('show');document.getElementById('newName').focus();}
 function hideAddRow(){document.getElementById('addRow').classList.remove('show');document.getElementById('newName').value='';document.getElementById('newPrice').value='';}
