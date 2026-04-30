@@ -117,6 +117,7 @@ router.patch("/organization", requireAuth, async (req, res, next) => {
       "workingHours",
       "defaultLanguage", "enabledLanguages",
       "onboardingCompleted",
+      "orderListEnabled",
     ];
     const data = {};
     for (const key of allowed) {
@@ -148,6 +149,7 @@ function orgPublic(o) {
     defaultLanguage: o.defaultLanguage || "en",
     enabledLanguages: o.enabledLanguages || [],
     onboardingCompleted: o.onboardingCompleted,
+    orderListEnabled: o.orderListEnabled !== false,
   };
 }
 

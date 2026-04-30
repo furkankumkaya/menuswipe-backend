@@ -156,6 +156,115 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .lang-row.on .lang-code{background:rgba(255,255,255,.25)}
 .lang-name{flex:1;font-size:14px;font-weight:600}
 
+/* ORDER LIST */
+.add-btn{
+  position:absolute;right:18px;bottom:calc(20px + env(safe-area-inset-bottom,0px) + 10px);
+  width:54px;height:54px;border-radius:50%;
+  background:#8E1616;border:none;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 20px rgba(142,22,22,.5);
+  transition:transform .15s, background .2s;
+  z-index:6;
+}
+.add-btn:active{transform:scale(.92)}
+.add-btn.in-list{background:#1a8754}
+.qty-controls{
+  position:absolute;right:18px;bottom:calc(20px + env(safe-area-inset-bottom,0px) + 10px);
+  display:flex;align-items:center;
+  background:#1a8754;border-radius:30px;
+  box-shadow:0 6px 20px rgba(26,135,84,.5);
+  z-index:6;height:54px;
+}
+.qty-btn{
+  width:44px;height:54px;border:none;background:transparent;
+  color:#fff;font-size:22px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.qty-num{
+  min-width:30px;color:#fff;font-size:18px;font-weight:800;
+  text-align:center;
+}
+
+/* CART BADGE on profile button */
+.cart-badge{
+  position:absolute;top:-3px;right:-3px;
+  min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:#fff;color:#8E1616;
+  font-size:10px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid #1D1616;
+}
+
+/* CART/ORDER LIST FAB */
+.order-fab{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  background:#fff;color:#1D1616;
+  padding:12px 18px;border-radius:30px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 6px 24px rgba(0,0,0,.4);
+  cursor:pointer;border:none;
+  font-size:13px;font-weight:800;
+  z-index:7;
+  transition:opacity .25s, transform .25s;
+}
+.order-fab.hide{opacity:0;transform:translate(-50%, 20px);pointer-events:none}
+.order-fab-count{
+  background:#8E1616;color:#fff;
+  min-width:22px;height:22px;border-radius:11px;
+  font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;padding:0 6px;
+}
+
+/* ORDER SHEET */
+.order-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:95;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.order-overlay.open{display:flex}
+.order-sheet{background:#1D1616;border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:88vh;overflow:hidden;color:#fff;display:flex;flex-direction:column}
+.order-sheet-header{padding:18px 20px 12px;flex-shrink:0}
+.order-sheet-body{flex:1;overflow-y:auto;padding:0 16px}
+.order-sheet-footer{padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;background:#1D1616}
+
+.order-row{display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(255,255,255,.06);border-radius:14px;margin-bottom:8px}
+.order-thumb{width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,.05);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.order-thumb img{width:100%;height:100%;object-fit:cover}
+.order-info{flex:1;min-width:0}
+.order-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-orig{font-size:11px;color:rgba(255,255,255,.5);font-style:italic;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-price{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
+.order-qty{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:18px;padding:3px;flex-shrink:0}
+.order-qty button{width:28px;height:28px;border:none;background:transparent;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.order-qty button:hover{background:rgba(255,255,255,.1)}
+.order-qty .num{min-width:18px;text-align:center;color:#fff;font-weight:800;font-size:13px}
+.order-total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 4px}
+.order-total-label{font-size:13px;color:rgba(255,255,255,.6);font-weight:600}
+.order-total-amt{font-size:22px;font-weight:800;color:#fff}
+.order-empty{padding:48px 24px;text-align:center;color:rgba(255,255,255,.5);font-size:14px}
+
+/* WAITER MODE */
+.waiter-screen{position:fixed;inset:0;background:#000;z-index:200;color:#fff;display:none;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.waiter-screen.open{display:flex}
+.waiter-header{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.1)}
+.waiter-title{flex:1;font-size:16px;font-weight:800}
+.waiter-close{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.waiter-list{flex:1;overflow-y:auto;padding:14px 16px}
+.waiter-item{display:flex;align-items:flex-start;gap:14px;padding:18px 14px;background:#1a1a1a;border-radius:16px;margin-bottom:10px}
+.waiter-qty{
+  font-size:32px;font-weight:800;color:#fff;
+  min-width:50px;
+}
+.waiter-qty .x{font-size:18px;color:rgba(255,255,255,.5);margin-right:2px}
+.waiter-text{flex:1;min-width:0}
+.waiter-name{font-size:22px;font-weight:800;color:#fff;line-height:1.2;letter-spacing:-0.3px}
+.waiter-trans{font-size:13px;color:rgba(255,255,255,.45);font-style:italic;margin-top:4px;line-height:1.3}
+.waiter-price{font-size:18px;font-weight:700;color:#fff;flex-shrink:0;margin-left:8px}
+.waiter-total{
+  border-top:2px solid rgba(255,255,255,.15);
+  padding:18px 16px calc(20px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;justify-content:space-between;
+}
+.waiter-total-label{font-size:14px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px}
+.waiter-total-amt{font-size:32px;font-weight:800;color:#fff}
+
 .info{position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));pointer-events:none}
 .cat-tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
 .item-name{font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:5px}
@@ -248,6 +357,60 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   </div>
 </div>
 
+<!-- Order list FAB (görünür: liste boş değilse) -->
+<button class="order-fab hide" id="orderFab" onclick="openOrderSheet()">
+  <span id="orderFabCount" class="order-fab-count">0</span>
+  <span id="orderFabLabel">View order</span>
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<!-- Order sheet -->
+<div class="order-overlay" id="orderOverlay">
+  <div class="order-sheet">
+    <div class="order-sheet-header">
+      <div class="info-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-size:18px;font-weight:800">My order</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px" id="orderSubtitle">Your selection</div>
+        </div>
+        <button onclick="closeOrderSheet()" style="width:32px;height:32px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="order-sheet-body" id="orderItems"></div>
+    <div class="order-sheet-footer">
+      <div class="order-total-row">
+        <span class="order-total-label">Total</span>
+        <span class="order-total-amt" id="orderTotal">$0</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:8px">
+        <button onclick="clearOrder()" style="padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Clear</button>
+        <button onclick="openWaiterMode()" style="padding:13px;border-radius:14px;border:none;background:#fff;color:#1D1616;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 13c0-3 2.5-5 5-5s5 2 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Show to waiter
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Waiter mode (full screen) -->
+<div class="waiter-screen" id="waiterScreen">
+  <div class="waiter-header">
+    <div class="waiter-title">Order summary</div>
+    <button class="waiter-close" onclick="closeWaiterMode()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="waiter-list" id="waiterList"></div>
+  <div class="waiter-total">
+    <span class="waiter-total-label">Total</span>
+    <span class="waiter-total-amt" id="waiterTotal">$0</span>
+  </div>
+</div>
+
 <div class="filter-overlay" id="filterOverlay">
   <div class="filter-sheet">
     <div class="info-handle"></div>
@@ -299,6 +462,7 @@ let allItems=[],filteredItems=[],currentCat='all',activeDietaryFilters=new Set()
 let currentLang = null;
 let availableLanguages = [];
 let defaultLanguage = 'en';
+let orderList = {};  // { itemId: { qty, name, originalName, price, photoUrl } }
 let curItem=0;
 let curPhoto={};
 let orgData=null,branchData=null,allBranches=[],categoriesMeta=[];
@@ -311,8 +475,172 @@ async function boot(){
   const browserLang = navigator.language?.split('-')[0];
   currentLang = urlLang || savedLang || browserLang || null;
   
+  // Order list'i localStorage'dan yükle
+  loadOrderList();
+  
   await fetchMenu();
 }
+
+/* ORDER LIST PERSISTENCE */
+function orderStorageKey(){ return 'ms_order_'+slug; }
+
+function loadOrderList(){
+  try{
+    const raw = localStorage.getItem(orderStorageKey());
+    if(!raw){ orderList = {}; return; }
+    const data = JSON.parse(raw);
+    // 24 saatten eski ise temizle
+    if(data.savedAt && (Date.now() - data.savedAt) > 24*60*60*1000){
+      orderList = {};
+      localStorage.removeItem(orderStorageKey());
+      return;
+    }
+    orderList = data.items || {};
+  }catch(e){ orderList = {}; }
+}
+
+function saveOrderList(){
+  try{
+    localStorage.setItem(orderStorageKey(), JSON.stringify({
+      items: orderList,
+      savedAt: Date.now(),
+    }));
+  }catch(e){}
+}
+
+function addToOrder(itemId){
+  const item = allItems.find(i => i.id === itemId);
+  if(!item) return;
+  if(!orderList[itemId]){
+    orderList[itemId] = { qty: 1, name: item.name, originalName: item.originalName||item.name, price: item.price, photoUrl: item.photos?.[0]?.url||null };
+  } else {
+    orderList[itemId].qty++;
+  }
+  saveOrderList();
+  renderAddBox(item);
+  updateOrderFab();
+}
+
+function incQty(itemId){
+  const item = allItems.find(i => i.id === itemId);
+  if(!item || !orderList[itemId]) return;
+  orderList[itemId].qty++;
+  saveOrderList();
+  renderAddBox(item);
+  updateOrderFab();
+}
+
+function decQty(itemId){
+  const item = allItems.find(i => i.id === itemId);
+  if(!item || !orderList[itemId]) return;
+  orderList[itemId].qty--;
+  if(orderList[itemId].qty <= 0) delete orderList[itemId];
+  saveOrderList();
+  renderAddBox(item);
+  updateOrderFab();
+  // Eğer order sheet açıksa, içeriği yenile
+  if(document.getElementById('orderOverlay').classList.contains('open')) renderOrderSheet();
+}
+
+function updateOrderFab(){
+  const fab = document.getElementById('orderFab');
+  const totalQty = Object.values(orderList).reduce((s,i)=>s+i.qty, 0);
+  if(totalQty > 0){
+    fab.classList.remove('hide');
+    document.getElementById('orderFabCount').textContent = totalQty;
+  } else {
+    fab.classList.add('hide');
+  }
+}
+
+function openOrderSheet(){
+  renderOrderSheet();
+  document.getElementById('orderOverlay').classList.add('open');
+}
+function closeOrderSheet(){ document.getElementById('orderOverlay').classList.remove('open'); }
+document.getElementById('orderOverlay').addEventListener('click', e => {
+  if(e.target === document.getElementById('orderOverlay')) closeOrderSheet();
+});
+
+function renderOrderSheet(){
+  const sym = getSym();
+  const ids = Object.keys(orderList);
+  const body = document.getElementById('orderItems');
+  
+  if(ids.length === 0){
+    body.innerHTML = '<div class="order-empty">No items in your order yet.<br/>Tap the + button on a dish to add it.</div>';
+    document.getElementById('orderTotal').textContent = sym+'0';
+    return;
+  }
+  
+  let total = 0;
+  let totalQty = 0;
+  body.innerHTML = ids.map(id => {
+    const o = orderList[id];
+    const lineTotal = o.qty * o.price;
+    total += lineTotal;
+    totalQty += o.qty;
+    const showOriginal = o.name !== o.originalName;
+    return `<div class="order-row">
+      <div class="order-thumb">${o.photoUrl?`<img src="${o.photoUrl}" alt=""/>`:'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" opacity=".4"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/></svg>'}</div>
+      <div class="order-info">
+        <div class="order-name">${escapeHtml(o.name)}</div>
+        ${showOriginal?`<div class="order-orig">${escapeHtml(o.originalName)}</div>`:''}
+        <div class="order-price">${sym}${o.price} × ${o.qty} = ${sym}${lineTotal.toFixed(2)}</div>
+      </div>
+      <div class="order-qty">
+        <button onclick="decQty('${id}')">−</button>
+        <span class="num">${o.qty}</span>
+        <button onclick="incQty('${id}')">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  
+  document.getElementById('orderTotal').textContent = sym + total.toFixed(2);
+  document.getElementById('orderSubtitle').textContent = `${totalQty} item${totalQty===1?'':'s'}`;
+}
+
+function clearOrder(){
+  if(!confirm('Clear your order?')) return;
+  orderList = {};
+  saveOrderList();
+  updateOrderFab();
+  renderOrderSheet();
+  // Tüm item slide'larını yenile
+  for(const item of allItems) renderAddBox(item);
+}
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* WAITER MODE */
+function openWaiterMode(){
+  const sym = getSym();
+  const ids = Object.keys(orderList);
+  if(ids.length === 0) return;
+  
+  let total = 0;
+  const html = ids.map(id => {
+    const o = orderList[id];
+    const lineTotal = o.qty * o.price;
+    total += lineTotal;
+    const showTrans = o.name !== o.originalName;
+    return `<div class="waiter-item">
+      <div class="waiter-qty"><span class="x">×</span>${o.qty}</div>
+      <div class="waiter-text">
+        <div class="waiter-name">${escapeHtml(o.originalName)}</div>
+        ${showTrans?`<div class="waiter-trans">${escapeHtml(o.name)}</div>`:''}
+      </div>
+      <div class="waiter-price">${sym}${lineTotal.toFixed(2)}</div>
+    </div>`;
+  }).join('');
+  
+  document.getElementById('waiterList').innerHTML = html;
+  document.getElementById('waiterTotal').textContent = sym + total.toFixed(2);
+  document.getElementById('waiterScreen').classList.add('open');
+  closeOrderSheet();
+}
+
+function closeWaiterMode(){ document.getElementById('waiterScreen').classList.remove('open'); }
 
 async function fetchMenu(){
   try{
@@ -406,6 +734,21 @@ async function selectLanguage(code){
   document.getElementById('splash').style.opacity = '0';
   document.getElementById('splash').classList.add('hide');
   await fetchMenu();
+  // Order list'teki item adlarını yeni dile göre güncelle (originalName aynı kalır)
+  syncOrderListWithLanguage();
+}
+
+function syncOrderListWithLanguage(){
+  let changed = false;
+  for(const id of Object.keys(orderList)){
+    const item = allItems.find(i => i.id === id);
+    if(item){
+      orderList[id].name = item.name;
+      orderList[id].originalName = item.originalName || item.name;
+      changed = true;
+    }
+  }
+  if(changed) saveOrderList();
 }
 
 function getSym(){return CURRENCIES_SYM[orgData?.currency||'USD']||'$';}
@@ -504,10 +847,30 @@ function buildSlides(){
         ${desc?`<div class="item-desc">${desc}</div>`:''}
         <div class="item-price">${sym}${item.price}</div>
         ${dotsHtml}
-      </div>`;
+      </div>
+      ${orgData.orderListEnabled ? `<div id="addbox-${item.id}"></div>` : ''}`;
     wrap.appendChild(slide);
+    if(orgData.orderListEnabled) renderAddBox(item);
   });
   trackItemView();
+  updateOrderFab();
+}
+
+function renderAddBox(item){
+  const box = document.getElementById('addbox-'+item.id);
+  if(!box) return;
+  const qty = (orderList[item.id]?.qty)||0;
+  if(qty === 0){
+    box.innerHTML = `<button class="add-btn" onclick="addToOrder('${item.id}')" aria-label="Add to order">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4v14M4 11h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+    </button>`;
+  } else {
+    box.innerHTML = `<div class="qty-controls">
+      <button class="qty-btn" onclick="decQty('${item.id}')">−</button>
+      <div class="qty-num">${qty}</div>
+      <button class="qty-btn" onclick="incQty('${item.id}')">+</button>
+    </div>`;
+  }
 }
 
 /* FILTER */

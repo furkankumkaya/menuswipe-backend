@@ -48,6 +48,9 @@ model Organization {
   // Onboarding
   onboardingCompleted Boolean   @default(false)
   
+  // Features
+  orderListEnabled    Boolean   @default(true)
+  
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   

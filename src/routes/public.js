@@ -74,6 +74,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
       return {
         id: it.id,
         name: useTranslation ? tr.name : it.name,
+        originalName: it.name,  // Garson modu için ana dildeki isim
         description: useTranslation ? (tr.description || it.description) : it.description,
         price: it.price,
         category: it.category,
@@ -127,6 +128,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         googleMapsUrl: org.googleMapsUrl, googlePlaceId: org.googlePlaceId,
         latitude: org.latitude, longitude: org.longitude,
         workingHours: org.workingHours,
+        orderListEnabled: org.orderListEnabled !== false,
       },
       branch: {
         id: selectedBranch.id, name: selectedBranch.name, slug: selectedBranch.slug,

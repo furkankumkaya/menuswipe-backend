@@ -782,6 +782,22 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         </div>
       </div>
 
+      <!-- Features -->
+      <div class="profile-section-title" style="margin-top:16px">Customer features</div>
+      <div class="profile-section">
+        <div class="profile-row" style="cursor:default">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b">Show to waiter</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;line-height:1.4">Customers can build a list and show it to your waiter in your local language. Helpful for foreign tourists.</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" id="orgOrderListEnabled" onchange="toggleOrderList(this)"/>
+            <div class="tog-t"></div>
+            <div class="tog-th"></div>
+          </label>
+        </div>
+      </div>
+
       <!-- Branches -->
       <div class="profile-section-title">Branches</div>
       <div class="profile-section" style="background:transparent;border:none;padding:0">
@@ -1413,6 +1429,7 @@ function loadProfile(){
   document.getElementById('orgPostal').value=org.postalCode||'';
   document.getElementById('orgCurrency').value=org.currency||'USD';
   document.getElementById('orgLanguage').value=org.defaultLanguage||'en';
+  document.getElementById('orgOrderListEnabled').checked = org.orderListEnabled !== false;
   document.getElementById('orgMapsUrl').value=org.googleMapsUrl||'';
   document.getElementById('orgPhone').value=org.phone||'';
   document.getElementById('orgWebsite').value=org.website||'';
@@ -1779,6 +1796,18 @@ async function aiGenerateDesc(id){
 }
 
 /* ============== TRANSLATIONS ============== */
+async function toggleOrderList(cb){
+  try{
+    const updated = await api('PATCH','/api/auth/organization', { orderListEnabled: cb.checked });
+    org = {...org, ...updated};
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    toast(cb.checked ? 'Show to waiter enabled' : 'Show to waiter disabled');
+  }catch(e){
+    toast('Failed: '+e.message);
+    cb.checked = !cb.checked;
+  }
+}
+
 let translationData = null;
 let translationJobId = null;
 let translationPolling = null;
