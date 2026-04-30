@@ -395,19 +395,8 @@ document.getElementById('filterOverlay').addEventListener('click',(e)=>{
   if(e.target===document.getElementById('filterOverlay')) closeFilter();
 });
 function buildFilterChips(){
-  // Sadece menüdeki itemların sahip olduğu dietary tag'leri göster
-  const usedTags = new Set();
-  for(const item of allItems){
-    if(item.tagDietary) usedTags.add(item.tagDietary);
-  }
-  const tagList = DIETARY_TAGS.filter(t => usedTags.has(t));
-  
-  if(tagList.length === 0){
-    document.getElementById('filterGrid').innerHTML = '<div style="color:rgba(255,255,255,.5);font-size:13px;text-align:center;width:100%;padding:20px">No dietary properties available</div>';
-    return;
-  }
-  
-  document.getElementById('filterGrid').innerHTML = tagList.map(t => {
+  // Tüm dietary tag'lerini her zaman göster
+  document.getElementById('filterGrid').innerHTML = DIETARY_TAGS.map(t => {
     const isActive = activeDietaryFilters.has(t);
     return `<div class="filter-chip${isActive?' on':''}" onclick="toggleFilterChip('${t}')">${TAG_LABELS[t]||t}</div>`;
   }).join('');

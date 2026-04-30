@@ -211,4 +211,37 @@ router.post("/_logo", requireAuth, upload.single("logo"), async (req, res, next)
   } catch (err) { next(err); }
 });
 
+router.post("/:id/regenerate-description", requireAuth, async (req, res, next) => {
+  try {
+    const item = await prisma.menuItem.findFirst({
+      where: { id: req.params.id, organizationId: req.org.id },
+    });
+    if (!item) return res.status(404).json({ error: "Item not found" });
+
+    const { generateDescription } = require("../services/ai");
+    const cat = await prisma.category.findFirst({
+      where: { organizationId: req.org.id, code: item.category },
+    });
+    const catLabel = cat?.label || "Main";
+
+    const lang = req.org.defaultLanguage || "en";
+    const description = await generateDescription(item.name, catLabel, lang);
+
+    const updated = await prisma.menuItem.update({
+      where: { id: item.id },
+      data: { description },
+      include: {
+        photos: { orderBy: { sortOrder: "asc" } },
+        itemBranches: { select: { branchId: true } },
+      },
+    });
+
+    res.json({
+      ...updated,
+      branchIds: updated.itemBranches.map(ib => ib.branchId),
+      itemBranches: undefined,
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
