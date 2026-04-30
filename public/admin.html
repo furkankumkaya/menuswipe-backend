@@ -22,9 +22,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .auth-logo-text{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px}
 .auth-logo-text span{color:#D84040}
 .auth-sub{font-size:13px;color:#94a3b8;margin-bottom:24px}
-.auth-tabs{display:flex;gap:4px;background:#1D1616;border-radius:10px;padding:3px;margin-bottom:20px}
-.auth-tab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer}
-.auth-tab.on{background:#2a1d1d;color:#f1f5f9}
+.auth-tabs{display:flex;gap:4px;background:#1D1616;border-radius:12px;padding:4px;margin-bottom:24px;border:1px solid #3d2828}
+.auth-tab{flex:1;padding:11px 8px;border-radius:9px;border:none;background:transparent;color:#94a3b8;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.auth-tab.on{background:#8E1616;color:#fff;box-shadow:0 2px 8px rgba(142,22,22,.3)}
 .auth-lbl{font-size:11px;color:#94a3b8;margin-bottom:5px;margin-top:14px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .auth-inp{width:100%;font-size:14px;color:#f1f5f9;background:#1D1616;border:1.5px solid #3d2828;border-radius:10px;padding:12px 14px;outline:none}
 .auth-inp:focus{border-color:var(--accent)}
@@ -295,6 +295,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="auth-lbl">Password</div>
       <input class="auth-inp" id="loginPassword" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
       <button class="auth-btn" onclick="doLogin()">Sign in</button>
+      <div style="text-align:center;margin-top:14px;font-size:12px;color:#94a3b8">
+        Don't have an account? <a onclick="switchTab('register')" style="color:#D84040;font-weight:700;cursor:pointer;text-decoration:none">Create one</a>
+      </div>
     </div>
     <div id="registerForm" style="display:none">
       <div class="auth-lbl">Restaurant name</div>
@@ -306,6 +309,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="auth-lbl">Confirm password</div>
       <input class="auth-inp" id="regPasswordConfirm" type="password" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')doRegister()"/>
       <button class="auth-btn" onclick="doRegister()">Create account</button>
+      <div style="text-align:center;margin-top:14px;font-size:12px;color:#94a3b8">
+        Already have an account? <a onclick="switchTab('login')" style="color:#D84040;font-weight:700;cursor:pointer;text-decoration:none">Sign in</a>
+      </div>
     </div>
     <div class="auth-err" id="authErr"></div>
   </div>

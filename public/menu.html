@@ -156,6 +156,108 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .lang-row.on .lang-code{background:rgba(255,255,255,.25)}
 .lang-name{flex:1;font-size:14px;font-weight:600}
 
+/* DETAIL SHEET — item detayları (read more) */
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:95;align-items:flex-end;justify-content:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.detail-overlay.open{display:flex}
+.detail-sheet{
+  background:#1D1616;border-radius:24px 24px 0 0;
+  width:100%;max-width:520px;max-height:92vh;
+  overflow:hidden;color:#fff;
+  display:flex;flex-direction:column;
+}
+.detail-photo{
+  position:relative;width:100%;height:280px;
+  background:#000;flex-shrink:0;
+  overflow:hidden;
+}
+.detail-photo img{width:100%;height:100%;object-fit:cover}
+.detail-photo-placeholder{
+  width:100%;height:100%;display:flex;
+  align-items:center;justify-content:center;
+}
+.detail-close{
+  position:absolute;top:14px;right:14px;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:none;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  z-index:5;
+}
+.detail-photo-dots{
+  position:absolute;bottom:12px;left:50%;
+  transform:translateX(-50%);
+  display:flex;gap:5px;z-index:4;
+}
+.detail-photo-dots .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.4);transition:.2s;
+}
+.detail-photo-dots .dot.on{background:#fff;width:18px;border-radius:3px}
+.detail-body{
+  flex:1;overflow-y:auto;padding:20px 22px 12px;
+}
+.detail-cat{
+  font-size:11px;font-weight:700;letter-spacing:.6px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+  margin-bottom:6px;
+}
+.detail-tags-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.detail-name{
+  font-size:26px;font-weight:800;color:#fff;
+  line-height:1.2;letter-spacing:-0.5px;
+  margin-bottom:8px;
+}
+.detail-desc{
+  font-size:14px;color:rgba(255,255,255,.75);
+  line-height:1.55;margin-bottom:14px;
+  white-space:pre-wrap;
+}
+.detail-price{
+  font-size:24px;font-weight:800;color:#fff;
+  margin-bottom:16px;
+}
+.detail-footer{
+  padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;background:#1D1616;
+}
+.detail-add-btn{
+  width:100%;padding:15px;border-radius:14px;
+  border:none;background:#8E1616;color:#fff;
+  font-size:14px;font-weight:800;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.detail-add-btn.in-list{
+  background:transparent;border:1.5px solid rgba(255,255,255,.2);
+}
+.detail-qty-row{
+  display:flex;align-items:center;gap:10px;
+}
+.detail-qty-controls{
+  flex:1;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.08);border-radius:14px;padding:6px 6px;
+}
+.detail-qty-controls button{
+  width:48px;height:48px;border:none;background:rgba(255,255,255,.08);
+  color:#fff;font-size:22px;font-weight:700;cursor:pointer;
+  border-radius:11px;display:flex;align-items:center;justify-content:center;
+  -webkit-user-select:none;user-select:none;
+}
+.detail-qty-controls .num{
+  font-size:18px;font-weight:800;color:#fff;
+  min-width:30px;text-align:center;
+}
+
+/* "Read more" link (slide içinde) */
+.read-more-link{
+  display:inline-block;color:rgba(255,255,255,.85);
+  font-size:13px;font-weight:700;
+  text-decoration:underline;text-underline-offset:2px;
+  cursor:pointer;margin-top:2px;
+}
+
 /* ORDER LIST */
 .add-btn{
   position:absolute;right:16px;top:max(calc(env(safe-area-inset-top,0px) + 80px), 100px);
@@ -282,7 +384,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .info{position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));pointer-events:none}
 .cat-tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
 .item-name{font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:5px}
-.item-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .item-price{font-size:22px;font-weight:800;color:#fff;margin-bottom:10px}
 
 .photo-dots{display:flex;gap:5px;margin-bottom:6px}
@@ -368,6 +470,15 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
     <div class="filter-title">Language</div>
     <div class="filter-sub">Choose your menu language</div>
     <div class="lang-grid" id="langGrid"></div>
+  </div>
+</div>
+
+<!-- Detail sheet (item detayları) -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-sheet" id="detailSheet">
+    <div class="detail-photo" id="detailPhoto"></div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-footer" id="detailFooter"></div>
   </div>
 </div>
 
@@ -862,6 +973,7 @@ function buildSlides(){
       : '';
 
     const desc = item.description||'';
+    const descIsLong = desc.length > 80; // 2 satırdan fazla potansiyel
 
     // Tag system: marketing + dietary, max 2 tag
     let mTag = item.tagMarketing;
@@ -872,6 +984,10 @@ function buildSlides(){
       ? `<div class="tags-row">${mTag?`<div class="tag-pill tag-${mTag}">${TAG_LABELS[mTag]||mTag}</div>`:''}${dTag?`<div class="tag-pill tag-${dTag}">${TAG_LABELS[dTag]||dTag}</div>`:''}</div>`
       : '';
 
+    const descBlock = desc 
+      ? `<div class="item-desc">${escapeHtml(desc)}</div>${descIsLong?`<span class="read-more-link" onclick="event.stopPropagation();openDetail('${item.id}')">Read more</span>`:''}`
+      : '';
+
     slide.innerHTML = `
       <div class="photos-track" id="track-${item.id}" style="transform:translateX(${-photoOffset*100}%)">
         ${photosHtml}
@@ -880,8 +996,8 @@ function buildSlides(){
       <div class="info">
         ${tagsRow}
         <div class="cat-tag">${cm.label}</div>
-        <div class="item-name">${item.name}</div>
-        ${desc?`<div class="item-desc">${desc}</div>`:''}
+        <div class="item-name" onclick="event.stopPropagation();openDetail('${item.id}')" style="cursor:pointer">${escapeHtml(item.name)}</div>
+        ${descBlock}
         <div class="item-price">${sym}${item.price}</div>
         ${dotsHtml}
       </div>
@@ -898,17 +1014,120 @@ function renderAddBox(item){
   if(!box) return;
   const qty = (orderList[item.id]?.qty)||0;
   if(qty === 0){
-    box.innerHTML = `<button class="add-btn" onclick="addToOrder('${item.id}')" aria-label="Add to order">
+    box.innerHTML = `<button class="add-btn" onclick="event.stopPropagation();addToOrder('${item.id}')" aria-label="Add to order">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4v14M4 11h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
     </button>`;
   } else {
     box.innerHTML = `<div class="qty-controls">
-      <button class="qty-btn" onclick="decQty('${item.id}')">−</button>
+      <button class="qty-btn" onclick="event.stopPropagation();decQty('${item.id}')">−</button>
       <div class="qty-num">${qty}</div>
-      <button class="qty-btn" onclick="incQty('${item.id}')">+</button>
+      <button class="qty-btn" onclick="event.stopPropagation();incQty('${item.id}')">+</button>
     </div>`;
   }
 }
+
+/* DETAIL SHEET */
+let _detailItemId = null;
+let _detailPhotoIdx = 0;
+let _detailTouchStartX = 0;
+
+function openDetail(itemId){
+  const item = allItems.find(i => i.id === itemId);
+  if(!item) return;
+  _detailItemId = itemId;
+  _detailPhotoIdx = 0;
+  renderDetailSheet();
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail(){
+  document.getElementById('detailOverlay').classList.remove('open');
+  _detailItemId = null;
+}
+
+function renderDetailSheet(){
+  const item = allItems.find(i => i.id === _detailItemId);
+  if(!item) return;
+  const sym = getSym();
+  const cm = catMeta(item.category||'MAIN');
+  const photos = item.photos||[];
+  const desc = item.description||'';
+  const qty = (orderList[item.id]?.qty)||0;
+
+  // Tags
+  let mTag = item.tagMarketing;
+  if(!mTag && item.isBestseller) mTag = 'BESTSELLER';
+  const dTag = item.tagDietary;
+  const tagsRow = (mTag || dTag) 
+    ? `<div class="detail-tags-row">${mTag?`<div class="tag-pill tag-${mTag}">${TAG_LABELS[mTag]||mTag}</div>`:''}${dTag?`<div class="tag-pill tag-${dTag}">${TAG_LABELS[dTag]||dTag}</div>`:''}</div>`
+    : '';
+
+  // Photo content
+  let photoContent = '';
+  if(photos.length > 0){
+    photoContent = `<img src="${photos[_detailPhotoIdx]?.url}" alt=""/>`;
+    if(photos.length > 1){
+      photoContent += `<div class="detail-photo-dots">${photos.map((_,i)=>`<div class="dot${i===_detailPhotoIdx?' on':''}"></div>`).join('')}</div>`;
+    }
+  } else {
+    photoContent = `<div class="detail-photo-placeholder" style="background:${cm.color}22">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" opacity=".15"><rect x="10" y="10" width="60" height="60" rx="10" stroke="${cm.color}" stroke-width="3"/></svg>
+    </div>`;
+  }
+  photoContent += `<button class="detail-close" onclick="closeDetail()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>`;
+
+  document.getElementById('detailPhoto').innerHTML = photoContent;
+  document.getElementById('detailBody').innerHTML = `
+    ${tagsRow}
+    <div class="detail-cat">${escapeHtml(cm.label)}</div>
+    <div class="detail-name">${escapeHtml(item.name)}</div>
+    ${desc?`<div class="detail-desc">${escapeHtml(desc)}</div>`:''}
+    <div class="detail-price">${sym}${item.price}</div>
+  `;
+
+  // Footer (add/quantity)
+  if(orgData.orderListEnabled){
+    if(qty === 0){
+      document.getElementById('detailFooter').innerHTML = `
+        <button class="detail-add-btn" onclick="addToOrder('${item.id}');renderDetailSheet()">
+          <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 4v14M4 11h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          Add to order
+        </button>`;
+    } else {
+      document.getElementById('detailFooter').innerHTML = `
+        <div class="detail-qty-row">
+          <div class="detail-qty-controls">
+            <button onclick="decQty('${item.id}');renderDetailSheet()">−</button>
+            <span class="num">${qty} in order</span>
+            <button onclick="incQty('${item.id}');renderDetailSheet()">+</button>
+          </div>
+        </div>`;
+    }
+  } else {
+    document.getElementById('detailFooter').innerHTML = '';
+    document.getElementById('detailFooter').style.display = 'none';
+  }
+
+  // Photo swipe support
+  const photoEl = document.getElementById('detailPhoto');
+  if(photos.length > 1){
+    photoEl.ontouchstart = (e) => { _detailTouchStartX = e.touches[0].clientX; };
+    photoEl.ontouchend = (e) => {
+      const dx = _detailTouchStartX - e.changedTouches[0].clientX;
+      if(Math.abs(dx) < 40) return;
+      if(dx > 0 && _detailPhotoIdx < photos.length - 1) _detailPhotoIdx++;
+      else if(dx < 0 && _detailPhotoIdx > 0) _detailPhotoIdx--;
+      renderDetailSheet();
+    };
+  }
+}
+
+// Overlay tıklayınca kapat (sheet dışı)
+document.getElementById('detailOverlay').addEventListener('click', (e) => {
+  if(e.target === document.getElementById('detailOverlay')) closeDetail();
+});
 
 /* FILTER */
 function openFilter(){
