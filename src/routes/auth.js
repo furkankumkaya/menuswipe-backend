@@ -46,12 +46,21 @@ router.post("/register", async (req, res, next) => {
 
     const slug = await uniqueSlug(restaurantName);
     const passwordHash = await bcrypt.hash(password, 12);
+    
+    // Trial 30 gün
+    const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     const org = await prisma.organization.create({
       data: {
         name: restaurantName,
         slug,
         currency: "USD",
+        defaultLanguage: "en",
+        enabledLanguages: [],
+        plan: "TRIAL",
+        subscriptionStatus: "TRIAL",
+        trialEndsAt,
+        onboardingCompleted: false,
         users: {
           create: { email, passwordHash, name: restaurantName, role: "OWNER" },
         },
@@ -105,7 +114,9 @@ router.patch("/organization", requireAuth, async (req, res, next) => {
       "phone", "website", "instagram", "facebook",
       "country", "city", "address", "postalCode",
       "googleMapsUrl", "googlePlaceId", "latitude", "longitude",
-      "workingHours"
+      "workingHours",
+      "defaultLanguage", "enabledLanguages",
+      "onboardingCompleted",
     ];
     const data = {};
     for (const key of allowed) {
@@ -120,6 +131,8 @@ router.patch("/organization", requireAuth, async (req, res, next) => {
 });
 
 function orgPublic(o) {
+  const { getSubscriptionInfo } = require("../middleware/subscription");
+  const sub = getSubscriptionInfo(o);
   return {
     id: o.id, name: o.name, slug: o.slug,
     logoUrl: o.logoUrl, accentColor: o.accentColor, currency: o.currency || "USD",
@@ -128,7 +141,13 @@ function orgPublic(o) {
     googleMapsUrl: o.googleMapsUrl, googlePlaceId: o.googlePlaceId,
     latitude: o.latitude, longitude: o.longitude,
     workingHours: o.workingHours,
-    plan: o.plan,
+    plan: sub.plan,
+    subscriptionStatus: sub.status,
+    trialDaysLeft: sub.daysLeft,
+    isActive: sub.isActive,
+    defaultLanguage: o.defaultLanguage || "en",
+    enabledLanguages: o.enabledLanguages || [],
+    onboardingCompleted: o.onboardingCompleted,
   };
 }
 

@@ -32,8 +32,21 @@ model Organization {
   
   workingHours    Json?
   
-  plan            String       @default("FREE")
-  stripeCustomerId String?
+  // Subscription
+  plan                String    @default("TRIAL")  // TRIAL, STARTER, PRO
+  subscriptionStatus  String    @default("TRIAL")  // TRIAL, ACTIVE, EXPIRED, GRACE
+  billingCycle        String?                       // MONTHLY, YEARLY
+  trialEndsAt         DateTime?
+  subscriptionEndsAt  DateTime?
+  stripeCustomerId    String?
+  stripeSubscriptionId String?
+  
+  // Languages
+  defaultLanguage     String    @default("en")
+  enabledLanguages    String[]  @default([])
+  
+  // Onboarding
+  onboardingCompleted Boolean   @default(false)
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

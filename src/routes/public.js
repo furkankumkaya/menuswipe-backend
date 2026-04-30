@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
 const crypto = require("crypto");
+const { getSubscriptionInfo } = require("../middleware/subscription");
 
 const prisma = new PrismaClient();
 
@@ -21,6 +22,19 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
       },
     });
     if (!org) return res.status(404).json({ error: "Restaurant not found" });
+
+    // Subscription kontrolü - süresi dolmuş restoran menüsü erişilemez
+    const subInfo = getSubscriptionInfo(org);
+    if (!subInfo.isActive) {
+      return res.status(402).json({
+        error: "menu_unavailable",
+        message: "This menu is currently unavailable.",
+        organization: {
+          name: org.name,
+          logoUrl: org.logoUrl,
+        },
+      });
+    }
 
     const activeBranches = org.branches;
     if (activeBranches.length === 0) return res.status(404).json({ error: "No active branches" });
