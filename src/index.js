@@ -12,6 +12,7 @@ const publicRoutes = require("./routes/public");
 const analyticsRoutes = require("./routes/analytics");
 const categoriesRoutes = require("./routes/categories");
 const subscriptionRoutes = require("./routes/subscription");
+const importRoutes = require("./routes/import");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/menu", menuRoutes);
 app.use("/api/branches", branchRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/import", importRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/qr", qrRoutes);
 app.use("/api/public", publicRoutes);
