@@ -3,6 +3,12 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
+// Kritik env var kontrolü
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET environment variable is not set!");
+  process.exit(1);
+}
+
 const authRoutes = require("./routes/auth");
 const menuRoutes = require("./routes/menu");
 const branchRoutes = require("./routes/branches");
