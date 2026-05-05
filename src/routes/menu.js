@@ -193,6 +193,12 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
     const sd = sanitizeTag(tagDietary, VALID_DIETARY);
     if (sd !== undefined) data.tagDietary = sd;
 
+    // Allergens
+    const VALID_ALLERGENS = ["GLUTEN","CRUSTACEANS","EGGS","FISH","PEANUTS","SOYBEANS","MILK","NUTS","CELERY","MUSTARD","SESAME","SULPHITES","LUPIN","MOLLUSCS"];
+    if (Array.isArray(req.body.allergens)) {
+      data.allergens = req.body.allergens.filter(a => VALID_ALLERGENS.includes(a));
+    }
+
     if (Array.isArray(branchIds)) {
       await prisma.menuItemBranch.deleteMany({ where: { menuItemId: req.params.id } });
       data.itemBranches = { create: branchIds.map(bid => ({ branchId: bid })) };

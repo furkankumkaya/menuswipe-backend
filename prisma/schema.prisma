@@ -155,6 +155,9 @@ model MenuItem {
   tagMarketing    String?
   tagDietary      String?
   
+  // Alerjenler (virgülle ayrılmış kodlar: GLUTEN,EGGS,MILK vb.)
+  allergens       String[]     @default([])
+  
   sortOrder       Int          @default(0)
   
   createdAt       DateTime     @default(now())

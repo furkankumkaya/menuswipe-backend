@@ -130,6 +130,10 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .ai-gen-btn:hover{background:#fef2f2;border-color:#fecaca}
 .ai-gen-btn:disabled{opacity:.5;cursor:wait}
 .ai-gen-btn.spinning svg{animation:spin 1s linear infinite}
+.allergen-chip{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:.15s;background:#fff;font-size:12px;font-weight:600;color:#475569}
+.allergen-chip.on{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+.allergen-chip input{accent-color:#8E1616;width:14px;height:14px;cursor:pointer}
+.allergen-badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:800;background:#fee2e2;color:#991b1b;margin-left:4px;cursor:pointer;border:none;vertical-align:middle}
 
 /* ADD ROW */
 .add-row{display:none;grid-template-columns:88px 88px minmax(140px,1fr) 80px 70px 76px 60px;border-top:1px dashed #e2e8f0;background:#f8fafc}
@@ -581,6 +585,21 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       </div>
     </div>
 
+    <!-- ALLERGEN EDIT OVERLAY -->
+    <div class="overlay" id="allergenOverlay">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="m-title">Allergens</div>
+        <div class="m-sub" id="allergenItemName" style="color:#8E1616;font-weight:700;margin-bottom:4px"></div>
+        <div class="m-sub">Select all allergens present in this dish. Customers with allergies will be warned before ordering.</div>
+        <div id="allergenGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0"></div>
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;font-size:11px;color:#92400e;line-height:1.5;margin-bottom:14px">
+          ⚠️ Allergen information is the restaurant's responsibility. Always verify with your kitchen. MenuSwipe displays what you enter.
+        </div>
+        <div class="m-row"><button class="btn-gh" onclick="closeAllergenOverlay()">Cancel</button><button class="btn-dk" onclick="saveAllergens()">Save</button></div>
+      </div>
+    </div>
+
     <!-- MENU PANEL -->
     <div class="panel on" id="p-menu">
       <div class="sstrip">
@@ -913,6 +932,23 @@ const STAR_FILL='<svg width="16" height="16" viewBox="0 0 16 16" fill="currentCo
 const STAR_OUTLINE='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.94 4.07 4.49.65-3.25 3.16.77 4.46L8 11.74l-4.01 2.1.77-4.46L1.51 6.22l4.49-.65L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
 const SPARK='<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 4 4 1.5-4 1.5L7 12l-1.5-4-4-1.5 4-1.5L7 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>';
 const TRANSLATE_ICO='<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 4h6M5 2v8M2 10l3-6 3 6M9 11l3-3 3 3M11 8v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+const ALLERGENS = [
+  {code:'GLUTEN',    label:'Gluten',          emoji:'🌾'},
+  {code:'CRUSTACEANS',label:'Crustaceans',    emoji:'🦐'},
+  {code:'EGGS',      label:'Eggs',            emoji:'🥚'},
+  {code:'FISH',      label:'Fish',            emoji:'🐟'},
+  {code:'PEANUTS',   label:'Peanuts',         emoji:'🥜'},
+  {code:'SOYBEANS',  label:'Soybeans',        emoji:'🫘'},
+  {code:'MILK',      label:'Milk',            emoji:'🥛'},
+  {code:'NUTS',      label:'Tree Nuts',       emoji:'🌰'},
+  {code:'CELERY',    label:'Celery',          emoji:'🥬'},
+  {code:'MUSTARD',   label:'Mustard',         emoji:'🌿'},
+  {code:'SESAME',    label:'Sesame',          emoji:'🌱'},
+  {code:'SULPHITES', label:'Sulphites',       emoji:'🧪'},
+  {code:'LUPIN',     label:'Lupin',           emoji:'🌼'},
+  {code:'MOLLUSCS',  label:'Molluscs',        emoji:'🐚'},
+];
 
 async function api(method,path,body){
   const opts={method,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}};
@@ -1649,7 +1685,7 @@ function buildCatPills(){
 
 /* MENU */
 async function loadMenu(){
-  try{const data=await api('GET','/api/menu');items=data;renderItems();updateStats();}
+  try{const data=await api('GET','/api/menu');items=data;renderItems();updateStats();buildPreview();}
   catch(e){document.getElementById('itemRows').innerHTML='<div class="loading-msg">Failed to load.</div>';}
 }
 function updateStats(){
@@ -1722,7 +1758,7 @@ function renderItems(){
           <div class="icell"><span class="ctag" style="border-left:3px solid ${cat.color}">${cat.label}</span></div>
           <div class="icell" style="font-size:13px;font-weight:700;color:#1e293b">${sym}${item.price}</div>
           <div class="icell"><button class="photo-ibtn" onclick="openPhoto('${item.id}')">${PHOTO_ICO} ${photos.length}/3</button></div>
-          <div class="act-cell"><button class="ib" onclick="openItemTranslations('${item.id}')" title="Translations" style="${(org?.enabledLanguages||[]).length===0?'display:none':''}">${TRANSLATE_ICO}</button><button class="ib" onclick="startEdit('${item.id}')">${PENCIL}</button><button class="ib" onclick="askDelete('${item.id}','${(item.name||'').replace(/'/g,"\\'")}',\'item\')">${TRASH}</button></div>
+          <div class="act-cell"><button class="ib" onclick="openItemTranslations('${item.id}')" title="Translations" style="${(org?.enabledLanguages||[]).length===0?'display:none':''}">${TRANSLATE_ICO}</button><button class="ib" onclick="openAllergenOverlay('${item.id}')" title="Allergens" style="color:${(item.allergens||[]).length>0?'#991b1b':'currentColor'}">${(item.allergens||[]).length>0?`<span style="font-size:10px;font-weight:800">${(item.allergens||[]).length}⚠</span>`:PENCIL.replace('PENCIL','')+'<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v5M7 10v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>'}</button><button class="ib" onclick="startEdit('${item.id}')">${PENCIL}</button><button class="ib" onclick="askDelete('${item.id}','${(item.name||'').replace(/'/g,"\\'")}',\'item\')">${TRASH}</button></div>
         </div>`;
     const descSec=`<div class="desc-ed${descOpen?' open':''}"><div class="desc-inner"><textarea class="desc-ta" id="dt-${item.id}" maxlength="${DESC_MAX}" placeholder="Describe this dish..." oninput="descCount('${item.id}')">${desc}</textarea><div class="desc-right"><div class="desc-cnt" id="dc-${item.id}">${desc.length}/${DESC_MAX}</div><button class="ai-gen-btn" id="ai-${item.id}" onclick="aiGenerateDesc('${item.id}')" title="Generate with AI">${SPARK}</button><button class="ok-btn" onclick="saveDesc('${item.id}')">${CHECK}</button></div></div></div>`;
     return `<div class="irow${isEd?' editing':''}">${mainRow}${descSec}</div>`;
@@ -1814,7 +1850,57 @@ async function aiGenerateDesc(id){
   }
 }
 
-/* ============== TRANSLATIONS ============== */
+/* ============== ALLERGENS ============== */
+let _allergenItemId = null;
+let _allergenSelected = new Set();
+
+function openAllergenOverlay(itemId){
+  const item = items.find(i => i.id === itemId);
+  if(!item) return;
+  _allergenItemId = itemId;
+  _allergenSelected = new Set(item.allergens || []);
+  document.getElementById('allergenItemName').textContent = item.name;
+  renderAllergenGrid();
+  document.getElementById('allergenOverlay').classList.add('open');
+}
+
+function renderAllergenGrid(){
+  document.getElementById('allergenGrid').innerHTML = ALLERGENS.map(a => {
+    const on = _allergenSelected.has(a.code);
+    return `<label class="allergen-chip${on?' on':''}">
+      <input type="checkbox" ${on?'checked':''} onchange="toggleAllergen('${a.code}',this.checked)"/>
+      <span>${a.emoji}</span>
+      <span>${a.label}</span>
+    </label>`;
+  }).join('');
+}
+
+function toggleAllergen(code, checked){
+  if(checked) _allergenSelected.add(code);
+  else _allergenSelected.delete(code);
+  // Chip stilini güncelle
+  const chips = document.querySelectorAll('.allergen-chip');
+  ALLERGENS.forEach((a, i) => {
+    if(a.code === code) chips[i]?.classList.toggle('on', checked);
+  });
+}
+
+function closeAllergenOverlay(){
+  document.getElementById('allergenOverlay').classList.remove('open');
+  _allergenItemId = null;
+}
+
+async function saveAllergens(){
+  if(!_allergenItemId) return;
+  try{
+    const updated = await api('PATCH','/api/menu/'+_allergenItemId, { allergens: [..._allergenSelected] });
+    const item = items.find(i => i.id === _allergenItemId);
+    if(item) item.allergens = updated.allergens;
+    closeAllergenOverlay();
+    renderItems();
+    toast('Allergens saved');
+  }catch(e){ toast('Failed: '+e.message); }
+}
 async function toggleOrderList(cb){
   try{
     const updated = await api('PATCH','/api/auth/organization', { orderListEnabled: cb.checked });

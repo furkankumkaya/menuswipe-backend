@@ -342,7 +342,42 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .order-total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 4px}
 .order-total-label{font-size:13px;color:rgba(255,255,255,.6);font-weight:600}
 .order-total-amt{font-size:22px;font-weight:800;color:#fff}
-.order-empty{padding:48px 24px;text-align:center;color:rgba(255,255,255,.5);font-size:14px}
+.order-allergen-row{display:flex;align-items:center;padding:4px 0;cursor:pointer;-webkit-user-select:none;user-select:none}
+.order-allergen-detail{border-top:1px solid rgba(255,255,255,.06);margin-top:2px;padding-top:4px}
+
+/* CROSS SELL */
+.cross-sell-card{
+  position:fixed;
+  bottom:calc(80px + env(safe-area-inset-bottom,0px));
+  left:16px;right:16px;
+  background:#1D1616;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:18px;
+  padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  z-index:50;
+  transform:translateX(110%);
+  transition:transform .35s cubic-bezier(.25,.46,.45,.94);
+  touch-action:pan-x;
+}
+.cross-sell-card.visible{transform:translateX(0)}
+.cross-sell-thumb{
+  width:52px;height:52px;border-radius:12px;
+  background:rgba(255,255,255,.05);overflow:hidden;flex-shrink:0;
+}
+.cross-sell-thumb img{width:100%;height:100%;object-fit:cover}
+.cross-sell-text{flex:1;min-width:0}
+.cross-sell-label{font-size:10px;font-weight:700;color:#D84040;letter-spacing:.4px;text-transform:uppercase;margin-bottom:2px}
+.cross-sell-name{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cross-sell-price{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.cross-sell-add{
+  width:36px;height:36px;border-radius:10px;
+  background:#8E1616;border:none;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+  font-size:20px;font-weight:300;
+}
 
 /* WAITER MODE */
 .waiter-screen{position:fixed;inset:0;background:#000;z-index:200;color:#fff;display:none;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
@@ -473,6 +508,9 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   </div>
 </div>
 
+<!-- Cross-sell card -->
+<div class="cross-sell-card" id="crossSellCard"></div>
+
 <!-- Detail sheet (item detayları) -->
 <div class="detail-overlay" id="detailOverlay">
   <div class="detail-sheet" id="detailSheet">
@@ -540,10 +578,24 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   <div class="filter-sheet">
     <div class="info-handle"></div>
     <div class="filter-title">Filter menu</div>
-    <div class="filter-sub">Show only items with these properties</div>
+
+    <!-- ALLERGEN BÖLÜMÜ -->
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">
+      🚫 Allergen-free — hide dishes containing:
+    </div>
+    <div class="filter-grid" id="allergenFilterGrid" style="margin-bottom:14px"></div>
+
+    <!-- DİVIDER -->
+    <div style="height:1px;background:rgba(255,255,255,.08);margin-bottom:14px"></div>
+
+    <!-- DIETARY BÖLÜMÜ -->
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
+      ✅ Show only dishes that are:
+    </div>
     <div class="filter-grid" id="filterGrid"></div>
-    <div class="filter-actions">
-      <button class="filter-clear" onclick="clearFilter()">Clear</button>
+
+    <div class="filter-actions" style="margin-top:14px">
+      <button class="filter-clear" onclick="clearFilter()">Clear all</button>
       <button class="filter-apply" onclick="applyFilter()">Apply</button>
     </div>
   </div>
@@ -582,8 +634,24 @@ const LANG_NAMES = {
   pl:'Polski',uk:'Українська',el:'Ελληνικά',he:'עברית',fa:'فارسی',ms:'Bahasa Melayu',
   sv:'Svenska',no:'Norsk',da:'Dansk',fi:'Suomi',cs:'Čeština',hu:'Magyar',ro:'Română',
 };
+const ALLERGEN_LIST = [
+  {code:'GLUTEN',label:'Gluten',emoji:'🌾'},
+  {code:'CRUSTACEANS',label:'Crustaceans',emoji:'🦐'},
+  {code:'EGGS',label:'Eggs',emoji:'🥚'},
+  {code:'FISH',label:'Fish',emoji:'🐟'},
+  {code:'PEANUTS',label:'Peanuts',emoji:'🥜'},
+  {code:'SOYBEANS',label:'Soybeans',emoji:'🫘'},
+  {code:'MILK',label:'Milk',emoji:'🥛'},
+  {code:'NUTS',label:'Tree Nuts',emoji:'🌰'},
+  {code:'CELERY',label:'Celery',emoji:'🥬'},
+  {code:'MUSTARD',label:'Mustard',emoji:'🌿'},
+  {code:'SESAME',label:'Sesame',emoji:'🌱'},
+  {code:'SULPHITES',label:'Sulphites',emoji:'🧪'},
+  {code:'LUPIN',label:'Lupin',emoji:'🌼'},
+  {code:'MOLLUSCS',label:'Molluscs',emoji:'🐚'},
+];
 
-let allItems=[],filteredItems=[],currentCat='all',activeDietaryFilters=new Set();
+let allItems=[],filteredItems=[],currentCat='all',activeDietaryFilters=new Set(),activeAllergenFilters=new Set();
 let currentLang = null;
 let availableLanguages = [];
 let defaultLanguage = 'en';
@@ -637,7 +705,17 @@ function addToOrder(itemId){
   const item = allItems.find(i => i.id === itemId);
   if(!item) return;
   if(!orderList[itemId]){
-    orderList[itemId] = { qty: 1, name: item.name, originalName: item.originalName||item.name, price: item.price, photoUrl: item.photos?.[0]?.url||null };
+    orderList[itemId] = {
+      qty: 1,
+      name: item.name,
+      originalName: item.originalName||item.name,
+      price: item.price,
+      photoUrl: item.photos?.[0]?.url||null,
+      allergens: item.allergens||[],
+      category: item.category||'MAIN',
+    };
+    // İlk eklemede cross-sell tetikle
+    triggerCrossSell(item);
   } else {
     orderList[itemId].qty++;
   }
@@ -708,12 +786,22 @@ function renderOrderSheet(){
     total += lineTotal;
     totalQty += o.qty;
     const showOriginal = o.name !== o.originalName;
+    const allergens = o.allergens || [];
+    const hasAllergens = allergens.length > 0;
+    const allergenNames = allergens.map(a => ALLERGEN_LIST.find(x=>x.code===a)?.label||a).join(', ');
     return `<div class="order-row" data-item-id="${id}">
       <div class="order-thumb">${o.photoUrl?`<img src="${o.photoUrl}" alt=""/>`:'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" opacity=".4"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/></svg>'}</div>
       <div class="order-info">
         <div class="order-name">${escapeHtml(o.name)}</div>
         ${showOriginal?`<div class="order-orig">${escapeHtml(o.originalName)}</div>`:''}
         <div class="order-price">${sym}${o.price} × ${o.qty} = ${sym}${lineTotal.toFixed(2)}</div>
+        ${hasAllergens?`<div class="order-allergen-row" onclick="toggleAllergenDetail('${id}')" id="arow-${id}">
+          <span style="font-size:10px;font-weight:700;color:#f59e0b">⚠ Contains allergens</span>
+          <span id="achev-${id}" style="font-size:10px;color:rgba(255,255,255,.4);margin-left:4px">▸</span>
+        </div>
+        <div class="order-allergen-detail" id="adetail-${id}" style="display:none;font-size:10px;color:rgba(255,255,255,.6);padding:4px 0;line-height:1.5">
+          ${allergenNames}
+        </div>`:''}
       </div>
       <div class="order-qty">
         <button type="button" data-action="dec">−</button>
@@ -759,6 +847,84 @@ function clearOrder(){
 }
 
 function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function toggleAllergenDetail(id){
+  const detail = document.getElementById('adetail-'+id);
+  const chev = document.getElementById('achev-'+id);
+  if(!detail) return;
+  const open = detail.style.display !== 'none';
+  detail.style.display = open ? 'none' : 'block';
+  if(chev) chev.textContent = open ? '▸' : '▾';
+}
+
+/* CROSS-SELL */
+const CROSS_SELL_MAP = {
+  'MAIN':    ['DRINK','STARTER','DESSERT'],
+  'STARTER': ['DRINK','MAIN'],
+  'DRINK':   [],
+  'DESSERT': ['DRINK'],
+};
+let _crossSellShown = new Set();
+let _crossSellTouchStartX = 0;
+
+function triggerCrossSell(addedItem){
+  const addedCat = addedItem.category || 'MAIN';
+  const targetCats = CROSS_SELL_MAP[addedCat] || [];
+  const alreadyInOrder = new Set(Object.keys(orderList));
+  
+  let candidate = null;
+  for(const targetCat of targetCats){
+    const catCode = cats.find(c=>c.label.toLowerCase()===targetCat.toLowerCase())?.code || targetCat;
+    const pool = allItems.filter(i =>
+      (i.category||'MAIN') === catCode &&
+      !alreadyInOrder.has(i.id) &&
+      !_crossSellShown.has(i.id)
+    );
+    if(pool.length > 0){
+      candidate = pool[Math.floor(Math.random() * pool.length)];
+      break;
+    }
+  }
+  if(!candidate) return;
+  _crossSellShown.add(candidate.id);
+  showCrossSellCard(candidate);
+}
+
+function showCrossSellCard(item){
+  const sym = getSym();
+  const card = document.getElementById('crossSellCard');
+  const thumb = item.photos?.[0]?.url
+    ? `<div class="cross-sell-thumb"><img src="${item.photos[0].url}" alt=""/></div>`
+    : `<div class="cross-sell-thumb" style="display:flex;align-items:center;justify-content:center;font-size:22px">🍽</div>`;
+  card.innerHTML = `
+    ${thumb}
+    <div class="cross-sell-text">
+      <div class="cross-sell-label">Goes well with this</div>
+      <div class="cross-sell-name">${escapeHtml(item.name)}</div>
+      <div class="cross-sell-price">${sym}${item.price}</div>
+    </div>
+    <button class="cross-sell-add" onclick="event.stopPropagation();addFromCrossSell('${item.id}')">+</button>`;
+  card.onclick = (e) => { if(!e.target.closest('.cross-sell-add')) dismissCrossSell(); };
+  card.ontouchstart = (e) => { _crossSellTouchStartX = e.touches[0].clientX; e.stopPropagation(); };
+  card.ontouchmove = (e) => { e.stopPropagation(); };
+  card.ontouchend = (e) => {
+    e.stopPropagation();
+    const dx = e.changedTouches[0].clientX - _crossSellTouchStartX;
+    if(dx > 60) dismissCrossSell();
+  };
+  requestAnimationFrame(() => card.classList.add('visible'));
+}
+
+function dismissCrossSell(){
+  document.getElementById('crossSellCard').classList.remove('visible');
+}
+
+function addFromCrossSell(itemId){
+  dismissCrossSell();
+  addToOrder(itemId);
+  const item = allItems.find(i => i.id === itemId);
+  if(item) setTimeout(() => triggerCrossSell(item), 600);
+}
 
 /* WAITER MODE */
 function openWaiterMode(){
@@ -907,11 +1073,15 @@ function catMeta(code){
 function getFiltered(){
   let list = allItems;
   if(currentCat !== 'all') list = list.filter(i => (i.category||'MAIN') === currentCat);
-  // Dietary filter: seçili olan TÜM tag'ler item'da olmalı (AND)
+  // Dietary filter: OR mantığı (seçili tag'lerden birini içeren)
   if(activeDietaryFilters.size > 0){
+    list = list.filter(i => activeDietaryFilters.has(i.tagDietary));
+  }
+  // Allergen filter: seçili alerjenleri içeren item'ları GÖSTERME
+  if(activeAllergenFilters.size > 0){
     list = list.filter(i => {
-      // Item'ın dietary tag'i seçili filtrelerden BİRİNDE olmalı (OR mantığı daha kullanıcı dostu)
-      return activeDietaryFilters.has(i.tagDietary);
+      const itemAllergens = i.allergens || [];
+      return !itemAllergens.some(a => activeAllergenFilters.has(a));
     });
   }
   return list;
@@ -1141,19 +1311,36 @@ document.getElementById('filterOverlay').addEventListener('click',(e)=>{
   if(e.target===document.getElementById('filterOverlay')) closeFilter();
 });
 function buildFilterChips(){
-  // Tüm dietary tag'lerini her zaman göster
+  // Allergen filter chips
+  document.getElementById('allergenFilterGrid').innerHTML = ALLERGEN_LIST.map(a => {
+    const isActive = activeAllergenFilters.has(a.code);
+    return `<div class="filter-chip${isActive?' on':''}" onclick="toggleAllergenFilter('${a.code}')" style="${isActive?'background:#fee2e2;color:#991b1b;border-color:#fca5a5':''}">
+      ${a.emoji} ${a.label}
+    </div>`;
+  }).join('');
+
+  // Dietary filter chips
   document.getElementById('filterGrid').innerHTML = DIETARY_TAGS.map(t => {
     const isActive = activeDietaryFilters.has(t);
     return `<div class="filter-chip${isActive?' on':''}" onclick="toggleFilterChip('${t}')">${TAG_LABELS[t]||t}</div>`;
   }).join('');
 }
+
+function toggleAllergenFilter(code){
+  if(activeAllergenFilters.has(code)) activeAllergenFilters.delete(code);
+  else activeAllergenFilters.add(code);
+  buildFilterChips();
+}
+
 function toggleFilterChip(tag){
   if(activeDietaryFilters.has(tag)) activeDietaryFilters.delete(tag);
   else activeDietaryFilters.add(tag);
   buildFilterChips();
 }
+
 function clearFilter(){
   activeDietaryFilters.clear();
+  activeAllergenFilters.clear();
   updateFilterBadge();
   filteredItems = getFiltered();
   curItem = 0;
@@ -1161,6 +1348,7 @@ function clearFilter(){
   updateProgress();
   closeFilter();
 }
+
 function applyFilter(){
   updateFilterBadge();
   filteredItems = getFiltered();
@@ -1169,10 +1357,11 @@ function applyFilter(){
   updateProgress();
   closeFilter();
 }
+
 function updateFilterBadge(){
   const btn = document.getElementById('filterBtn');
   const badge = document.getElementById('filterBadge');
-  const count = activeDietaryFilters.size;
+  const count = activeDietaryFilters.size + activeAllergenFilters.size;
   if(count > 0){
     btn.classList.add('has-active');
     badge.style.display = 'flex';
@@ -1203,8 +1392,8 @@ function updateProgress(){
   document.getElementById('progf').style.width = n?((curItem+1)/n*100)+'%':'0%';
 }
 
-function goNextItem(){if(curItem<filteredItems.length-1){curItem++;updateSlidePositions();}}
-function goPrevItem(){if(curItem>0){curItem--;updateSlidePositions();}}
+function goNextItem(){if(curItem<filteredItems.length-1){curItem++;updateSlidePositions();dismissCrossSell();}}
+function goPrevItem(){if(curItem>0){curItem--;updateSlidePositions();dismissCrossSell();}}
 
 function goNextPhoto(){
   const item = filteredItems[curItem]; if(!item) return;
