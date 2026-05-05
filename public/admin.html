@@ -74,7 +74,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .itable{min-width:660px;width:100%}
 .irow{background:#fff;border-bottom:1px solid #f1f5f9}
 .irow:last-child{border-bottom:none}
-.irow-main{display:grid;grid-template-columns:88px 88px minmax(140px,1fr) 80px 70px 76px 60px;align-items:center}
+.irow-main{display:grid;grid-template-columns:88px 88px 60px minmax(140px,1fr) 80px 70px 76px 60px;align-items:center}
 .irow.hdr .irow-main{background:#f8fafc;border-radius:14px 14px 0 0}
 .irow.hdr span{font-size:10px;color:#64748b;font-weight:700;padding:10px 12px;display:block;text-transform:uppercase;letter-spacing:.4px}
 .icell{padding:10px 8px;display:flex;align-items:center;min-height:54px}
@@ -136,7 +136,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .allergen-badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:800;background:#fee2e2;color:#991b1b;margin-left:4px;cursor:pointer;border:none;vertical-align:middle}
 
 /* ADD ROW */
-.add-row{display:none;grid-template-columns:88px 88px minmax(140px,1fr) 80px 70px 76px 60px;border-top:1px dashed #e2e8f0;background:#f8fafc}
+.add-row{display:none;grid-template-columns:88px 88px 60px minmax(140px,1fr) 80px 70px 76px 60px;border-top:1px dashed #e2e8f0;background:#f8fafc}
 .add-row.show{display:grid}
 .add-cell{padding:8px 12px;display:flex;align-items:center}
 .add-inp{border:none;background:transparent;font-size:12px;color:#1e293b;outline:none;width:100%;font-weight:500}
@@ -617,7 +617,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="catPills"></div>
       <div class="itable-wrap">
         <div class="itable">
-          <div class="irow hdr"><div class="irow-main"><span>Marketing</span><span>Dietary</span><span>Name</span><span>Category</span><span>Price</span><span>Photos</span><span style="text-align:center">Edit</span></div></div>
+          <div class="irow hdr"><div class="irow-main"><span>Marketing</span><span>Dietary</span><span style="font-size:9px">Allergen</span><span>Name</span><span>Category</span><span>Price</span><span>Photos</span><span style="text-align:center">Edit</span></div></div>
           <div id="itemRows"><div class="loading-msg">Loading...</div></div>
           <div class="add-row" id="addRow">
             <div class="add-cell"></div>
@@ -1733,11 +1733,19 @@ function renderItems(){
 
     const tagM = tagSelectHTML(item.id, 'marketing', item.tagMarketing);
     const tagD = tagSelectHTML(item.id, 'dietary', item.tagDietary);
+    const allergenCount = (item.allergens||[]).length;
+    const allergenCell = `<div class="tag-cell" style="justify-content:center">
+      <button onclick="openAllergenOverlay('${item.id}')" title="Edit allergens" style="width:100%;border:none;background:${allergenCount>0?'#fee2e2':'#f8fafc'};border-radius:7px;padding:5px 3px;cursor:pointer;font-size:10px;font-weight:700;color:${allergenCount>0?'#991b1b':'#94a3b8'};display:flex;flex-direction:column;align-items:center;gap:1px">
+        <span style="font-size:13px">${allergenCount>0?'⚠':'○'}</span>
+        <span>${allergenCount>0?allergenCount:'—'}</span>
+      </button>
+    </div>`;
 
     const mainRow=isEd
       ?`<div class="irow-main" style="background:#f8fafc">
           <div class="tag-cell">${tagM}</div>
           <div class="tag-cell">${tagD}</div>
+          ${allergenCell}
           <div class="icell"><input class="edit-inp" id="en-${item.id}" value="${item.name}"/></div>
           <div class="icell"><select class="cat-sel" id="ec-${item.id}">${cats.map(c=>`<option value="${c.code}"${c.code===(item.category||'MAIN')?' selected':''}>${c.label}</option>`).join('')}</select></div>
           <div class="icell"><input class="price-inp" id="ep-${item.id}" type="number" step="0.01" value="${item.price}"/></div>
@@ -1747,6 +1755,7 @@ function renderItems(){
       :`<div class="irow-main">
           <div class="tag-cell">${tagM}</div>
           <div class="tag-cell">${tagD}</div>
+          ${allergenCell}
           <div class="icell" style="cursor:pointer" onclick="toggleDesc('${item.id}')">
             <div class="iname-area">
               <div class="iname-row">
@@ -1758,7 +1767,11 @@ function renderItems(){
           <div class="icell"><span class="ctag" style="border-left:3px solid ${cat.color}">${cat.label}</span></div>
           <div class="icell" style="font-size:13px;font-weight:700;color:#1e293b">${sym}${item.price}</div>
           <div class="icell"><button class="photo-ibtn" onclick="openPhoto('${item.id}')">${PHOTO_ICO} ${photos.length}/3</button></div>
-          <div class="act-cell"><button class="ib" onclick="openItemTranslations('${item.id}')" title="Translations" style="${(org?.enabledLanguages||[]).length===0?'display:none':''}">${TRANSLATE_ICO}</button><button class="ib" onclick="openAllergenOverlay('${item.id}')" title="Allergens" style="color:${(item.allergens||[]).length>0?'#991b1b':'currentColor'}">${(item.allergens||[]).length>0?`<span style="font-size:10px;font-weight:800">${(item.allergens||[]).length}⚠</span>`:PENCIL.replace('PENCIL','')+'<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v5M7 10v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>'}</button><button class="ib" onclick="startEdit('${item.id}')">${PENCIL}</button><button class="ib" onclick="askDelete('${item.id}','${(item.name||'').replace(/'/g,"\\'")}',\'item\')">${TRASH}</button></div>
+          <div class="act-cell">
+            ${(org?.enabledLanguages||[]).length>0?`<button class="ib" onclick="openItemTranslations('${item.id}')" title="Translations">${TRANSLATE_ICO}</button>`:''}
+            <button class="ib" onclick="startEdit('${item.id}')">${PENCIL}</button>
+            <button class="ib" onclick="askDelete('${item.id}','${(item.name||'').replace(/'/g,"\\'")}',\'item\')">${TRASH}</button>
+          </div>
         </div>`;
     const descSec=`<div class="desc-ed${descOpen?' open':''}"><div class="desc-inner"><textarea class="desc-ta" id="dt-${item.id}" maxlength="${DESC_MAX}" placeholder="Describe this dish..." oninput="descCount('${item.id}')">${desc}</textarea><div class="desc-right"><div class="desc-cnt" id="dc-${item.id}">${desc.length}/${DESC_MAX}</div><button class="ai-gen-btn" id="ai-${item.id}" onclick="aiGenerateDesc('${item.id}')" title="Generate with AI">${SPARK}</button><button class="ok-btn" onclick="saveDesc('${item.id}')">${CHECK}</button></div></div></div>`;
     return `<div class="irow${isEd?' editing':''}">${mainRow}${descSec}</div>`;

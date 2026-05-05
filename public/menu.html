@@ -620,12 +620,29 @@ const fromQr = new URLSearchParams(window.location.search).get('qr') === '1';
 
 const CURRENCIES_SYM={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',AED:'د.إ',SAR:'﷼',CAD:'$',AUD:'$',CHF:'Fr',INR:'₹',BRL:'R$',MXN:'$',KRW:'₩',SGD:'$',HKD:'$',NOK:'kr',SEK:'kr',DKK:'kr',PLN:'zł',RUB:'₽',ZAR:'R',THB:'฿',IDR:'Rp',MYR:'RM',PHP:'₱',VND:'₫',EGP:'£',ILS:'₪',NZD:'$',ARS:'$',CLP:'$',COP:'$',CZK:'Kč',HUF:'Ft',RON:'lei',PKR:'₨',BDT:'৳',NGN:'₦',KES:'KSh',GHS:'GH₵',MAD:'د.م.',QAR:'ر.ق'};
 
-const TAG_LABELS = {
-  NEW:'NEW', BESTSELLER:'BESTSELLER', OFFER:'OFFER', LIMITED:'LIMITED',
-  SEASONAL:'SEASONAL', LOCAL_FOOD:'LOCAL FOOD', SOLD_OUT:'SOLD OUT',
-  SPICY:'SPICY', VEGAN:'VEGAN', GLUTEN_FREE:'GLUTEN-FREE',
-  HALAL:'HALAL', DAIRY_FREE:'DAIRY-FREE', PROTEIN_PLUS:'PROTEIN+'
+const TAG_LABELS_BY_LANG = {
+  en: {NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',LIMITED:'LIMITED',SEASONAL:'SEASONAL',LOCAL_FOOD:'LOCAL FOOD',SOLD_OUT:'SOLD OUT',SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'},
+  tr: {NEW:'YENİ',BESTSELLER:'FAVORI',OFFER:'İNDİRİM',LIMITED:'SINIRLI',SEASONAL:'MEVSIMLIK',LOCAL_FOOD:'YEREl ÜRÜN',SOLD_OUT:'TÜKENDI',SPICY:'ACILI',VEGAN:'VEGAn',GLUTEN_FREE:'GLÜTENSİZ',HALAL:'HELAL',DAIRY_FREE:'SÜT İÇERMEZ',PROTEIN_PLUS:'PROTEİN+'},
+  de: {NEW:'NEU',BESTSELLER:'BESTSELLER',OFFER:'ANGEBOT',LIMITED:'BEGRENZT',SEASONAL:'SAISONAL',LOCAL_FOOD:'REGIONAL',SOLD_OUT:'AUSVERKAUFT',SPICY:'SCHARF',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTENFREI',HALAL:'HALAL',DAIRY_FREE:'LAKTOSEFREI',PROTEIN_PLUS:'PROTEIN+'},
+  fr: {NEW:'NOUVEAU',BESTSELLER:'BESTSELLER',OFFER:'OFFRE',LIMITED:'LIMITÉ',SEASONAL:'SAISONNIER',LOCAL_FOOD:'LOCAL',SOLD_OUT:'ÉPUISÉ',SPICY:'ÉPICÉ',VEGAN:'VÉGANE',GLUTEN_FREE:'SANS GLUTEN',HALAL:'HALAL',DAIRY_FREE:'SANS LAIT',PROTEIN_PLUS:'PROTÉINE+'},
+  es: {NEW:'NUEVO',BESTSELLER:'MÁS VENDIDO',OFFER:'OFERTA',LIMITED:'LIMITADO',SEASONAL:'TEMPORADA',LOCAL_FOOD:'LOCAL',SOLD_OUT:'AGOTADO',SPICY:'PICANTE',VEGAN:'VEGANO',GLUTEN_FREE:'SIN GLUTEN',HALAL:'HALAL',DAIRY_FREE:'SIN LÁCTEOS',PROTEIN_PLUS:'PROTEÍNA+'},
+  ar: {NEW:'جديد',BESTSELLER:'الأكثر مبيعاً',OFFER:'عرض',LIMITED:'محدود',SEASONAL:'موسمي',LOCAL_FOOD:'محلي',SOLD_OUT:'نفد',SPICY:'حار',VEGAN:'نباتي',GLUTEN_FREE:'خالي من الغلوتين',HALAL:'حلال',DAIRY_FREE:'خالي من الألبان',PROTEIN_PLUS:'بروتين+'},
+  ru: {NEW:'НОВЫЙ',BESTSELLER:'БЕСТСЕЛЛЕР',OFFER:'АКЦИЯ',LIMITED:'ЛИМИТ',SEASONAL:'СЕЗОННЫЙ',LOCAL_FOOD:'МЕСТНЫЙ',SOLD_OUT:'ПРОДАНО',SPICY:'ОСТРЫЙ',VEGAN:'ВЕГАН',GLUTEN_FREE:'БЕЗ ГЛЮТЕНА',HALAL:'ХАЛЯЛЬ',DAIRY_FREE:'БЕЗ ЛАКТОЗЫ',PROTEIN_PLUS:'ПРОТЕИН+'},
+  zh: {NEW:'新品',BESTSELLER:'畅销',OFFER:'优惠',LIMITED:'限量',SEASONAL:'季节',LOCAL_FOOD:'本地',SOLD_OUT:'售罄',SPICY:'辣',VEGAN:'纯素',GLUTEN_FREE:'无麸质',HALAL:'清真',DAIRY_FREE:'无乳糖',PROTEIN_PLUS:'高蛋白'},
+  ja: {NEW:'新着',BESTSELLER:'人気',OFFER:'お得',LIMITED:'数量限定',SEASONAL:'旬',LOCAL_FOOD:'地元',SOLD_OUT:'売切',SPICY:'辛口',VEGAN:'完全菜食',GLUTEN_FREE:'グルテンフリー',HALAL:'ハラール',DAIRY_FREE:'乳糖フリー',PROTEIN_PLUS:'プロテイン+'},
+  ko: {NEW:'신규',BESTSELLER:'베스트',OFFER:'할인',LIMITED:'한정',SEASONAL:'계절',LOCAL_FOOD:'로컬',SOLD_OUT:'품절',SPICY:'매운',VEGAN:'비건',GLUTEN_FREE:'글루텐프리',HALAL:'할랄',DAIRY_FREE:'유당프리',PROTEIN_PLUS:'고단백'},
+  it: {NEW:'NUOVO',BESTSELLER:'BESTSELLER',OFFER:'OFFERTA',LIMITED:'LIMITATO',SEASONAL:'STAGIONALE',LOCAL_FOOD:'LOCALE',SOLD_OUT:'ESAURITO',SPICY:'PICCANTE',VEGAN:'VEGANO',GLUTEN_FREE:'SENZA GLUTINE',HALAL:'HALAL',DAIRY_FREE:'SENZA LATTOSIO',PROTEIN_PLUS:'PROTEINA+'},
+  pt: {NEW:'NOVO',BESTSELLER:'MAIS VENDIDO',OFFER:'OFERTA',LIMITED:'LIMITADO',SEASONAL:'SAZONAL',LOCAL_FOOD:'LOCAL',SOLD_OUT:'ESGOTADO',SPICY:'PICANTE',VEGAN:'VEGANO',GLUTEN_FREE:'SEM GLÚTEN',HALAL:'HALAL',DAIRY_FREE:'SEM LACTOSE',PROTEIN_PLUS:'PROTEÍNA+'},
 };
+
+function getTagLabel(code){
+  const lang = currentLang || defaultLanguage || 'en';
+  const labels = TAG_LABELS_BY_LANG[lang] || TAG_LABELS_BY_LANG['en'];
+  return labels[code] || TAG_LABELS_BY_LANG['en'][code] || code;
+}
+
+// Geriye uyumluluk için
+const TAG_LABELS = TAG_LABELS_BY_LANG['en'];
 const DIETARY_TAGS = ['SPICY','VEGAN','GLUTEN_FREE','HALAL','DAIRY_FREE','PROTEIN_PLUS'];
 const LANG_NAMES = {
   en:'English',tr:'Türkçe',es:'Español',fr:'Français',de:'Deutsch',it:'Italiano',
@@ -858,33 +875,57 @@ function toggleAllergenDetail(id){
 }
 
 /* CROSS-SELL */
-const CROSS_SELL_MAP = {
-  'MAIN':    ['DRINK','STARTER','DESSERT'],
+function getCatType(catCode){
+  const cat = cats.find(c=>c.code===catCode);
+  const label = (cat?.label||catCode).toLowerCase();
+  if(/drink|içecek|beverage|juice|boire|trinken|bebida|напиток|مشروب|bevanda|beber|içki/.test(label)) return 'DRINK';
+  if(/starter|başlangıç|appetizer|entree|vorspeise|entrée|antipast|soğuk|sıcak başl/.test(label)) return 'STARTER';
+  if(/dessert|tatlı|dolce|postre|süss|sweet|pastry|cake/.test(label)) return 'DESSERT';
+  return 'MAIN';
+}
+
+const CROSS_SELL_RULES = {
+  'MAIN':    ['DRINK','STARTER'],
   'STARTER': ['DRINK','MAIN'],
   'DRINK':   [],
   'DESSERT': ['DRINK'],
 };
+
 let _crossSellShown = new Set();
 let _crossSellTouchStartX = 0;
 
 function triggerCrossSell(addedItem){
-  const addedCat = addedItem.category || 'MAIN';
-  const targetCats = CROSS_SELL_MAP[addedCat] || [];
-  const alreadyInOrder = new Set(Object.keys(orderList));
+  if(!allItems.length || !cats.length) return;
   
+  const addedCatType = getCatType(addedItem.category||'');
+  const targetTypes = CROSS_SELL_RULES[addedCatType] || [];
+  
+  const alreadyInOrder = new Set(Object.keys(orderList));
   let candidate = null;
-  for(const targetCat of targetCats){
-    const catCode = cats.find(c=>c.label.toLowerCase()===targetCat.toLowerCase())?.code || targetCat;
+  
+  // Tip bazlı eşleştirme dene
+  for(const targetType of targetTypes){
+    const targetCatCodes = cats.filter(c => getCatType(c.code) === targetType).map(c => c.code);
     const pool = allItems.filter(i =>
-      (i.category||'MAIN') === catCode &&
+      targetCatCodes.includes(i.category||'') &&
       !alreadyInOrder.has(i.id) &&
-      !_crossSellShown.has(i.id)
+      !_crossSellShown.has(i.id) &&
+      i.id !== addedItem.id
     );
-    if(pool.length > 0){
-      candidate = pool[Math.floor(Math.random() * pool.length)];
-      break;
-    }
+    if(pool.length){candidate = pool[Math.floor(Math.random()*pool.length)];break;}
   }
+  
+  // Tip eşleşmedi, farklı kategoriden rastgele öner (fallback)
+  if(!candidate){
+    const pool = allItems.filter(i =>
+      i.category !== addedItem.category &&
+      !alreadyInOrder.has(i.id) &&
+      !_crossSellShown.has(i.id) &&
+      i.id !== addedItem.id
+    );
+    if(pool.length) candidate = pool[Math.floor(Math.random()*pool.length)];
+  }
+  
   if(!candidate) return;
   _crossSellShown.add(candidate.id);
   showCrossSellCard(candidate);
@@ -1151,7 +1192,7 @@ function buildSlides(){
     const dTag = item.tagDietary;
     
     const tagsRow = (mTag || dTag) 
-      ? `<div class="tags-row">${mTag?`<div class="tag-pill tag-${mTag}">${TAG_LABELS[mTag]||mTag}</div>`:''}${dTag?`<div class="tag-pill tag-${dTag}">${TAG_LABELS[dTag]||dTag}</div>`:''}</div>`
+      ? `<div class="tags-row">${mTag?`<div class="tag-pill tag-${mTag}">${getTagLabel(mTag)}</div>`:''}${dTag?`<div class="tag-pill tag-${dTag}">${getTagLabel(dTag)}</div>`:''}</div>`
       : '';
 
     const descBlock = desc 
@@ -1229,7 +1270,7 @@ function renderDetailSheet(){
   if(!mTag && item.isBestseller) mTag = 'BESTSELLER';
   const dTag = item.tagDietary;
   const tagsRow = (mTag || dTag) 
-    ? `<div class="detail-tags-row">${mTag?`<div class="tag-pill tag-${mTag}">${TAG_LABELS[mTag]||mTag}</div>`:''}${dTag?`<div class="tag-pill tag-${dTag}">${TAG_LABELS[dTag]||dTag}</div>`:''}</div>`
+    ? `<div class="detail-tags-row">${mTag?`<div class="tag-pill tag-${mTag}">${getTagLabel(mTag)}</div>`:''}${dTag?`<div class="tag-pill tag-${dTag}">${getTagLabel(dTag)}</div>`:''}</div>`
     : '';
 
   // Photo content
@@ -1322,7 +1363,7 @@ function buildFilterChips(){
   // Dietary filter chips
   document.getElementById('filterGrid').innerHTML = DIETARY_TAGS.map(t => {
     const isActive = activeDietaryFilters.has(t);
-    return `<div class="filter-chip${isActive?' on':''}" onclick="toggleFilterChip('${t}')">${TAG_LABELS[t]||t}</div>`;
+    return `<div class="filter-chip${isActive?' on':''}" onclick="toggleFilterChip('${t}')">${getTagLabel(t)}</div>`;
   }).join('');
 }
 
@@ -1418,7 +1459,9 @@ function updatePhotoTrack(item){
 
 function setupTouch(){
   const el = document.getElementById('screen');
+  let touchTarget = null;
   el.addEventListener('touchstart',e=>{
+    touchTarget = e.target;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     touchStartTime = Date.now();
@@ -1432,6 +1475,10 @@ function setupTouch(){
     }
   },{passive:true});
   el.addEventListener('touchend',e=>{
+    // Buton veya interaktif element'e tıklanıyorsa swipe/tap handler'ı çalıştırma
+    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,.add-btn,.qty-btn,.qty-controls,.read-more-link,.cat,.lang-btn,.filter-btn,.profile-btn');
+    if(isInteractive) return;
+    
     const dx = touchStartX-e.changedTouches[0].clientX;
     const dy = touchStartY-e.changedTouches[0].clientY;
     const dt = Date.now()-touchStartTime;
