@@ -622,17 +622,55 @@ const CURRENCIES_SYM={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',AED
 
 const TAG_LABELS_BY_LANG = {
   en: {NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',LIMITED:'LIMITED',SEASONAL:'SEASONAL',LOCAL_FOOD:'LOCAL FOOD',SOLD_OUT:'SOLD OUT',SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'},
-  tr: {NEW:'YENİ',BESTSELLER:'FAVORI',OFFER:'İNDİRİM',LIMITED:'SINIRLI',SEASONAL:'MEVSIMLIK',LOCAL_FOOD:'YEREl ÜRÜN',SOLD_OUT:'TÜKENDI',SPICY:'ACILI',VEGAN:'VEGAn',GLUTEN_FREE:'GLÜTENSİZ',HALAL:'HELAL',DAIRY_FREE:'SÜT İÇERMEZ',PROTEIN_PLUS:'PROTEİN+'},
+  tr: {NEW:'YENİ',BESTSELLER:'FAVORİ',OFFER:'İNDİRİM',LIMITED:'SINIRLI',SEASONAL:'MEVSİMLİK',LOCAL_FOOD:'YEREL ÜRÜN',SOLD_OUT:'TÜKENDİ',SPICY:'ACILI',VEGAN:'VEGAN',GLUTEN_FREE:'GLÜTENSİZ',HALAL:'HELAL',DAIRY_FREE:'SÜTSİZ',PROTEIN_PLUS:'PROTEİN+'},
   de: {NEW:'NEU',BESTSELLER:'BESTSELLER',OFFER:'ANGEBOT',LIMITED:'BEGRENZT',SEASONAL:'SAISONAL',LOCAL_FOOD:'REGIONAL',SOLD_OUT:'AUSVERKAUFT',SPICY:'SCHARF',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTENFREI',HALAL:'HALAL',DAIRY_FREE:'LAKTOSEFREI',PROTEIN_PLUS:'PROTEIN+'},
   fr: {NEW:'NOUVEAU',BESTSELLER:'BESTSELLER',OFFER:'OFFRE',LIMITED:'LIMITÉ',SEASONAL:'SAISONNIER',LOCAL_FOOD:'LOCAL',SOLD_OUT:'ÉPUISÉ',SPICY:'ÉPICÉ',VEGAN:'VÉGANE',GLUTEN_FREE:'SANS GLUTEN',HALAL:'HALAL',DAIRY_FREE:'SANS LAIT',PROTEIN_PLUS:'PROTÉINE+'},
   es: {NEW:'NUEVO',BESTSELLER:'MÁS VENDIDO',OFFER:'OFERTA',LIMITED:'LIMITADO',SEASONAL:'TEMPORADA',LOCAL_FOOD:'LOCAL',SOLD_OUT:'AGOTADO',SPICY:'PICANTE',VEGAN:'VEGANO',GLUTEN_FREE:'SIN GLUTEN',HALAL:'HALAL',DAIRY_FREE:'SIN LÁCTEOS',PROTEIN_PLUS:'PROTEÍNA+'},
   ar: {NEW:'جديد',BESTSELLER:'الأكثر مبيعاً',OFFER:'عرض',LIMITED:'محدود',SEASONAL:'موسمي',LOCAL_FOOD:'محلي',SOLD_OUT:'نفد',SPICY:'حار',VEGAN:'نباتي',GLUTEN_FREE:'خالي من الغلوتين',HALAL:'حلال',DAIRY_FREE:'خالي من الألبان',PROTEIN_PLUS:'بروتين+'},
   ru: {NEW:'НОВЫЙ',BESTSELLER:'БЕСТСЕЛЛЕР',OFFER:'АКЦИЯ',LIMITED:'ЛИМИТ',SEASONAL:'СЕЗОННЫЙ',LOCAL_FOOD:'МЕСТНЫЙ',SOLD_OUT:'ПРОДАНО',SPICY:'ОСТРЫЙ',VEGAN:'ВЕГАН',GLUTEN_FREE:'БЕЗ ГЛЮТЕНА',HALAL:'ХАЛЯЛЬ',DAIRY_FREE:'БЕЗ ЛАКТОЗЫ',PROTEIN_PLUS:'ПРОТЕИН+'},
   zh: {NEW:'新品',BESTSELLER:'畅销',OFFER:'优惠',LIMITED:'限量',SEASONAL:'季节',LOCAL_FOOD:'本地',SOLD_OUT:'售罄',SPICY:'辣',VEGAN:'纯素',GLUTEN_FREE:'无麸质',HALAL:'清真',DAIRY_FREE:'无乳糖',PROTEIN_PLUS:'高蛋白'},
-  ja: {NEW:'新着',BESTSELLER:'人気',OFFER:'お得',LIMITED:'数量限定',SEASONAL:'旬',LOCAL_FOOD:'地元',SOLD_OUT:'売切',SPICY:'辛口',VEGAN:'完全菜食',GLUTEN_FREE:'グルテンフリー',HALAL:'ハラール',DAIRY_FREE:'乳糖フリー',PROTEIN_PLUS:'プロテイン+'},
-  ko: {NEW:'신규',BESTSELLER:'베스트',OFFER:'할인',LIMITED:'한정',SEASONAL:'계절',LOCAL_FOOD:'로컬',SOLD_OUT:'품절',SPICY:'매운',VEGAN:'비건',GLUTEN_FREE:'글루텐프리',HALAL:'할랄',DAIRY_FREE:'유당프리',PROTEIN_PLUS:'고단백'},
-  it: {NEW:'NUOVO',BESTSELLER:'BESTSELLER',OFFER:'OFFERTA',LIMITED:'LIMITATO',SEASONAL:'STAGIONALE',LOCAL_FOOD:'LOCALE',SOLD_OUT:'ESAURITO',SPICY:'PICCANTE',VEGAN:'VEGANO',GLUTEN_FREE:'SENZA GLUTINE',HALAL:'HALAL',DAIRY_FREE:'SENZA LATTOSIO',PROTEIN_PLUS:'PROTEINA+'},
+  ja: {NEW:'新着',BESTSELLER:'人気',OFFER:'お得',LIMITED:'数量限定',SEASONAL:'旬',LOCAL_FOOD:'地元',SOLD_OUT:'売切',SPICY:'辛口',VEGAN:'ヴィーガン',GLUTEN_FREE:'グルテンフリー',HALAL:'ハラール',DAIRY_FREE:'乳製品不使用',PROTEIN_PLUS:'高タンパク'},
+  ko: {NEW:'신규',BESTSELLER:'베스트',OFFER:'할인',LIMITED:'한정',SEASONAL:'계절',LOCAL_FOOD:'로컬',SOLD_OUT:'품절',SPICY:'매운',VEGAN:'비건',GLUTEN_FREE:'글루텐프리',HALAL:'할랄',DAIRY_FREE:'유제품없음',PROTEIN_PLUS:'고단백'},
+  it: {NEW:'NUOVO',BESTSELLER:'BESTSELLER',OFFER:'OFFERTA',LIMITED:'LIMITATO',SEASONAL:'STAGIONALE',LOCAL_FOOD:'LOCALE',SOLD_OUT:'ESAURITO',SPICY:'PICCANTE',VEGAN:'VEGANO',GLUTEN_FREE:'SENZA GLUTINE',HALAL:'HALAL',DAIRY_FREE:'SENZA LATTE',PROTEIN_PLUS:'PROTEINA+'},
   pt: {NEW:'NOVO',BESTSELLER:'MAIS VENDIDO',OFFER:'OFERTA',LIMITED:'LIMITADO',SEASONAL:'SAZONAL',LOCAL_FOOD:'LOCAL',SOLD_OUT:'ESGOTADO',SPICY:'PICANTE',VEGAN:'VEGANO',GLUTEN_FREE:'SEM GLÚTEN',HALAL:'HALAL',DAIRY_FREE:'SEM LACTOSE',PROTEIN_PLUS:'PROTEÍNA+'},
+  nl: {NEW:'NIEUW',BESTSELLER:'BESTSELLER',OFFER:'AANBIEDING',LIMITED:'BEPERKT',SEASONAL:'SEIZOEN',LOCAL_FOOD:'LOKAAL',SOLD_OUT:'UITVERKOCHT',SPICY:'PIKANT',VEGAN:'VEGANISTISCH',GLUTEN_FREE:'GLUTENVRIJ',HALAL:'HALAL',DAIRY_FREE:'ZUIVELVRIJ',PROTEIN_PLUS:'PROTEÏNE+'},
+  pl: {NEW:'NOWY',BESTSELLER:'BESTSELLER',OFFER:'OFERTA',LIMITED:'LIMITOWANY',SEASONAL:'SEZONOWY',LOCAL_FOOD:'LOKALNY',SOLD_OUT:'WYPRZEDANY',SPICY:'OSTRY',VEGAN:'WEGAŃSKI',GLUTEN_FREE:'BEZGLUTENOWY',HALAL:'HALAL',DAIRY_FREE:'BEZ LAKTOZY',PROTEIN_PLUS:'BIAŁKO+'},
+  uk: {NEW:'НОВИЙ',BESTSELLER:'БЕСТСЕЛЕР',OFFER:'АКЦІЯ',LIMITED:'ОБМЕЖЕНО',SEASONAL:'СЕЗОННИЙ',LOCAL_FOOD:'МІСЦЕВИЙ',SOLD_OUT:'ПРОДАНО',SPICY:'ГОСТРИЙ',VEGAN:'ВЕГАН',GLUTEN_FREE:'БЕЗ ГЛЮТЕНУ',HALAL:'ХАЛЯЛЬ',DAIRY_FREE:'БЕЗ ЛАКТОЗИ',PROTEIN_PLUS:'ПРОТЕЇН+'},
+  el: {NEW:'ΝΕΟ',BESTSELLER:'BESTSELLER',OFFER:'ΠΡΟΣΦΟΡΑ',LIMITED:'ΠΕΡΙΟΡΙΣΜ.',SEASONAL:'ΕΠΟΧΙΑΚΟ',LOCAL_FOOD:'ΤΟΠΙΚΟ',SOLD_OUT:'ΕΞΑΝΤΛ.',SPICY:'ΚΑΥΤΕΡΟ',VEGAN:'VEGAN',GLUTEN_FREE:'ΧΩΡΙΣ ΓΛΟΥΤ.',HALAL:'HALAL',DAIRY_FREE:'ΧΩΡΙΣ ΓΑΛΑΚ.',PROTEIN_PLUS:'ΠΡΩΤΕΙΝΗ+'},
+  he: {NEW:'חדש',BESTSELLER:'נמכר ביותר',OFFER:'מבצע',LIMITED:'מוגבל',SEASONAL:'עונתי',LOCAL_FOOD:'מקומי',SOLD_OUT:'אזל',SPICY:'חריף',VEGAN:'טבעוני',GLUTEN_FREE:'ללא גלוטן',HALAL:'חלאל',DAIRY_FREE:'ללא חלב',PROTEIN_PLUS:'עשיר בחלבון'},
+  fa: {NEW:'جدید',BESTSELLER:'پرفروش',OFFER:'تخفیف',LIMITED:'محدود',SEASONAL:'فصلی',LOCAL_FOOD:'محلی',SOLD_OUT:'تمام شد',SPICY:'تند',VEGAN:'وگان',GLUTEN_FREE:'بدون گلوتن',HALAL:'حلال',DAIRY_FREE:'بدون لبنیات',PROTEIN_PLUS:'پروتئین+'},
+  hi: {NEW:'नया',BESTSELLER:'बेस्टसेलर',OFFER:'ऑफर',LIMITED:'सीमित',SEASONAL:'मौसमी',LOCAL_FOOD:'स्थानीय',SOLD_OUT:'बिक गया',SPICY:'मसालेदार',VEGAN:'शाकाहारी',GLUTEN_FREE:'ग्लूटन-मुक्त',HALAL:'हलाल',DAIRY_FREE:'डेयरी-मुक्त',PROTEIN_PLUS:'प्रोटीन+'},
+  th: {NEW:'ใหม่',BESTSELLER:'ขายดี',OFFER:'โปรโมชั่น',LIMITED:'จำกัด',SEASONAL:'ตามฤดูกาล',LOCAL_FOOD:'ท้องถิ่น',SOLD_OUT:'หมดแล้ว',SPICY:'เผ็ด',VEGAN:'วีแกน',GLUTEN_FREE:'ไม่มีกลูเตน',HALAL:'ฮาลาล',DAIRY_FREE:'ไม่มีนม',PROTEIN_PLUS:'โปรตีน+'},
+  vi: {NEW:'MỚI',BESTSELLER:'BÁN CHẠY',OFFER:'KHUYẾN MÃI',LIMITED:'GIỚI HẠN',SEASONAL:'THEO MÙA',LOCAL_FOOD:'ĐỊA PHƯƠNG',SOLD_OUT:'HẾT HÀNG',SPICY:'CAY',VEGAN:'THUẦN CHAY',GLUTEN_FREE:'KHÔNG GLUTEN',HALAL:'HALAL',DAIRY_FREE:'KHÔNG SỮA',PROTEIN_PLUS:'PROTEIN+'},
+  id: {NEW:'BARU',BESTSELLER:'TERLARIS',OFFER:'PROMO',LIMITED:'TERBATAS',SEASONAL:'MUSIMAN',LOCAL_FOOD:'LOKAL',SOLD_OUT:'HABIS',SPICY:'PEDAS',VEGAN:'VEGAN',GLUTEN_FREE:'BEBAS GLUTEN',HALAL:'HALAL',DAIRY_FREE:'BEBAS SUSU',PROTEIN_PLUS:'PROTEIN+'},
+  ms: {NEW:'BARU',BESTSELLER:'TERLARIS',OFFER:'TAWARAN',LIMITED:'TERHAD',SEASONAL:'BERMUSIM',LOCAL_FOOD:'TEMPATAN',SOLD_OUT:'HABIS',SPICY:'PEDAS',VEGAN:'VEGAN',GLUTEN_FREE:'BEBAS GLUTEN',HALAL:'HALAL',DAIRY_FREE:'BEBAS TENUSU',PROTEIN_PLUS:'PROTEIN+'},
+  sv: {NEW:'NY',BESTSELLER:'BESTSELLER',OFFER:'ERBJUDANDE',LIMITED:'BEGRÄNSAD',SEASONAL:'SÄSONGENS',LOCAL_FOOD:'LOKALT',SOLD_OUT:'SLUTSÅLD',SPICY:'KRYDDSTARK',VEGAN:'VEGANSK',GLUTEN_FREE:'GLUTENFRI',HALAL:'HALAL',DAIRY_FREE:'LAKTOSFRI',PROTEIN_PLUS:'PROTEIN+'},
+  no: {NEW:'NY',BESTSELLER:'BESTSELLER',OFFER:'TILBUD',LIMITED:'BEGRENSET',SEASONAL:'SESONG',LOCAL_FOOD:'LOKALT',SOLD_OUT:'UTSOLGT',SPICY:'KRYDRET',VEGAN:'VEGANSK',GLUTEN_FREE:'GLUTENFRI',HALAL:'HALAL',DAIRY_FREE:'LAKTOSEFRI',PROTEIN_PLUS:'PROTEIN+'},
+  da: {NEW:'NY',BESTSELLER:'BESTSELLER',OFFER:'TILBUD',LIMITED:'BEGRÆNSET',SEASONAL:'SÆSON',LOCAL_FOOD:'LOKALT',SOLD_OUT:'UDSOLGT',SPICY:'KRYDRET',VEGAN:'VEGANSK',GLUTEN_FREE:'GLUTENFRI',HALAL:'HALAL',DAIRY_FREE:'LAKTOSEFRI',PROTEIN_PLUS:'PROTEIN+'},
+  fi: {NEW:'UUSI',BESTSELLER:'BESTSELLER',OFFER:'TARJOUS',LIMITED:'RAJOITETTU',SEASONAL:'SESONKI',LOCAL_FOOD:'PAIKALLINEN',SOLD_OUT:'LOPPUNUT',SPICY:'TULINEN',VEGAN:'VEGAANINEN',GLUTEN_FREE:'GLUTEENITON',HALAL:'HALAL',DAIRY_FREE:'LAKTOOSITON',PROTEIN_PLUS:'PROTEIINI+'},
+  cs: {NEW:'NOVÝ',BESTSELLER:'BESTSELLER',OFFER:'NABÍDKA',LIMITED:'OMEZENÝ',SEASONAL:'SEZÓNNÍ',LOCAL_FOOD:'MÍSTNÍ',SOLD_OUT:'VYPRODÁNO',SPICY:'PIKANTNÍ',VEGAN:'VEGANSKÝ',GLUTEN_FREE:'BEZLEPKOVÝ',HALAL:'HALAL',DAIRY_FREE:'BEZ LAKTÓZY',PROTEIN_PLUS:'PROTEIN+'},
+  hu: {NEW:'ÚJ',BESTSELLER:'BESTSELLER',OFFER:'AKCIÓ',LIMITED:'KORLÁTOZOTT',SEASONAL:'SZEZONÁLIS',LOCAL_FOOD:'HELYI',SOLD_OUT:'ELFOGYOTT',SPICY:'CSÍPŐS',VEGAN:'VEGÁN',GLUTEN_FREE:'GLUTÉNMENTES',HALAL:'HALAL',DAIRY_FREE:'TEJMENTÉS',PROTEIN_PLUS:'FEHÉRJE+'},
+  ro: {NEW:'NOU',BESTSELLER:'BESTSELLER',OFFER:'OFERTĂ',LIMITED:'LIMITAT',SEASONAL:'SEZONIER',LOCAL_FOOD:'LOCAL',SOLD_OUT:'EPUIZAT',SPICY:'PICANT',VEGAN:'VEGAN',GLUTEN_FREE:'FĂRĂ GLUTEN',HALAL:'HALAL',DAIRY_FREE:'FĂRĂ LACTOZĂ',PROTEIN_PLUS:'PROTEINĂ+'},
+  az: {NEW:'YENİ',BESTSELLER:'BESTSELLER',OFFER:'ENDİRİM',LIMITED:'MƏHDUD',SEASONAL:'MÖVSÜMLÜK',LOCAL_FOOD:'YERLI',SOLD_OUT:'TÜKƏNIB',SPICY:'ACILI',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTENSIZ',HALAL:'HALAL',DAIRY_FREE:'SÜDSÜZ',PROTEIN_PLUS:'PROTEIN+'},
+  ka: {NEW:'ახალი',BESTSELLER:'BESTSELLER',OFFER:'ფასდ.',LIMITED:'შეზღ.',SEASONAL:'სეზ.',LOCAL_FOOD:'ადგ.',SOLD_OUT:'გაიყ.',SPICY:'ცხარე',VEGAN:'VEGAN',GLUTEN_FREE:'გლუტ.გარეშე',HALAL:'ჰალალი',DAIRY_FREE:'რძ.გარეშე',PROTEIN_PLUS:'ცილა+'},
+  hy: {NEW:'ՆՈՐ',BESTSELLER:'BESTSELLER',OFFER:'ԶԵՂՉ',LIMITED:'ՍԱՀM.',SEASONAL:'ՍԵԶOP.',LOCAL_FOOD:'ՏEՂ.',SOLD_OUT:'ՎԱՃM.',SPICY:'ԿԾՈՒ',VEGAN:'VEGAN',GLUTEN_FREE:'ԱՆԳLUTEN',HALAL:'ՀALALLL',DAIRY_FREE:'ԱՆKԱTH.',PROTEIN_PLUS:'ՍPITAK+'},
+  kk: {NEW:'ЖАҢА',BESTSELLER:'BESTSELLER',OFFER:'ЖЕҢІЛДІК',LIMITED:'ШЕКТЕУЛІ',SEASONAL:'МАУСЫМДЫҚ',LOCAL_FOOD:'ЖЕРГІЛІКТІ',SOLD_OUT:'САТЫЛДЫ',SPICY:'АЩЫ',VEGAN:'ВЕГАН',GLUTEN_FREE:'ГЛЮТЕНСІЗ',HALAL:'ХАЛАЛ',DAIRY_FREE:'СҮТСІЗ',PROTEIN_PLUS:'ПРОТЕИН+'},
+  uz: {NEW:'YANGI',BESTSELLER:'BESTSELLER',OFFER:'CHEGIRMA',LIMITED:'CHEKLANGAN',SEASONAL:'MAVSUMIY',LOCAL_FOOD:'MAHALLIY',SOLD_OUT:'TUGADI',SPICY:'ACHIQI',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTENSIZ',HALAL:'HALOL',DAIRY_FREE:'SŪTSIZ',PROTEIN_PLUS:'PROTEIN+'},
+};
+
+const ALLERGEN_LABELS_BY_LANG = {
+  en: {GLUTEN:'Gluten',CRUSTACEANS:'Crustaceans',EGGS:'Eggs',FISH:'Fish',PEANUTS:'Peanuts',SOYBEANS:'Soybeans',MILK:'Milk',NUTS:'Tree Nuts',CELERY:'Celery',MUSTARD:'Mustard',SESAME:'Sesame',SULPHITES:'Sulphites',LUPIN:'Lupin',MOLLUSCS:'Molluscs'},
+  tr: {GLUTEN:'Gluten',CRUSTACEANS:'Kabuklu Deniz Ürünleri',EGGS:'Yumurta',FISH:'Balık',PEANUTS:'Yerfıstığı',SOYBEANS:'Soya',MILK:'Süt',NUTS:'Sert Kabuklu Yemişler',CELERY:'Kereviz',MUSTARD:'Hardal',SESAME:'Susam',SULPHITES:'Sülfitler',LUPIN:'Acı Bakla',MOLLUSCS:'Yumuşakçalar'},
+  de: {GLUTEN:'Gluten',CRUSTACEANS:'Krebstiere',EGGS:'Eier',FISH:'Fisch',PEANUTS:'Erdnüsse',SOYBEANS:'Soja',MILK:'Milch',NUTS:'Schalenfrüchte',CELERY:'Sellerie',MUSTARD:'Senf',SESAME:'Sesam',SULPHITES:'Sulfite',LUPIN:'Lupinen',MOLLUSCS:'Weichtiere'},
+  fr: {GLUTEN:'Gluten',CRUSTACEANS:'Crustacés',EGGS:'Œufs',FISH:'Poisson',PEANUTS:'Arachides',SOYBEANS:'Soja',MILK:'Lait',NUTS:'Fruits à coque',CELERY:'Céleri',MUSTARD:'Moutarde',SESAME:'Sésame',SULPHITES:'Sulfites',LUPIN:'Lupin',MOLLUSCS:'Mollusques'},
+  es: {GLUTEN:'Gluten',CRUSTACEANS:'Crustáceos',EGGS:'Huevos',FISH:'Pescado',PEANUTS:'Cacahuetes',SOYBEANS:'Soja',MILK:'Leche',NUTS:'Frutos secos',CELERY:'Apio',MUSTARD:'Mostaza',SESAME:'Sésamo',SULPHITES:'Sulfitos',LUPIN:'Altramuz',MOLLUSCS:'Moluscos'},
+  ar: {GLUTEN:'الغلوتين',CRUSTACEANS:'القشريات',EGGS:'البيض',FISH:'السمك',PEANUTS:'الفول السوداني',SOYBEANS:'فول الصويا',MILK:'الحليب',NUTS:'المكسرات',CELERY:'الكرفس',MUSTARD:'الخردل',SESAME:'السمسم',SULPHITES:'الكبريتيت',LUPIN:'الترمس',MOLLUSCS:'الرخويات'},
+  ru: {GLUTEN:'Глютен',CRUSTACEANS:'Ракообразные',EGGS:'Яйца',FISH:'Рыба',PEANUTS:'Арахис',SOYBEANS:'Соя',MILK:'Молоко',NUTS:'Орехи',CELERY:'Сельдерей',MUSTARD:'Горчица',SESAME:'Кунжут',SULPHITES:'Сульфиты',LUPIN:'Люпин',MOLLUSCS:'Моллюски'},
+  zh: {GLUTEN:'麸质',CRUSTACEANS:'甲壳类',EGGS:'鸡蛋',FISH:'鱼',PEANUTS:'花生',SOYBEANS:'大豆',MILK:'牛奶',NUTS:'坚果',CELERY:'芹菜',MUSTARD:'芥末',SESAME:'芝麻',SULPHITES:'亚硫酸盐',LUPIN:'羽扇豆',MOLLUSCS:'软体动物'},
+  ja: {GLUTEN:'グルテン',CRUSTACEANS:'甲殻類',EGGS:'卵',FISH:'魚',PEANUTS:'落花生',SOYBEANS:'大豆',MILK:'乳',NUTS:'ナッツ類',CELERY:'セロリ',MUSTARD:'マスタード',SESAME:'ごま',SULPHITES:'亜硫酸塩',LUPIN:'ルパン',MOLLUSCS:'軟体動物'},
+  ko: {GLUTEN:'글루텐',CRUSTACEANS:'갑각류',EGGS:'계란',FISH:'생선',PEANUTS:'땅콩',SOYBEANS:'대두',MILK:'우유',NUTS:'견과류',CELERY:'셀러리',MUSTARD:'겨자',SESAME:'참깨',SULPHITES:'아황산염',LUPIN:'루핀',MOLLUSCS:'연체동물'},
+  it: {GLUTEN:'Glutine',CRUSTACEANS:'Crostacei',EGGS:'Uova',FISH:'Pesce',PEANUTS:'Arachidi',SOYBEANS:'Soia',MILK:'Latte',NUTS:'Frutta a guscio',CELERY:'Sedano',MUSTARD:'Senape',SESAME:'Sesamo',SULPHITES:'Solfiti',LUPIN:'Lupini',MOLLUSCS:'Molluschi'},
+  pt: {GLUTEN:'Glúten',CRUSTACEANS:'Crustáceos',EGGS:'Ovos',FISH:'Peixe',PEANUTS:'Amendoins',SOYBEANS:'Soja',MILK:'Leite',NUTS:'Frutos de casca rija',CELERY:'Aipo',MUSTARD:'Mostarda',SESAME:'Sésamo',SULPHITES:'Sulfitos',LUPIN:'Tremoços',MOLLUSCS:'Moluscos'},
 };
 
 function getTagLabel(code){
@@ -640,8 +678,15 @@ function getTagLabel(code){
   const labels = TAG_LABELS_BY_LANG[lang] || TAG_LABELS_BY_LANG['en'];
   return labels[code] || TAG_LABELS_BY_LANG['en'][code] || code;
 }
-
-// Geriye uyumluluk için
+function getAllergenLabel(code){
+  const lang = currentLang || defaultLanguage || 'en';
+  const labels = ALLERGEN_LABELS_BY_LANG[lang] || ALLERGEN_LABELS_BY_LANG['en'];
+  return labels[code] || ALLERGEN_LABELS_BY_LANG['en'][code] || code;
+}
+function getAllLabel(){
+  const m = {en:'All',tr:'Tümü',de:'Alle',fr:'Tout',es:'Todo',ar:'الكل',ru:'Все',zh:'全部',ja:'すべて',ko:'전체',it:'Tutto',pt:'Tudo',nl:'Alles',pl:'Wszystko',uk:'Всі',el:'Όλα',he:'הכל',fa:'همه',hi:'सभी',th:'ทั้งหมด',vi:'Tất cả',id:'Semua',ms:'Semua',sv:'Alla',no:'Alle',da:'Alle',fi:'Kaikki',cs:'Vše',hu:'Összes',ro:'Toate',az:'Hamısı',ka:'ყველა',hy:'Բոլոր',kk:'Барлық',uz:'Hammasi'};
+  return m[currentLang||defaultLanguage||'en'] || 'All';
+}
 const TAG_LABELS = TAG_LABELS_BY_LANG['en'];
 const DIETARY_TAGS = ['SPICY','VEGAN','GLUTEN_FREE','HALAL','DAIRY_FREE','PROTEIN_PLUS'];
 const LANG_NAMES = {
@@ -1137,10 +1182,12 @@ function init(){
 }
 
 function buildCatBar(){
-  // Sadece içinde item olan kategorileri göster
+  // Sadece içinde item olan kategorileri göster, sortOrder'a göre sırala
   const usedCats = new Set(allItems.map(i=>i.category||'MAIN'));
-  const visibleCats = categoriesMeta.filter(c => usedCats.has(c.code));
-  const all = [{code:'all',label:'All'}, ...visibleCats];
+  const visibleCats = [...categoriesMeta]
+    .filter(c => usedCats.has(c.code));
+  // sortOrder zaten backend'den geliyor, spread ederek orijinal sırayı koru
+  const all = [{code:'all', label: getAllLabel()}, ...visibleCats];
   document.getElementById('catBar').innerHTML = all.map(c =>
     `<div class="cat${c.code===currentCat?' on':''}" onclick="selectCat('${c.code}')">${c.label}</div>`
   ).join('');
@@ -1355,8 +1402,9 @@ function buildFilterChips(){
   // Allergen filter chips
   document.getElementById('allergenFilterGrid').innerHTML = ALLERGEN_LIST.map(a => {
     const isActive = activeAllergenFilters.has(a.code);
+    const label = getAllergenLabel(a.code);
     return `<div class="filter-chip${isActive?' on':''}" onclick="toggleAllergenFilter('${a.code}')" style="${isActive?'background:#fee2e2;color:#991b1b;border-color:#fca5a5':''}">
-      ${a.emoji} ${a.label}
+      ${a.emoji} ${label}
     </div>`;
   }).join('');
 

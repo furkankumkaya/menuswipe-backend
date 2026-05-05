@@ -47,18 +47,35 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
       selectedBranch = activeBranches[0];
     }
 
-    const items = await prisma.menuItem.findMany({
-      where: {
-        organizationId: org.id,
-        active: true,
-        itemBranches: { some: { branchId: selectedBranch.id } },
-      },
-      include: {
-        photos: { orderBy: { sortOrder: "asc" } },
-        translations: true,
-      },
-      orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
-    });
+    let items = [];
+    try {
+      items = await prisma.menuItem.findMany({
+        where: {
+          organizationId: org.id,
+          active: true,
+          itemBranches: { some: { branchId: selectedBranch.id } },
+        },
+        include: {
+          photos: { orderBy: { sortOrder: "asc" } },
+          translations: true,
+        },
+        orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+      });
+    } catch (e) {
+      // translations tablosu henüz yoksa temel query ile dene
+      console.warn("Full query failed, falling back:", e.message);
+      items = await prisma.menuItem.findMany({
+        where: {
+          organizationId: org.id,
+          active: true,
+          itemBranches: { some: { branchId: selectedBranch.id } },
+        },
+        include: {
+          photos: { orderBy: { sortOrder: "asc" } },
+        },
+        orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+      });
+    }
 
     // Dil seçimi
     const requestedLang = req.query.lang;
@@ -74,24 +91,33 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
       return {
         id: it.id,
         name: useTranslation ? tr.name : it.name,
-        originalName: it.name,  // Garson modu için ana dildeki isim
+        originalName: it.name,
         description: useTranslation ? (tr.description || it.description) : it.description,
         price: it.price,
         category: it.category,
         isBestseller: it.isBestseller,
         tagMarketing: it.tagMarketing,
         tagDietary: it.tagDietary,
+        allergens: it.allergens || [],
         sortOrder: it.sortOrder,
         photos: it.photos,
       };
     });
 
     // Kategorileri de localize et
-    const catsWithTranslations = await prisma.category.findMany({
-      where: { organizationId: org.id, visible: true },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      include: { translations: true },
-    });
+    let catsWithTranslations = [];
+    try {
+      catsWithTranslations = await prisma.category.findMany({
+        where: { organizationId: org.id, visible: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        include: { translations: true },
+      });
+    } catch(e) {
+      catsWithTranslations = await prisma.category.findMany({
+        where: { organizationId: org.id, visible: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      });
+    }
     const localizedCats = catsWithTranslations.map(c => {
       const tr = c.translations.find(t => t.language === selectedLang);
       const useTranslation = selectedLang !== defaultLang && tr;
@@ -99,6 +125,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         code: c.code,
         label: useTranslation ? tr.label : c.label,
         color: c.color,
+        sortOrder: c.sortOrder,
       };
     });
 
