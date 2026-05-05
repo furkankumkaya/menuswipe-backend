@@ -763,7 +763,15 @@ function saveOrderList(){
   }catch(e){}
 }
 
+let _lastAddTime = 0;
+let _lastAddItemId = null;
 function addToOrder(itemId){
+  // Debounce: aynı item'a 400ms içinde tekrar tıklanırsa yok say
+  const now = Date.now();
+  if(_lastAddItemId === itemId && (now - _lastAddTime) < 400) return;
+  _lastAddTime = now;
+  _lastAddItemId = itemId;
+  
   const item = allItems.find(i => i.id === itemId);
   if(!item) return;
   if(!orderList[itemId]){
@@ -776,7 +784,6 @@ function addToOrder(itemId){
       allergens: item.allergens||[],
       category: item.category||'MAIN',
     };
-    // İlk eklemede cross-sell tetikle
     triggerCrossSell(item);
   } else {
     orderList[itemId].qty++;
@@ -786,16 +793,24 @@ function addToOrder(itemId){
   updateOrderFab();
 }
 
+let _lastQtyTime = 0;
 function incQty(itemId){
+  const now = Date.now();
+  if((now - _lastQtyTime) < 250) return;
+  _lastQtyTime = now;
   const item = allItems.find(i => i.id === itemId);
   if(!item || !orderList[itemId]) return;
   orderList[itemId].qty++;
   saveOrderList();
   renderAddBox(item);
   updateOrderFab();
+  if(document.getElementById('orderOverlay').classList.contains('open')) renderOrderSheet();
 }
 
 function decQty(itemId){
+  const now = Date.now();
+  if((now - _lastQtyTime) < 250) return;
+  _lastQtyTime = now;
   const item = allItems.find(i => i.id === itemId);
   if(!item || !orderList[itemId]) return;
   orderList[itemId].qty--;
@@ -803,7 +818,6 @@ function decQty(itemId){
   saveOrderList();
   renderAddBox(item);
   updateOrderFab();
-  // Eğer order sheet açıksa, içeriği yenile
   if(document.getElementById('orderOverlay').classList.contains('open')) renderOrderSheet();
 }
 
@@ -921,7 +935,7 @@ function toggleAllergenDetail(id){
 
 /* CROSS-SELL */
 function getCatType(catCode){
-  const cat = cats.find(c=>c.code===catCode);
+  const cat = categoriesMeta.find(c=>c.code===catCode);
   const label = (cat?.label||catCode).toLowerCase();
   if(/drink|içecek|beverage|juice|boire|trinken|bebida|напиток|مشروب|bevanda|beber|içki/.test(label)) return 'DRINK';
   if(/starter|başlangıç|appetizer|entree|vorspeise|entrée|antipast|soğuk|sıcak başl/.test(label)) return 'STARTER';
@@ -940,45 +954,63 @@ let _crossSellShown = new Set();
 let _crossSellTouchStartX = 0;
 
 function triggerCrossSell(addedItem){
-  if(!allItems.length || !cats.length) return;
-  
-  const addedCatType = getCatType(addedItem.category||'');
-  const targetTypes = CROSS_SELL_RULES[addedCatType] || [];
-  
-  const alreadyInOrder = new Set(Object.keys(orderList));
-  let candidate = null;
-  
-  // Tip bazlı eşleştirme dene
-  for(const targetType of targetTypes){
-    const targetCatCodes = cats.filter(c => getCatType(c.code) === targetType).map(c => c.code);
-    const pool = allItems.filter(i =>
-      targetCatCodes.includes(i.category||'') &&
-      !alreadyInOrder.has(i.id) &&
-      !_crossSellShown.has(i.id) &&
-      i.id !== addedItem.id
-    );
-    if(pool.length){candidate = pool[Math.floor(Math.random()*pool.length)];break;}
+  try {
+    if(!allItems.length) return;
+    
+    const alreadyInOrder = new Set(Object.keys(orderList));
+    let candidate = null;
+    
+    // Tip bazlı eşleştirme dene (kategori meta varsa)
+    if(categoriesMeta.length){
+      const addedCatType = getCatType(addedItem.category||'');
+      const targetTypes = CROSS_SELL_RULES[addedCatType] || [];
+      
+      for(const targetType of targetTypes){
+        const targetCatCodes = categoriesMeta.filter(c => getCatType(c.code) === targetType).map(c => c.code);
+        const pool = allItems.filter(i =>
+          targetCatCodes.includes(i.category||'') &&
+          !alreadyInOrder.has(i.id) &&
+          !_crossSellShown.has(i.id) &&
+          i.id !== addedItem.id
+        );
+        if(pool.length){candidate = pool[Math.floor(Math.random()*pool.length)];break;}
+      }
+    }
+    
+    // Fallback: farklı kategoriden rastgele
+    if(!candidate){
+      const pool = allItems.filter(i =>
+        i.category !== addedItem.category &&
+        !alreadyInOrder.has(i.id) &&
+        !_crossSellShown.has(i.id) &&
+        i.id !== addedItem.id
+      );
+      if(pool.length) candidate = pool[Math.floor(Math.random()*pool.length)];
+    }
+    
+    // Son fallback: aynı kategoriden bile olsa öner (en az bir öneri çıksın)
+    if(!candidate){
+      const pool = allItems.filter(i =>
+        !alreadyInOrder.has(i.id) &&
+        !_crossSellShown.has(i.id) &&
+        i.id !== addedItem.id
+      );
+      if(pool.length) candidate = pool[Math.floor(Math.random()*pool.length)];
+    }
+    
+    if(!candidate){console.log('cross-sell: no candidate'); return;}
+    _crossSellShown.add(candidate.id);
+    showCrossSellCard(candidate);
+  } catch(err) {
+    console.error('cross-sell error', err);
   }
-  
-  // Tip eşleşmedi, farklı kategoriden rastgele öner (fallback)
-  if(!candidate){
-    const pool = allItems.filter(i =>
-      i.category !== addedItem.category &&
-      !alreadyInOrder.has(i.id) &&
-      !_crossSellShown.has(i.id) &&
-      i.id !== addedItem.id
-    );
-    if(pool.length) candidate = pool[Math.floor(Math.random()*pool.length)];
-  }
-  
-  if(!candidate) return;
-  _crossSellShown.add(candidate.id);
-  showCrossSellCard(candidate);
 }
 
 function showCrossSellCard(item){
   const sym = getSym();
   const card = document.getElementById('crossSellCard');
+  if(!card){console.error('cross-sell card el yok'); return;}
+  
   const thumb = item.photos?.[0]?.url
     ? `<div class="cross-sell-thumb"><img src="${item.photos[0].url}" alt=""/></div>`
     : `<div class="cross-sell-thumb" style="display:flex;align-items:center;justify-content:center;font-size:22px">🍽</div>`;
@@ -998,7 +1030,10 @@ function showCrossSellCard(item){
     const dx = e.changedTouches[0].clientX - _crossSellTouchStartX;
     if(dx > 60) dismissCrossSell();
   };
-  requestAnimationFrame(() => card.classList.add('visible'));
+  // Force reflow + animation
+  card.classList.remove('visible');
+  void card.offsetWidth;
+  setTimeout(() => card.classList.add('visible'), 50);
 }
 
 function dismissCrossSell(){
@@ -1159,7 +1194,7 @@ function catMeta(code){
 function getFiltered(){
   let list = allItems;
   if(currentCat !== 'all') list = list.filter(i => (i.category||'MAIN') === currentCat);
-  // Dietary filter: OR mantığı (seçili tag'lerden birini içeren)
+  // Dietary filter: OR mantığı
   if(activeDietaryFilters.size > 0){
     list = list.filter(i => activeDietaryFilters.has(i.tagDietary));
   }
@@ -1170,6 +1205,15 @@ function getFiltered(){
       return !itemAllergens.some(a => activeAllergenFilters.has(a));
     });
   }
+  // Kategori sortOrder'a göre sırala (sonra item sortOrder)
+  const catOrder = {};
+  categoriesMeta.forEach((c, idx) => { catOrder[c.code] = c.sortOrder ?? idx; });
+  list = [...list].sort((a, b) => {
+    const ao = catOrder[a.category||'MAIN'] ?? 999;
+    const bo = catOrder[b.category||'MAIN'] ?? 999;
+    if(ao !== bo) return ao - bo;
+    return (a.sortOrder||0) - (b.sortOrder||0);
+  });
   return list;
 }
 
