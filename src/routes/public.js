@@ -99,6 +99,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         tagMarketing: it.tagMarketing,
         tagDietary: it.tagDietary,
         allergens: it.allergens || [],
+        crossSellItemId: it.crossSellItemId || null,
         sortOrder: it.sortOrder,
         photos: it.photos,
       };

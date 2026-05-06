@@ -348,15 +348,16 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 /* CROSS SELL */
 .cross-sell-card{
   position:fixed;
-  bottom:calc(80px + env(safe-area-inset-bottom,0px));
+  top:max(calc(env(safe-area-inset-top,0px) + 165px), 180px);
   left:16px;right:16px;
-  background:#1D1616;
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:18px;
-  padding:12px 14px;
-  display:flex;align-items:center;gap:12px;
-  box-shadow:0 8px 32px rgba(0,0,0,.5);
-  z-index:50;
+  background:rgba(29,22,22,.92);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  padding:10px 12px;
+  display:flex;align-items:center;gap:11px;
+  box-shadow:0 12px 36px rgba(0,0,0,.55);
+  z-index:60;
   transform:translateX(110%);
   transition:transform .35s cubic-bezier(.25,.46,.45,.94);
   touch-action:pan-x;
@@ -943,62 +944,24 @@ function getCatType(catCode){
   return 'MAIN';
 }
 
-const CROSS_SELL_RULES = {
-  'MAIN':    ['DRINK','STARTER'],
-  'STARTER': ['DRINK','MAIN'],
-  'DRINK':   [],
-  'DESSERT': ['DRINK'],
-};
-
+/* CROSS-SELL — Manuel: restoran sahibi her item için bir öneri belirler */
 let _crossSellShown = new Set();
 let _crossSellTouchStartX = 0;
 
 function triggerCrossSell(addedItem){
   try {
-    if(!allItems.length) return;
+    if(!addedItem || !addedItem.crossSellItemId) return;
     
-    const alreadyInOrder = new Set(Object.keys(orderList));
-    let candidate = null;
+    // Önerilen item zaten sepette ise gösterme
+    if(orderList[addedItem.crossSellItemId]) return;
     
-    // Tip bazlı eşleştirme dene (kategori meta varsa)
-    if(categoriesMeta.length){
-      const addedCatType = getCatType(addedItem.category||'');
-      const targetTypes = CROSS_SELL_RULES[addedCatType] || [];
-      
-      for(const targetType of targetTypes){
-        const targetCatCodes = categoriesMeta.filter(c => getCatType(c.code) === targetType).map(c => c.code);
-        const pool = allItems.filter(i =>
-          targetCatCodes.includes(i.category||'') &&
-          !alreadyInOrder.has(i.id) &&
-          !_crossSellShown.has(i.id) &&
-          i.id !== addedItem.id
-        );
-        if(pool.length){candidate = pool[Math.floor(Math.random()*pool.length)];break;}
-      }
-    }
+    // Bu öneri daha önce bu session'da gösterildiyse tekrar gösterme
+    if(_crossSellShown.has(addedItem.crossSellItemId)) return;
     
-    // Fallback: farklı kategoriden rastgele
-    if(!candidate){
-      const pool = allItems.filter(i =>
-        i.category !== addedItem.category &&
-        !alreadyInOrder.has(i.id) &&
-        !_crossSellShown.has(i.id) &&
-        i.id !== addedItem.id
-      );
-      if(pool.length) candidate = pool[Math.floor(Math.random()*pool.length)];
-    }
+    // Önerilen item'ı bul
+    const candidate = allItems.find(i => i.id === addedItem.crossSellItemId);
+    if(!candidate) return;
     
-    // Son fallback: aynı kategoriden bile olsa öner (en az bir öneri çıksın)
-    if(!candidate){
-      const pool = allItems.filter(i =>
-        !alreadyInOrder.has(i.id) &&
-        !_crossSellShown.has(i.id) &&
-        i.id !== addedItem.id
-      );
-      if(pool.length) candidate = pool[Math.floor(Math.random()*pool.length)];
-    }
-    
-    if(!candidate){console.log('cross-sell: no candidate'); return;}
     _crossSellShown.add(candidate.id);
     showCrossSellCard(candidate);
   } catch(err) {
@@ -1042,9 +1005,26 @@ function dismissCrossSell(){
 
 function addFromCrossSell(itemId){
   dismissCrossSell();
-  addToOrder(itemId);
+  // Cross-sell'den eklenen item için yeni cross-sell tetikleme — tek 1 öneri
   const item = allItems.find(i => i.id === itemId);
-  if(item) setTimeout(() => triggerCrossSell(item), 600);
+  if(!item) return;
+  if(!orderList[itemId]){
+    orderList[itemId] = {
+      qty: 1,
+      name: item.name,
+      originalName: item.originalName||item.name,
+      price: item.price,
+      photoUrl: item.photos?.[0]?.url||null,
+      allergens: item.allergens||[],
+      category: item.category||'MAIN',
+    };
+    // triggerCrossSell ÇAĞRILMIYOR — yalnızca 1 öneri
+  } else {
+    orderList[itemId].qty++;
+  }
+  saveOrderList();
+  renderAddBox(item);
+  updateOrderFab();
 }
 
 /* WAITER MODE */

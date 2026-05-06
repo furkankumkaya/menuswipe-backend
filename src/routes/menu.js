@@ -199,6 +199,11 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
       data.allergens = req.body.allergens.filter(a => VALID_ALLERGENS.includes(a));
     }
 
+    // Cross-sell suggestion
+    if (req.body.crossSellItemId !== undefined) {
+      data.crossSellItemId = req.body.crossSellItemId || null;
+    }
+
     if (Array.isArray(branchIds)) {
       await prisma.menuItemBranch.deleteMany({ where: { menuItemId: req.params.id } });
       data.itemBranches = { create: branchIds.map(bid => ({ branchId: bid })) };

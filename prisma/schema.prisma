@@ -155,8 +155,11 @@ model MenuItem {
   tagMarketing    String?
   tagDietary      String?
   
-  // Alerjenler (virgülle ayrılmış kodlar: GLUTEN,EGGS,MILK vb.)
+  // Alerjenler
   allergens       String[]     @default([])
+  
+  // Cross-sell - bu item siparişe eklenince önerilecek başka bir item ID'si
+  crossSellItemId String?
   
   sortOrder       Int          @default(0)
   

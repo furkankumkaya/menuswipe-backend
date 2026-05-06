@@ -600,6 +600,20 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       </div>
     </div>
 
+    <!-- CROSS-SELL OVERLAY -->
+    <div class="overlay" id="crossSellOverlay">
+      <div class="modal" style="max-width:600px">
+        <div class="modal-handle"></div>
+        <div class="m-title">Cross-sell suggestions</div>
+        <div class="m-sub">For each item, choose what to suggest when a customer adds it to their order. Leave blank for no suggestion.</div>
+        <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:9px 12px;font-size:11px;color:#713f12;line-height:1.5;margin:10px 0 14px">
+          Example: Customer adds Köfte → suggest Ayran. Customer adds Pizza → suggest Cola.
+        </div>
+        <div id="crossSellList" style="max-height:55vh;overflow-y:auto;margin-bottom:14px"></div>
+        <div class="m-row"><button class="btn-gh" onclick="closeCrossSellOverlay()">Cancel</button><button class="btn-dk" onclick="saveCrossSells()">Save all</button></div>
+      </div>
+    </div>
+
     <!-- MENU PANEL -->
     <div class="panel on" id="p-menu">
       <div class="sstrip">
@@ -609,10 +623,16 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       </div>
       <div class="sec-hd">
         <div class="sec-lbl">Filter</div>
-        <button class="btn-gh" onclick="openCatsOverlay()" style="font-size:11px">
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="6.5" y="1" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="6.5" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="6.5" y="6.5" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/></svg>
-          Categories
-        </button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-gh" onclick="openCrossSellOverlay()" style="font-size:11px">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4 7.5L9 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Cross-sell
+          </button>
+          <button class="btn-gh" onclick="openCatsOverlay()" style="font-size:11px">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="6.5" y="1" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="6.5" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="6.5" y="6.5" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/></svg>
+            Categories
+          </button>
+        </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="catPills"></div>
       <div class="itable-wrap">
@@ -1923,6 +1943,81 @@ async function toggleOrderList(cb){
   }catch(e){
     toast('Failed: '+e.message);
     cb.checked = !cb.checked;
+  }
+}
+
+/* ============== CROSS-SELL ============== */
+let _crossSellEdits = {};
+
+function openCrossSellOverlay(){
+  _crossSellEdits = {};
+  items.forEach(it => { _crossSellEdits[it.id] = it.crossSellItemId || ''; });
+  renderCrossSellList();
+  document.getElementById('crossSellOverlay').classList.add('open');
+}
+
+function renderCrossSellList(){
+  const body = document.getElementById('crossSellList');
+  if(items.length === 0){
+    body.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px 16px;font-size:13px">No items yet. Add some menu items first.</div>';
+    return;
+  }
+  // Kategori bazlı sırala
+  const sorted = [...items].sort((a,b) => {
+    const ca = cats.findIndex(c => c.code === (a.category||'MAIN'));
+    const cb = cats.findIndex(c => c.code === (b.category||'MAIN'));
+    if(ca !== cb) return ca - cb;
+    return (a.sortOrder||0) - (b.sortOrder||0);
+  });
+  body.innerHTML = sorted.map(item => {
+    const cat = cats.find(c => c.code === (item.category||'MAIN'));
+    const catLabel = cat?.label || 'MAIN';
+    const currentValue = _crossSellEdits[item.id] || '';
+    const opts = items
+      .filter(i => i.id !== item.id)
+      .map(i => `<option value="${i.id}"${i.id===currentValue?' selected':''}>${escAdm(i.name)}</option>`)
+      .join('');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f1f5f9">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escAdm(item.name)}</div>
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">${escAdm(catLabel)}</div>
+      </div>
+      <div style="font-size:14px;color:#cbd5e1;flex-shrink:0">→</div>
+      <select onchange="_crossSellEdits['${item.id}']=this.value" style="flex:1.2;min-width:0;padding:7px 8px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;cursor:pointer">
+        <option value="">— No suggestion —</option>
+        ${opts}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function escAdm(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function closeCrossSellOverlay(){
+  document.getElementById('crossSellOverlay').classList.remove('open');
+}
+
+async function saveCrossSells(){
+  const changes = [];
+  items.forEach(it => {
+    const newVal = _crossSellEdits[it.id] || null;
+    const oldVal = it.crossSellItemId || null;
+    if(newVal !== oldVal) changes.push({ id: it.id, crossSellItemId: newVal });
+  });
+  if(changes.length === 0){
+    closeCrossSellOverlay();
+    toast('No changes');
+    return;
+  }
+  try {
+    for(const c of changes){
+      await api('PATCH', '/api/menu/'+c.id, { crossSellItemId: c.crossSellItemId });
+    }
+    await loadMenu();
+    closeCrossSellOverlay();
+    toast(`Saved ${changes.length} cross-sell ${changes.length===1?'rule':'rules'}`);
+  } catch(e){
+    toast('Failed: '+e.message);
   }
 }
 
