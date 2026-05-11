@@ -2054,7 +2054,9 @@ function renderLanguages(){
         <div style="font-size:13px;font-weight:700;color:#1e293b">${defaultLangName}</div>
         <div style="font-size:10px;color:#64748b">Main language · ${d.totalItems} items</div>
       </div>
-      <div style="font-size:10px;color:#64748b;font-weight:600">DEFAULT</div>
+      <button onclick="openChangeMainLang()" style="width:28px;height:28px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center" title="Change main language">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 2.5l2.5 2.5M2 12V9.5L9 2.5l2.5 2.5L4.5 12H2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </button>
     </div>`;
   
   // Aktif diller
@@ -2096,6 +2098,60 @@ function renderLanguages(){
   document.getElementById('langSectionSub').textContent = enabled.length === 0 
     ? 'Show your menu in multiple languages' 
     : `${enabled.length} additional language${enabled.length===1?'':'s'} active`;
+}
+
+async function openChangeMainLang(){
+  const currentDefault = translationData?.defaultLanguage || 'en';
+  const enabled = translationData?.enabledLanguages || [];
+  
+  // Tüm diller seçilebilir (mevcut ana dil dahil değil)
+  const html = `
+    <div id="mainLangOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:420px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#1e293b">Change main language</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">Current: ${(LANGUAGES.find(l=>l.code===currentDefault)?.name)||currentDefault}</div>
+          </div>
+          <button onclick="document.getElementById('mainLangOverlay').remove()" style="width:28px;height:28px;border-radius:6px;border:none;background:#f1f5f9;cursor:pointer;color:#475569">${XMARK}</button>
+        </div>
+        <div style="background:#fef9c3;border-bottom:1px solid #fde047;padding:10px 14px;font-size:11px;color:#713f12;line-height:1.5">
+          <strong>Warning:</strong> Changing the main language means your existing items (in ${(LANGUAGES.find(l=>l.code===currentDefault)?.name)||currentDefault}) will be considered as the new main. Existing translations stay but may need updating. Run "Re-translate all" afterwards if needed.
+        </div>
+        <input type="text" id="mainLangSearch" placeholder="Search..." oninput="filterMainLangPicker(this.value)" style="margin:10px 14px;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"/>
+        <div id="mainLangList" style="flex:1;overflow-y:auto;padding:0 6px 14px">
+          ${LANGUAGES.filter(l=>l.code!==currentDefault).map(l=>`<button onclick="confirmChangeMainLang('${l.code}','${(l.name||'').replace(/'/g,"\\'")}')" data-name="${l.name.toLowerCase()}" style="width:100%;padding:10px 12px;border:none;background:transparent;cursor:pointer;text-align:left;border-radius:8px;display:flex;align-items:center;gap:10px;font-size:13px" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <span style="width:26px;height:26px;border-radius:6px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">${l.code.toUpperCase()}</span>
+            <span style="color:#1e293b;font-weight:600">${l.name}</span>
+            ${enabled.includes(l.code)?'<span style="margin-left:auto;font-size:10px;color:#16a34a;font-weight:700">Currently active</span>':''}
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(()=>document.getElementById('mainLangSearch').focus(), 50);
+}
+
+function filterMainLangPicker(query){
+  const q = query.toLowerCase();
+  document.querySelectorAll('#mainLangList button').forEach(btn=>{
+    const name = btn.getAttribute('data-name');
+    btn.style.display = name.includes(q) ? 'flex' : 'none';
+  });
+}
+
+async function confirmChangeMainLang(code, name){
+  if(!confirm(`Change main language to ${name}?\n\nThis will set ${name} as the primary language of your menu. Existing translations are preserved.`)) return;
+  document.getElementById('mainLangOverlay')?.remove();
+  try{
+    const updated = await api('PATCH','/api/auth/organization', { defaultLanguage: code });
+    org = {...org, ...updated};
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    await loadLanguages();
+    toast('Main language changed to '+name);
+  }catch(e){
+    toast('Failed: '+e.message);
+  }
 }
 
 async function openAddLanguage(){

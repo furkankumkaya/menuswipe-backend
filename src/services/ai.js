@@ -139,13 +139,15 @@ async function generateDescription(itemName, category, language = "en") {
       content: `Write a short, appetizing menu description for this dish. Language: ${langName}. Category: ${category}. Dish name: ${itemName}.
 
 Rules:
-- Around 120-180 characters, max 200 characters total
+- HARD LIMIT: max 200 characters total (including spaces) — count carefully
+- Length is flexible: can be short (60-100 chars) or longer (up to 200) — write what's natural
 - 1-2 complete sentences
 - Natural, restaurant-quality wording
 - Include key ingredients or preparation method if recognizable
 - Do not include the dish name itself in the description
 - No quotes, no markdown, just the plain description text
 - Always finish with proper punctuation (period)
+- If the dish is simple, keep it short. Don't pad with filler.
 
 Respond with ONLY the description text, nothing else.`,
     }],
@@ -154,17 +156,15 @@ Respond with ONLY the description text, nothing else.`,
   const textBlock = response.content.find(b => b.type === "text");
   let text = (textBlock?.text || "").trim();
   
-  // Sınırla ama kelime ortasından kesme
-  if (text.length > 220) {
-    // Son 220 karakter içinde son cümle sonu bul
-    const trimmed = text.slice(0, 220);
+  // 200 karakter sınırı
+  if (text.length > 200) {
+    const trimmed = text.slice(0, 200);
     const lastPunct = Math.max(trimmed.lastIndexOf('.'), trimmed.lastIndexOf('!'), trimmed.lastIndexOf('?'));
-    if (lastPunct > 100) {
+    if (lastPunct > 80) {
       text = trimmed.slice(0, lastPunct + 1);
     } else {
-      // Son boşluk
       const lastSpace = trimmed.lastIndexOf(' ');
-      text = lastSpace > 100 ? trimmed.slice(0, lastSpace) + '.' : trimmed + '.';
+      text = lastSpace > 80 ? trimmed.slice(0, lastSpace) + '.' : trimmed + '.';
     }
   }
   return text;
@@ -236,15 +236,15 @@ Respond with ONLY this JSON:
       const parsed = JSON.parse(jsonText);
       if (parsed.name) {
         let desc = (parsed.description || "").trim();
-        // Kelime ortasından kesme
-        if (desc.length > 250) {
-          const trimmed = desc.slice(0, 250);
+        // 200 karakter sınırı, kelime ortasından kesme
+        if (desc.length > 200) {
+          const trimmed = desc.slice(0, 200);
           const lastPunct = Math.max(trimmed.lastIndexOf('.'), trimmed.lastIndexOf('!'), trimmed.lastIndexOf('?'));
-          if (lastPunct > 100) {
+          if (lastPunct > 80) {
             desc = trimmed.slice(0, lastPunct + 1);
           } else {
             const lastSpace = trimmed.lastIndexOf(' ');
-            desc = lastSpace > 100 ? trimmed.slice(0, lastSpace) + '.' : trimmed;
+            desc = lastSpace > 80 ? trimmed.slice(0, lastSpace) + '.' : trimmed;
           }
         }
         return {

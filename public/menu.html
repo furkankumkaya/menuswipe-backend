@@ -420,7 +420,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .info{position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));pointer-events:none}
 .cat-tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
 .item-name{font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:5px}
-.item-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item-desc{font-size:13.5px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;max-width:680px}
 .item-price{font-size:22px;font-weight:800;color:#fff;margin-bottom:10px}
 
 .photo-dots{display:flex;gap:5px;margin-bottom:6px}
@@ -1255,7 +1255,6 @@ function buildSlides(){
       : '';
 
     const desc = item.description||'';
-    const descIsLong = desc.length > 80; // 2 satırdan fazla potansiyel
 
     // Tag system: marketing + dietary, max 2 tag
     let mTag = item.tagMarketing;
@@ -1267,7 +1266,7 @@ function buildSlides(){
       : '';
 
     const descBlock = desc 
-      ? `<div class="item-desc">${escapeHtml(desc)}</div>${descIsLong?`<span class="read-more-link" data-detail-id="${item.id}">Read more</span>`:''}`
+      ? `<div class="item-desc">${escapeHtml(desc)}</div>`
       : '';
 
     slide.innerHTML = `
@@ -1278,7 +1277,7 @@ function buildSlides(){
       <div class="info">
         ${tagsRow}
         <div class="cat-tag">${cm.label}</div>
-        <div class="item-name" data-detail-id="${item.id}" style="cursor:pointer">${escapeHtml(item.name)}</div>
+        <div class="item-name">${escapeHtml(item.name)}</div>
         ${descBlock}
         <div class="item-price">${sym}${item.price}</div>
         ${dotsHtml}
@@ -1308,30 +1307,10 @@ function renderAddBox(item){
   }
 }
 
-/* DETAIL SHEET */
+/* DETAIL SHEET (kullanılmıyor ama future-proof bırakıyoruz) */
 let _detailItemId = null;
 let _detailPhotoIdx = 0;
 let _detailTouchStartX = 0;
-
-// Document-level delegate: data-detail-id olan herhangi bir elemana tıklanırsa detay aç
-function _handleDetailClick(e){
-  const el = e.target.closest('[data-detail-id]');
-  if(!el) return;
-  const id = el.getAttribute('data-detail-id');
-  if(!id) return;
-  e.stopPropagation();
-  e.preventDefault();
-  openDetail(id);
-}
-document.addEventListener('click', _handleDetailClick, true);
-document.addEventListener('touchend', (e) => {
-  const el = e.target.closest('[data-detail-id]');
-  if(!el) return;
-  e.stopPropagation();
-  e.preventDefault();
-  const id = el.getAttribute('data-detail-id');
-  if(id) openDetail(id);
-}, true);
 
 function openDetail(itemId){
   const item = allItems.find(i => i.id === itemId);
@@ -1552,13 +1531,18 @@ function updatePhotoTrack(item){
 function setupTouch(){
   const el = document.getElementById('screen');
   let touchTarget = null;
+  let _lastSwipeTime = 0;
+  let touchEnded = false;
+  
   el.addEventListener('touchstart',e=>{
     touchTarget = e.target;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     touchStartTime = Date.now();
     trackingAxis = null;
+    touchEnded = false;
   },{passive:true});
+  
   el.addEventListener('touchmove',e=>{
     if(!trackingAxis){
       const dx = Math.abs(e.touches[0].clientX-touchStartX);
@@ -1566,20 +1550,38 @@ function setupTouch(){
       if(dx>8||dy>8) trackingAxis = dx>dy?'h':'v';
     }
   },{passive:true});
+  
   el.addEventListener('touchend',e=>{
-    // Buton veya interaktif element'e tıklanıyorsa swipe/tap handler'ı çalıştırma
-    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,.add-btn,.qty-btn,.qty-controls,.read-more-link,.cat,.lang-btn,.filter-btn,.profile-btn,[data-detail-id]');
+    // Çoklu touchend koruması
+    if(touchEnded) return;
+    touchEnded = true;
+    
+    // İnteraktif elementse atla
+    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,.add-btn,.qty-btn,.qty-controls,.cat,.lang-btn,.filter-btn,.profile-btn');
     if(isInteractive) return;
+    
+    // Swipe debounce: 350ms içinde tekrar swipe yapılamaz
+    const now = Date.now();
+    if((now - _lastSwipeTime) < 350) return;
     
     const dx = touchStartX-e.changedTouches[0].clientX;
     const dy = touchStartY-e.changedTouches[0].clientY;
-    const dt = Date.now()-touchStartTime;
+    const dt = now-touchStartTime;
     const adx = Math.abs(dx), ady = Math.abs(dy);
+    
+    // Çok uzun süreli touch swipe sayılmaz
     if(dt>500) return;
-    if(trackingAxis==='h'&&adx>40){dx>0?goNextPhoto():goPrevPhoto();}
-    else if(trackingAxis==='v'&&ady>40){dy>0?goNextItem():goPrevItem();}
-    else if(adx<10&&ady<10){if(e.changedTouches[0].clientY>window.innerHeight*0.55) goNextItem();}
+    
+    // Tap detection KALDIRILDI - kullanıcı yanlışlıkla tap ile slide atlayamaz
+    if(trackingAxis==='h' && adx>50){
+      _lastSwipeTime = now;
+      dx>0 ? goNextPhoto() : goPrevPhoto();
+    } else if(trackingAxis==='v' && ady>50){
+      _lastSwipeTime = now;
+      dy>0 ? goNextItem() : goPrevItem();
+    }
   },{passive:true});
+  
   document.addEventListener('keydown',e=>{
     if(e.key==='ArrowDown') goNextItem();
     if(e.key==='ArrowUp') goPrevItem();
