@@ -1267,7 +1267,7 @@ function buildSlides(){
       : '';
 
     const descBlock = desc 
-      ? `<div class="item-desc">${escapeHtml(desc)}</div>${descIsLong?`<span class="read-more-link" onclick="event.stopPropagation();openDetail('${item.id}')">Read more</span>`:''}`
+      ? `<div class="item-desc">${escapeHtml(desc)}</div>${descIsLong?`<span class="read-more-link" data-detail-id="${item.id}">Read more</span>`:''}`
       : '';
 
     slide.innerHTML = `
@@ -1278,7 +1278,7 @@ function buildSlides(){
       <div class="info">
         ${tagsRow}
         <div class="cat-tag">${cm.label}</div>
-        <div class="item-name" onclick="event.stopPropagation();openDetail('${item.id}')" style="cursor:pointer">${escapeHtml(item.name)}</div>
+        <div class="item-name" data-detail-id="${item.id}" style="cursor:pointer">${escapeHtml(item.name)}</div>
         ${descBlock}
         <div class="item-price">${sym}${item.price}</div>
         ${dotsHtml}
@@ -1312,6 +1312,26 @@ function renderAddBox(item){
 let _detailItemId = null;
 let _detailPhotoIdx = 0;
 let _detailTouchStartX = 0;
+
+// Document-level delegate: data-detail-id olan herhangi bir elemana tıklanırsa detay aç
+function _handleDetailClick(e){
+  const el = e.target.closest('[data-detail-id]');
+  if(!el) return;
+  const id = el.getAttribute('data-detail-id');
+  if(!id) return;
+  e.stopPropagation();
+  e.preventDefault();
+  openDetail(id);
+}
+document.addEventListener('click', _handleDetailClick, true);
+document.addEventListener('touchend', (e) => {
+  const el = e.target.closest('[data-detail-id]');
+  if(!el) return;
+  e.stopPropagation();
+  e.preventDefault();
+  const id = el.getAttribute('data-detail-id');
+  if(id) openDetail(id);
+}, true);
 
 function openDetail(itemId){
   const item = allItems.find(i => i.id === itemId);
@@ -1548,7 +1568,7 @@ function setupTouch(){
   },{passive:true});
   el.addEventListener('touchend',e=>{
     // Buton veya interaktif element'e tıklanıyorsa swipe/tap handler'ı çalıştırma
-    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,.add-btn,.qty-btn,.qty-controls,.read-more-link,.cat,.lang-btn,.filter-btn,.profile-btn');
+    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,.add-btn,.qty-btn,.qty-controls,.read-more-link,.cat,.lang-btn,.filter-btn,.profile-btn,[data-detail-id]');
     if(isInteractive) return;
     
     const dx = touchStartX-e.changedTouches[0].clientX;

@@ -133,25 +133,41 @@ async function generateDescription(itemName, category, language = "en") {
 
   const response = await client.messages.create({
     model: MODEL_DESC,
-    max_tokens: 200,
+    max_tokens: 400,
     messages: [{
       role: "user",
       content: `Write a short, appetizing menu description for this dish. Language: ${langName}. Category: ${category}. Dish name: ${itemName}.
 
 Rules:
-- Maximum 200 characters
-- 1-2 sentences
+- Around 120-180 characters, max 200 characters total
+- 1-2 complete sentences
 - Natural, restaurant-quality wording
 - Include key ingredients or preparation method if recognizable
 - Do not include the dish name itself in the description
 - No quotes, no markdown, just the plain description text
+- Always finish with proper punctuation (period)
 
 Respond with ONLY the description text, nothing else.`,
     }],
   });
 
   const textBlock = response.content.find(b => b.type === "text");
-  return (textBlock?.text || "").trim().slice(0, 200);
+  let text = (textBlock?.text || "").trim();
+  
+  // Sınırla ama kelime ortasından kesme
+  if (text.length > 220) {
+    // Son 220 karakter içinde son cümle sonu bul
+    const trimmed = text.slice(0, 220);
+    const lastPunct = Math.max(trimmed.lastIndexOf('.'), trimmed.lastIndexOf('!'), trimmed.lastIndexOf('?'));
+    if (lastPunct > 100) {
+      text = trimmed.slice(0, lastPunct + 1);
+    } else {
+      // Son boşluk
+      const lastSpace = trimmed.lastIndexOf(' ');
+      text = lastSpace > 100 ? trimmed.slice(0, lastSpace) + '.' : trimmed + '.';
+    }
+  }
+  return text;
 }
 
 /**
@@ -219,9 +235,21 @@ Respond with ONLY this JSON:
       
       const parsed = JSON.parse(jsonText);
       if (parsed.name) {
+        let desc = (parsed.description || "").trim();
+        // Kelime ortasından kesme
+        if (desc.length > 250) {
+          const trimmed = desc.slice(0, 250);
+          const lastPunct = Math.max(trimmed.lastIndexOf('.'), trimmed.lastIndexOf('!'), trimmed.lastIndexOf('?'));
+          if (lastPunct > 100) {
+            desc = trimmed.slice(0, lastPunct + 1);
+          } else {
+            const lastSpace = trimmed.lastIndexOf(' ');
+            desc = lastSpace > 100 ? trimmed.slice(0, lastSpace) + '.' : trimmed;
+          }
+        }
         return {
           name: parsed.name,
-          description: (parsed.description || "").slice(0, 250),
+          description: desc,
         };
       }
     } catch (e) {

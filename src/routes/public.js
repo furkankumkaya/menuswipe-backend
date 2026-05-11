@@ -53,7 +53,11 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         where: {
           organizationId: org.id,
           active: true,
-          itemBranches: { some: { branchId: selectedBranch.id } },
+          // Branch'a atanmış VEYA hiç branch'ı olmayan (eski/import) item'lar
+          OR: [
+            { itemBranches: { some: { branchId: selectedBranch.id } } },
+            { itemBranches: { none: {} } },
+          ],
         },
         include: {
           photos: { orderBy: { sortOrder: "asc" } },
@@ -62,13 +66,11 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
       });
     } catch (e) {
-      // translations tablosu henüz yoksa temel query ile dene
       console.warn("Full query failed, falling back:", e.message);
       items = await prisma.menuItem.findMany({
         where: {
           organizationId: org.id,
           active: true,
-          itemBranches: { some: { branchId: selectedBranch.id } },
         },
         include: {
           photos: { orderBy: { sortOrder: "asc" } },
@@ -86,7 +88,8 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
 
     // Item'ları seçili dile göre map et
     const localizedItems = items.map(it => {
-      const tr = it.translations.find(t => t.language === selectedLang);
+      const trs = it.translations || [];
+      const tr = trs.find(t => t.language === selectedLang);
       const useTranslation = selectedLang !== defaultLang && tr;
       return {
         id: it.id,
@@ -120,7 +123,8 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
       });
     }
     const localizedCats = catsWithTranslations.map(c => {
-      const tr = c.translations.find(t => t.language === selectedLang);
+      const trs = c.translations || [];
+      const tr = trs.find(t => t.language === selectedLang);
       const useTranslation = selectedLang !== defaultLang && tr;
       return {
         code: c.code,

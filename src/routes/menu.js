@@ -217,6 +217,14 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
         itemBranches: { select: { branchId: true } },
       },
     });
+    
+    // İsim veya açıklama değiştiyse otomatik yeniden çevir
+    const nameChanged = data.name !== undefined && data.name !== item.name;
+    const descChanged = data.description !== undefined && data.description !== item.description;
+    if (nameChanged || descChanged) {
+      triggerAutoTranslate(req.params.id, req.org).catch(e => console.error("Auto-translate failed:", e.message));
+    }
+    
     res.json({
       ...updated,
       branchIds: updated.itemBranches.map(ib => ib.branchId),
