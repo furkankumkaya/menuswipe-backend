@@ -2,8 +2,26 @@ const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
 const crypto = require("crypto");
 const { getSubscriptionInfo } = require("../middleware/subscription");
+const { recommendItems } = require("../services/ai");
 
 const prisma = new PrismaClient();
+
+// Rate limiting: IP başına AI çağrısı (basit memory cache)
+const aiRequestCache = new Map(); // ip -> { count, resetAt }
+const AI_RATE_LIMIT = 20; // saatte 20 istek
+const AI_RATE_WINDOW = 60 * 60 * 1000; // 1 saat
+
+function checkAiRateLimit(ip) {
+  const now = Date.now();
+  const entry = aiRequestCache.get(ip);
+  if (!entry || entry.resetAt < now) {
+    aiRequestCache.set(ip, { count: 1, resetAt: now + AI_RATE_WINDOW });
+    return true;
+  }
+  if (entry.count >= AI_RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
 
 function hashIp(ip) {
   return crypto.createHash("sha256").update(ip + (process.env.JWT_SECRET || "salt")).digest("hex").slice(0, 32);
@@ -204,6 +222,95 @@ router.post("/:orgSlug/track-item", async (req, res, next) => {
     }).catch(() => {});
     res.json({ ok: true });
   } catch (err) { res.json({ ok: false }); }
+});
+
+// AI Menu Concierge — ürün önerisi
+router.post("/:orgSlug/ai-recommend", async (req, res, next) => {
+  try {
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
+    
+    if (!checkAiRateLimit(ip)) {
+      return res.status(429).json({ error: "rate_limit", message: "Too many requests. Try again later." });
+    }
+    
+    const org = await prisma.organization.findUnique({
+      where: { slug: req.params.orgSlug },
+    });
+    if (!org) return res.status(404).json({ error: "not_found" });
+    
+    // Subscription kontrolü (trial dahil hepsine açık)
+    const sub = getSubscriptionInfo(org);
+    if (sub.status === "expired_grace" && Date.now() > new Date(sub.menuLockedUntil || 0).getTime()) {
+      return res.status(402).json({ error: "menu_unavailable" });
+    }
+    
+    const answers = req.body.answers || {};
+    const language = (req.body.language || org.defaultLanguage || "en").slice(0, 5);
+    
+    // Menü item'larını çek (translations dahil)
+    let items = [];
+    try {
+      items = await prisma.menuItem.findMany({
+        where: { organizationId: org.id, active: true },
+        include: { translations: true, photos: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      });
+    } catch (e) {
+      items = await prisma.menuItem.findMany({
+        where: { organizationId: org.id, active: true },
+        include: { photos: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      });
+    }
+    
+    if (items.length === 0) {
+      return res.status(400).json({ error: "no_menu", message: "Menu is empty" });
+    }
+    
+    const defaultLang = org.defaultLanguage || "en";
+    
+    // Item'ları seçili dile localize et
+    const localizedItems = items.map(it => {
+      const trs = it.translations || [];
+      const tr = trs.find(t => t.language === language);
+      const useTranslation = language !== defaultLang && tr;
+      return {
+        id: it.id,
+        name: useTranslation ? tr.name : it.name,
+        description: useTranslation ? (tr.description || it.description) : it.description,
+        category: it.category,
+        price: it.price,
+        tagDietary: it.tagDietary,
+        allergens: it.allergens || [],
+        photoUrl: it.photos?.[0]?.url || null,
+      };
+    });
+    
+    // AI'ya gönder
+    const result = await recommendItems(localizedItems, answers, language);
+    
+    // Sonucu zenginleştir - item detaylarını ekle
+    const enrichedItems = result.items.map(rec => {
+      const item = localizedItems.find(i => i.id === rec.id);
+      if (!item) return null;
+      return {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category: item.category,
+        photoUrl: item.photoUrl,
+        allergens: item.allergens,
+        reason: rec.reason,
+      };
+    }).filter(Boolean);
+    
+    res.json({
+      intro: result.intro,
+      items: enrichedItems,
+    });
+  } catch (err) {
+    console.error("AI recommend error:", err.message);
+    res.status(500).json({ error: "ai_error", message: err.message });
+  }
 });
 
 module.exports = router;

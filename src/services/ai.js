@@ -307,10 +307,100 @@ function getLanguageName(code) {
   return map[code] || code;
 }
 
+async function recommendItems(menuItems, answers, language = "en") {
+  const langName = getLanguageName(language);
+  
+  // Menü datasını compact JSON formatına çevir
+  const menuCompact = menuItems.map(it => ({
+    id: it.id,
+    name: it.name,
+    category: it.category,
+    price: it.price,
+    description: (it.description || "").slice(0, 150),
+    tagDietary: it.tagDietary || null,
+    allergens: it.allergens || [],
+  }));
+
+  const systemPrompt = `You are a friendly restaurant AI assistant helping a customer choose what to order from this restaurant's menu.
+
+You MUST ONLY recommend items from the JSON menu below. NEVER invent items that aren't in the list. Always reference items by their exact "id".
+
+Menu (JSON):
+${JSON.stringify(menuCompact)}
+
+Respond ONLY in valid JSON with this exact structure:
+{
+  "items": [
+    {"id": "exact-item-id-from-menu", "reason": "one short sentence in ${langName} explaining why this matches"}
+  ],
+  "intro": "one short friendly sentence in ${langName} introducing your suggestions"
+}
+
+Rules:
+- Recommend 2-3 items total based on what the customer wants
+- If they want food AND drink, include both
+- If they only want food, only suggest food. Same for drinks
+- Respect dietary restrictions strictly (vegan, vegetarian, gluten-free, halal)
+- Avoid items containing customer's allergens
+- Match the hunger level (light items for light hunger, hearty for very hungry)
+- Reason must be specific and in the customer's language: ${langName}
+- Keep each reason under 80 characters
+- If nothing matches well, still pick the closest 2 items and acknowledge in intro`;
+
+  const userMessage = `Customer answers (in their language ${langName}):
+- Looking for: ${answers.lookingFor || "anything"}
+- Hunger level: ${answers.hungerLevel || "not specified"}
+- Dietary restrictions: ${answers.dietary?.length ? answers.dietary.join(", ") : "none"}
+- Allergens to avoid: ${answers.allergens?.length ? answers.allergens.join(", ") : "none"}
+- Taste preferences: ${answers.taste?.length ? answers.taste.join(", ") : "no specific preference"}
+${answers.note ? `- Extra note from customer: "${answers.note}"` : ""}
+
+Recommend the best 2-3 items from the menu. Respond in ${langName}.`;
+
+  const response = await client.messages.create({
+    model: MODEL_DESC,
+    max_tokens: 800,
+    system: systemPrompt,
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  const textBlock = response.content.find(b => b.type === "text");
+  let text = (textBlock?.text || "").trim();
+  
+  // JSON parse
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("AI did not return valid JSON");
+  }
+  
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonMatch[0]);
+  } catch (e) {
+    throw new Error("Failed to parse AI response");
+  }
+  
+  // Validation: AI'nın döndürdüğü ID'ler gerçekten menüde var mı?
+  const menuIds = new Set(menuItems.map(i => i.id));
+  parsed.items = (parsed.items || [])
+    .filter(rec => rec.id && menuIds.has(rec.id))
+    .slice(0, 3);
+  
+  if (parsed.items.length === 0) {
+    throw new Error("No valid recommendations from AI");
+  }
+  
+  return {
+    intro: parsed.intro || "",
+    items: parsed.items,
+  };
+}
+
 module.exports = {
   extractMenuFromFiles,
   generateDescription,
   translateItem,
   translateCategory,
   getLanguageName,
+  recommendItems,
 };
