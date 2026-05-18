@@ -63,7 +63,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
           photos: { orderBy: { sortOrder: "asc" } },
           translations: true,
         },
-        orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       });
     } catch (e) {
       console.warn("Full query failed, falling back:", e.message);
@@ -75,7 +75,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         include: {
           photos: { orderBy: { sortOrder: "asc" } },
         },
-        orderBy: [{ isBestseller: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       });
     }
 

@@ -68,7 +68,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   pointer-events:none;
 }
 .action-col > *{pointer-events:auto}
-.action-btn{
+.action-col-btn{
   width:46px;height:46px;border-radius:50%;
   background:rgba(20,15,15,.55);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -79,8 +79,8 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   padding:0;
   font-size:12px;font-weight:500;letter-spacing:.3px;
 }
-.action-btn:active{transform:scale(.94)}
-.action-btn.has-active{background:#8E1616;border-color:#8E1616}
+.action-col-btn:active{transform:scale(.94)}
+.action-col-btn.has-active{background:#8E1616;border-color:#8E1616}
 
 /* SLIDES */
 .slides-wrap{position:absolute;inset:0;overflow:hidden}
@@ -499,10 +499,10 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   </div>
   <div class="slides-wrap" id="slidesWrap"></div>
   <div class="action-col" id="actionCol">
-    <button class="action-btn" id="langBtn" onclick="openLangPicker()" style="display:none">
+    <button class="action-col-btn" id="langBtn" onclick="openLangPicker()" style="display:none">
       <span id="langBtnLabel">EN</span>
     </button>
-    <button class="action-btn" id="filterBtn" onclick="openFilter()">
+    <button class="action-col-btn" id="filterBtn" onclick="openFilter()">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M5 10h10M8 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <div class="filter-badge" id="filterBadge" style="display:none">0</div>
     </button>
@@ -1527,8 +1527,25 @@ function updateProgress(){
   document.getElementById('progf').style.width = n?((curItem+1)/n*100)+'%':'0%';
 }
 
-function goNextItem(){if(curItem<filteredItems.length-1){curItem++;updateSlidePositions();dismissCrossSell();}}
-function goPrevItem(){if(curItem>0){curItem--;updateSlidePositions();dismissCrossSell();}}
+let _swipeLocked = false;
+function goNextItem(){
+  if(_swipeLocked) return;
+  if(curItem >= filteredItems.length-1) return;
+  _swipeLocked = true;
+  curItem++;
+  updateSlidePositions();
+  dismissCrossSell();
+  setTimeout(() => { _swipeLocked = false; }, 500);
+}
+function goPrevItem(){
+  if(_swipeLocked) return;
+  if(curItem <= 0) return;
+  _swipeLocked = true;
+  curItem--;
+  updateSlidePositions();
+  dismissCrossSell();
+  setTimeout(() => { _swipeLocked = false; }, 500);
+}
 
 function goNextPhoto(){
   const item = filteredItems[curItem]; if(!item) return;
@@ -1554,10 +1571,13 @@ function updatePhotoTrack(item){
 function setupTouch(){
   const el = document.getElementById('screen');
   let touchTarget = null;
-  let _lastSwipeTime = 0;
   let touchEnded = false;
+  let pointerActive = false;
   
   el.addEventListener('touchstart',e=>{
+    // Eğer swipe kilitliyse veya zaten bir touch sürüyorsa yeni touch'ı yok say
+    if(_swipeLocked || pointerActive) return;
+    pointerActive = true;
     touchTarget = e.target;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
@@ -1567,6 +1587,7 @@ function setupTouch(){
   },{passive:true});
   
   el.addEventListener('touchmove',e=>{
+    if(!pointerActive) return;
     if(!trackingAxis){
       const dx = Math.abs(e.touches[0].clientX-touchStartX);
       const dy = Math.abs(e.touches[0].clientY-touchStartY);
@@ -1574,33 +1595,38 @@ function setupTouch(){
     }
   },{passive:true});
   
+  el.addEventListener('touchcancel', () => {
+    pointerActive = false;
+    touchEnded = true;
+  }, {passive:true});
+  
   el.addEventListener('touchend',e=>{
+    if(!pointerActive) return;
+    pointerActive = false;
+    
     // Çoklu touchend koruması
     if(touchEnded) return;
     touchEnded = true;
     
     // İnteraktif elementse atla
-    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,.add-btn,.qty-btn,.qty-controls,.cat,.action-btn,.action-col,.profile-btn,.cross-sell-card,.order-fab');
+    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,.add-btn,.qty-btn,.qty-controls,.cat,.action-col-btn,.action-col,.profile-btn,.cross-sell-card,.order-fab');
     if(isInteractive) return;
     
-    // Swipe debounce: 350ms içinde tekrar swipe yapılamaz
-    const now = Date.now();
-    if((now - _lastSwipeTime) < 350) return;
+    // Animasyon kilidi
+    if(_swipeLocked) return;
     
     const dx = touchStartX-e.changedTouches[0].clientX;
     const dy = touchStartY-e.changedTouches[0].clientY;
-    const dt = now-touchStartTime;
+    const dt = Date.now()-touchStartTime;
     const adx = Math.abs(dx), ady = Math.abs(dy);
     
     // Çok uzun süreli touch swipe sayılmaz
     if(dt>500) return;
     
-    // Tap detection KALDIRILDI - kullanıcı yanlışlıkla tap ile slide atlayamaz
-    if(trackingAxis==='h' && adx>50){
-      _lastSwipeTime = now;
+    // Eşik 60px (daha sıkı)
+    if(trackingAxis==='h' && adx>60){
       dx>0 ? goNextPhoto() : goPrevPhoto();
-    } else if(trackingAxis==='v' && ady>50){
-      _lastSwipeTime = now;
+    } else if(trackingAxis==='v' && ady>60){
       dy>0 ? goNextItem() : goPrevItem();
     }
   },{passive:true});
