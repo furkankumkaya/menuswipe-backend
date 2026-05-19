@@ -59,6 +59,8 @@ model Organization {
   menuItems       MenuItem[]
   views           MenuView[]
   categories      Category[]
+  tables          RestaurantTable[]
+  orders          Order[]
 }
 
 model User {
@@ -224,4 +226,60 @@ model MenuView {
   
   @@index([organizationId, createdAt])
   @@index([branchId, createdAt])
+}
+
+model RestaurantTable {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  label           String       // "1", "2", "Bahçe 1", "VIP" gibi
+  sortOrder       Int          @default(0)
+  active          Boolean      @default(true)
+  
+  createdAt       DateTime     @default(now())
+  
+  orders          Order[]
+  
+  @@index([organizationId, sortOrder])
+}
+
+model Order {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Sipariş numarası (kısa görünür id, restoran içi günlük artar)
+  orderNumber     Int          @default(0)
+  
+  tableId         String?
+  table           RestaurantTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  tableLabel      String?      // tableLabel cache - masa silinse bile sipariş geçmişinde kalır
+  
+  // Sipariş içeriği JSON: [{itemId, name, originalName, price, qty, allergens, photoUrl}]
+  items           Json
+  
+  // Hesaplama
+  subtotal        Float        @default(0)
+  currency        String       @default("USD")
+  
+  // Müşteri notu (AI Concierge'den gelebilir veya manuel)
+  note            String?
+  
+  // Müşteri dili (admin'e geldiğinde hangi dilde göstereceğimiz)
+  customerLanguage String?     @default("en")
+  
+  // Status: pending → accepted → preparing → ready → completed | cancelled
+  status          String       @default("pending")
+  
+  // Müşteri info (opsiyonel)
+  customerName    String?
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  acceptedAt      DateTime?
+  completedAt     DateTime?
+  
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
 }

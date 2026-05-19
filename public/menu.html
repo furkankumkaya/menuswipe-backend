@@ -585,6 +585,10 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 /* WAITER MODE */
 .waiter-screen{position:fixed;inset:0;background:#000;z-index:200;color:#fff;display:none;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 .waiter-screen.open{display:flex}
+@keyframes status-pulse{
+  0%,100%{opacity:0.6;transform:scale(0.8)}
+  50%{opacity:1;transform:scale(1.2)}
+}
 .waiter-header{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.1)}
 .waiter-title{flex:1;font-size:16px;font-weight:800}
 .waiter-close{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -786,28 +790,54 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
       </div>
       <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:8px">
         <button onclick="clearOrder()" style="padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Clear</button>
-        <button onclick="openWaiterMode()" style="padding:13px;border-radius:14px;border:none;background:#fff;color:#1D1616;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2 13c0-3 2.5-5 5-5s5 2 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Show to waiter
+        <button onclick="openTablePicker()" style="padding:13px;border-radius:14px;border:none;background:#fff;color:#1D1616;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5h8M3 8h8M11 2v10M3 2v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span id="sendOrderBtnLabel">Send order</span>
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Waiter mode (full screen) -->
-<div class="waiter-screen" id="waiterScreen">
+<!-- TABLE PICKER + ORDER SUBMIT FLOW -->
+<div class="lang-overlay" id="tablePickerOverlay" style="display:none">
+  <div class="lang-sheet" style="max-height:75vh">
+    <div class="info-handle"></div>
+    <div class="filter-title" id="tablePickerTitle">Select your table</div>
+    <div class="filter-sub" id="tablePickerSub">Which table are you at?</div>
+    <div id="tableGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;margin-top:14px;max-height:50vh;overflow-y:auto;padding:4px"></div>
+    <div id="tablePickerActions" style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="closeTablePicker()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER STATUS SCREEN (sipariş gönderildikten sonra) -->
+<div class="waiter-screen" id="orderStatusScreen">
   <div class="waiter-header">
-    <div class="waiter-title">Order summary</div>
-    <button class="waiter-close" onclick="closeWaiterMode()">
+    <div class="waiter-title" id="orderStatusTitle">Order placed</div>
+    <button class="waiter-close" onclick="closeOrderStatus()">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
   </div>
-  <div class="waiter-list" id="waiterList"></div>
-  <div class="waiter-total">
-    <span class="waiter-total-label">Total</span>
-    <span class="waiter-total-amt" id="waiterTotal">$0</span>
+  <div style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+    <div id="orderStatusIcon" style="width:80px;height:80px;border-radius:50%;background:rgba(26,135,84,.15);border:2px solid #1a8754;display:flex;align-items:center;justify-content:center;margin-bottom:18px">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M10 20l7 7 14-14" stroke="#1a8754" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div id="orderStatusHeading" style="font-size:22px;font-weight:700;margin-bottom:6px">Order sent!</div>
+    <div id="orderStatusSubheading" style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:20px;max-width:280px;line-height:1.5">Your order has been sent to the kitchen.</div>
+    <div id="orderStatusNumber" style="font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Order</div>
+    <div id="orderStatusNumberValue" style="font-size:36px;font-weight:800;color:#fff;margin-bottom:24px">#0</div>
+    <div id="orderStatusTable" style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:8px"></div>
+    <div id="orderStatusBadge" style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,158,11,.15);border:1px solid #f59e0b;color:#fbbf24;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600">
+      <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;animation:status-pulse 1.5s ease-in-out infinite"></div>
+      <span id="orderStatusBadgeText">Pending</span>
+    </div>
   </div>
+  <div style="padding:14px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;gap:10px">
+    <button onclick="closeOrderStatus()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Back to menu</button>
+  </div>
+</div>
 </div>
 
 <div class="filter-overlay" id="filterOverlay">
@@ -1603,35 +1633,234 @@ function aiAddFromRec(itemId, recData){
   }
 }
 
-/* WAITER MODE */
-function openWaiterMode(){
-  const sym = getSym();
-  const ids = Object.keys(orderList);
-  if(ids.length === 0) return;
-  
-  let total = 0;
-  const html = ids.map(id => {
-    const o = orderList[id];
-    const lineTotal = o.qty * o.price;
-    total += lineTotal;
-    const showTrans = o.name !== o.originalName;
-    return `<div class="waiter-item">
-      <div class="waiter-text">
-        <div class="waiter-name">${escapeHtml(o.originalName)}</div>
-        ${showTrans?`<div class="waiter-trans">${escapeHtml(o.name)}</div>`:''}
-        <div class="waiter-price">${sym}${o.price.toFixed(2)} × ${o.qty} = ${sym}${lineTotal.toFixed(2)}</div>
-      </div>
-      <div class="waiter-qty-box"><span class="x">×</span>${o.qty}</div>
-    </div>`;
-  }).join('');
-  
-  document.getElementById('waiterList').innerHTML = html;
-  document.getElementById('waiterTotal').textContent = sym + total.toFixed(2);
-  document.getElementById('waiterScreen').classList.add('open');
+/* SEND ORDER FLOW */
+let _availableTables = [];
+let _tablesLoaded = false;
+
+async function openTablePicker(){
+  if(Object.keys(orderList).length === 0) return;
   closeOrderSheet();
+  
+  // Tabloları yükle (önbelleğe al)
+  if(!_tablesLoaded){
+    try {
+      const r = await fetch(`${BASE}/api/public/${slug}/tables`);
+      _availableTables = await r.json();
+      _tablesLoaded = true;
+    } catch(e) {
+      _availableTables = [];
+    }
+  }
+  
+  const overlay = document.getElementById('tablePickerOverlay');
+  const grid = document.getElementById('tableGrid');
+  const actions = document.getElementById('tablePickerActions');
+  
+  if(_availableTables.length === 0){
+    // Restoran masaları tanımlamamış, manuel giriş iste
+    grid.innerHTML = `
+      <div style="grid-column:1/-1">
+        <input type="text" id="manualTableInput" placeholder="${escapeHtml(tOrder('tableNumber'))}" maxlength="20" style="width:100%;padding:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:16px;outline:none;text-align:center"/>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-top:6px">${escapeHtml(tOrder('orLeaveBlank'))}</div>
+      </div>`;
+    actions.innerHTML = `
+      <button onclick="closeTablePicker()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#fff;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(tOrder('cancel'))}</button>
+      <button onclick="sendOrderNow()" style="flex:1.5;padding:13px;border-radius:14px;border:none;background:#fff;color:#1D1616;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(tOrder('sendOrder'))}</button>`;
+  } else {
+    grid.innerHTML = _availableTables.map(t => 
+      `<button onclick="selectTableAndSend('${t.id}')" style="aspect-ratio:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;font-size:16px;font-weight:600;cursor:pointer">${escapeHtml(t.label)}</button>`
+    ).join('');
+    actions.innerHTML = `
+      <button onclick="closeTablePicker()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#fff;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(tOrder('cancel'))}</button>`;
+  }
+  
+  overlay.style.display = 'flex';
 }
 
-function closeWaiterMode(){ document.getElementById('waiterScreen').classList.remove('open'); }
+function closeTablePicker(){
+  document.getElementById('tablePickerOverlay').style.display = 'none';
+}
+
+async function selectTableAndSend(tableId){
+  await submitOrder({ tableId });
+}
+
+async function sendOrderNow(){
+  const manualInput = document.getElementById('manualTableInput');
+  const tableLabel = manualInput ? manualInput.value.trim() : '';
+  await submitOrder({ tableLabel });
+}
+
+async function submitOrder(opts){
+  closeTablePicker();
+  
+  const items = Object.keys(orderList).map(id => ({
+    itemId: id,
+    name: orderList[id].name,
+    qty: orderList[id].qty,
+    photoUrl: orderList[id].photoUrl,
+  }));
+  
+  if(items.length === 0) return;
+  
+  // Loading göster
+  showOrderStatus({ loading: true });
+  
+  try {
+    const r = await fetch(`${BASE}/api/public/${slug}/order`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        tableId: opts.tableId || null,
+        tableLabel: opts.tableLabel || null,
+        items,
+        customerLanguage: currentLang || defaultLanguage,
+      }),
+    });
+    
+    const data = await r.json();
+    if(!r.ok){
+      showOrderStatus({ error: data.message || data.error || 'Failed' });
+      return;
+    }
+    
+    // Başarılı: sepet temizle, status göster
+    orderList = {};
+    saveOrderList();
+    updateOrderFab();
+    renderActiveAddBox();
+    
+    showOrderStatus({
+      success: true,
+      orderNumber: data.orderNumber,
+      tableLabel: data.tableLabel,
+      orderId: data.id,
+    });
+  } catch(e) {
+    showOrderStatus({ error: e.message });
+  }
+}
+
+function showOrderStatus(opts){
+  const screen = document.getElementById('orderStatusScreen');
+  const icon = document.getElementById('orderStatusIcon');
+  const heading = document.getElementById('orderStatusHeading');
+  const sub = document.getElementById('orderStatusSubheading');
+  const numLabel = document.getElementById('orderStatusNumber');
+  const numVal = document.getElementById('orderStatusNumberValue');
+  const tableEl = document.getElementById('orderStatusTable');
+  const badge = document.getElementById('orderStatusBadge');
+  
+  if(opts.loading){
+    icon.style.background = 'rgba(255,255,255,.08)';
+    icon.style.borderColor = 'rgba(255,255,255,.2)';
+    icon.innerHTML = '<div class="ai-loading-spinner"></div>';
+    heading.textContent = tOrder('sending');
+    sub.textContent = '';
+    numLabel.style.display = 'none';
+    numVal.style.display = 'none';
+    tableEl.style.display = 'none';
+    badge.style.display = 'none';
+    screen.classList.add('open');
+    return;
+  }
+  
+  if(opts.error){
+    icon.style.background = 'rgba(220,38,38,.15)';
+    icon.style.borderColor = '#dc2626';
+    icon.innerHTML = '<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M13 13l14 14M27 13L13 27" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/></svg>';
+    heading.textContent = tOrder('failed');
+    sub.textContent = opts.error;
+    numLabel.style.display = 'none';
+    numVal.style.display = 'none';
+    tableEl.style.display = 'none';
+    badge.style.display = 'none';
+    return;
+  }
+  
+  if(opts.success){
+    icon.style.background = 'rgba(26,135,84,.15)';
+    icon.style.borderColor = '#1a8754';
+    icon.innerHTML = '<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M10 20l7 7 14-14" stroke="#1a8754" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    heading.textContent = tOrder('orderSent');
+    sub.textContent = tOrder('orderSentSub');
+    numLabel.style.display = '';
+    numLabel.textContent = tOrder('order');
+    numVal.style.display = '';
+    numVal.textContent = '#' + opts.orderNumber;
+    if(opts.tableLabel){
+      tableEl.style.display = '';
+      tableEl.textContent = tOrder('table') + ': ' + opts.tableLabel;
+    } else {
+      tableEl.style.display = 'none';
+    }
+    badge.style.display = '';
+    document.getElementById('orderStatusBadgeText').textContent = tOrder('pending');
+    screen.classList.add('open');
+    
+    // Status polling başlat
+    if(opts.orderId) pollOrderStatus(opts.orderId);
+  }
+}
+
+function closeOrderStatus(){
+  document.getElementById('orderStatusScreen').classList.remove('open');
+  if(_orderPollTimer){ clearTimeout(_orderPollTimer); _orderPollTimer = null; }
+}
+
+let _orderPollTimer = null;
+async function pollOrderStatus(orderId){
+  try {
+    const r = await fetch(`${BASE}/api/orders/public/${orderId}`);
+    if(r.ok){
+      const data = await r.json();
+      const badgeText = document.getElementById('orderStatusBadgeText');
+      const badge = document.getElementById('orderStatusBadge');
+      
+      if(data.status === 'pending'){
+        badge.style.background = 'rgba(245,158,11,.15)';
+        badge.style.borderColor = '#f59e0b';
+        badge.style.color = '#fbbf24';
+        badgeText.textContent = tOrder('pending');
+      } else if(data.status === 'accepted' || data.status === 'preparing'){
+        badge.style.background = 'rgba(59,130,246,.15)';
+        badge.style.borderColor = '#3b82f6';
+        badge.style.color = '#60a5fa';
+        badgeText.textContent = tOrder('preparing');
+      } else if(data.status === 'ready'){
+        badge.style.background = 'rgba(26,135,84,.15)';
+        badge.style.borderColor = '#1a8754';
+        badge.style.color = '#4ade80';
+        badgeText.textContent = tOrder('ready');
+      } else if(data.status === 'completed'){
+        badge.style.background = 'rgba(100,116,139,.15)';
+        badge.style.borderColor = '#64748b';
+        badge.style.color = '#cbd5e1';
+        badgeText.textContent = tOrder('completed');
+        return; // poll'u durdur
+      } else if(data.status === 'cancelled'){
+        badge.style.background = 'rgba(220,38,38,.15)';
+        badge.style.borderColor = '#dc2626';
+        badge.style.color = '#f87171';
+        badgeText.textContent = tOrder('cancelled');
+        return;
+      }
+    }
+  } catch(e) {}
+  
+  // 5 saniyede bir tekrar dene
+  _orderPollTimer = setTimeout(() => pollOrderStatus(orderId), 5000);
+}
+
+/* Order screen translations */
+const ORDER_LABELS_BY_LANG = {
+  en: {sending:'Sending order...',orderSent:'Order sent!',orderSentSub:'The kitchen has received your order. We will start preparing it shortly.',failed:'Could not send order',order:'Order',table:'Table',pending:'Waiting for confirmation',preparing:'Being prepared',ready:'Ready to serve',completed:'Completed',cancelled:'Cancelled',sendOrder:'Send order',tableNumber:'Table number',orLeaveBlank:'Or leave blank if no table',cancel:'Cancel'},
+  tr: {sending:'Sipariş gönderiliyor...',orderSent:'Sipariş alındı!',orderSentSub:'Mutfak siparişinizi aldı. Birazdan hazırlamaya başlıyorlar.',failed:'Sipariş gönderilemedi',order:'Sipariş',table:'Masa',pending:'Onay bekleniyor',preparing:'Hazırlanıyor',ready:'Hazır',completed:'Tamamlandı',cancelled:'İptal edildi',sendOrder:'Sipariş ver',tableNumber:'Masa numarası',orLeaveBlank:'Veya masa yoksa boş bırakın',cancel:'İptal'},
+};
+function tOrder(key){
+  const lang = currentLang || defaultLanguage || 'en';
+  return (ORDER_LABELS_BY_LANG[lang] || ORDER_LABELS_BY_LANG.en)[key] || ORDER_LABELS_BY_LANG.en[key] || key;
+}
 
 async function fetchMenu(){
   try{

@@ -313,4 +313,128 @@ router.post("/:orgSlug/ai-recommend", async (req, res, next) => {
   }
 });
 
+// Müşteri: sipariş oluştur
+router.post("/:orgSlug/order", async (req, res, next) => {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { slug: req.params.orgSlug },
+    });
+    if (!org) return res.status(404).json({ error: "not_found" });
+    
+    // Subscription kontrolü
+    const sub = getSubscriptionInfo(org);
+    if (sub.status === "expired_grace" && Date.now() > new Date(sub.menuLockedUntil || 0).getTime()) {
+      return res.status(402).json({ error: "menu_unavailable" });
+    }
+    
+    const { tableId, tableLabel, items, note, customerName, customerLanguage } = req.body;
+    
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "empty_order" });
+    }
+    
+    // Items'ı doğrula - sadece menüde olan item'lar kabul edilir
+    const itemIds = items.map(i => i.itemId).filter(Boolean);
+    const menuItems = await prisma.menuItem.findMany({
+      where: { organizationId: org.id, id: { in: itemIds }, active: true },
+    });
+    const menuItemMap = new Map(menuItems.map(mi => [mi.id, mi]));
+    
+    // Items'ı temizle ve subtotal hesapla
+    let subtotal = 0;
+    const cleanedItems = items
+      .filter(i => i.itemId && menuItemMap.has(i.itemId))
+      .map(i => {
+        const mi = menuItemMap.get(i.itemId);
+        const qty = Math.max(1, Math.min(99, parseInt(i.qty) || 1));
+        const lineTotal = mi.price * qty;
+        subtotal += lineTotal;
+        return {
+          itemId: mi.id,
+          name: i.name || mi.name,
+          originalName: mi.name,
+          price: mi.price,
+          qty,
+          allergens: mi.allergens || [],
+          photoUrl: i.photoUrl || null,
+          category: mi.category,
+        };
+      });
+    
+    if (cleanedItems.length === 0) {
+      return res.status(400).json({ error: "invalid_items" });
+    }
+    
+    // Masa kontrolü (opsiyonel)
+    let resolvedTableLabel = (tableLabel || "").toString().trim().slice(0, 50) || null;
+    let resolvedTableId = null;
+    if (tableId) {
+      const table = await prisma.restaurantTable.findFirst({
+        where: { id: tableId, organizationId: org.id },
+      });
+      if (table) {
+        resolvedTableId = table.id;
+        resolvedTableLabel = table.label;
+      }
+    }
+    
+    // Bu restoranın günlük order numarası (yeni gün başlarsa 1'den, aynı gün artar)
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const todayCount = await prisma.order.count({
+      where: {
+        organizationId: org.id,
+        createdAt: { gte: startOfDay },
+      },
+    });
+    
+    const order = await prisma.order.create({
+      data: {
+        organizationId: org.id,
+        orderNumber: todayCount + 1,
+        tableId: resolvedTableId,
+        tableLabel: resolvedTableLabel,
+        items: cleanedItems,
+        subtotal,
+        currency: org.currency || "USD",
+        note: (note || "").toString().slice(0, 500) || null,
+        customerName: (customerName || "").toString().trim().slice(0, 80) || null,
+        customerLanguage: (customerLanguage || org.defaultLanguage || "en").slice(0, 5),
+        status: "pending",
+      },
+    });
+    
+    res.json({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      tableLabel: order.tableLabel,
+      subtotal: order.subtotal,
+      currency: order.currency,
+    });
+  } catch (err) {
+    console.error("Order create error:", err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// Müşteri: aktif masaları listele
+router.get("/:orgSlug/tables", async (req, res, next) => {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { slug: req.params.orgSlug },
+    });
+    if (!org) return res.status(404).json({ error: "not_found" });
+    
+    const tables = await prisma.restaurantTable.findMany({
+      where: { organizationId: org.id, active: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: { id: true, label: true },
+    });
+    res.json(tables);
+  } catch (err) {
+    res.json([]);
+  }
+});
+
 module.exports = router;

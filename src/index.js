@@ -19,6 +19,8 @@ const analyticsRoutes = require("./routes/analytics");
 const categoriesRoutes = require("./routes/categories");
 const subscriptionRoutes = require("./routes/subscription");
 const importRoutes = require("./routes/import");
+const tablesRoutes = require("./routes/tables");
+const ordersRoutes = require("./routes/orders");
 const translationsRoutes = require("./routes/translations");
 
 const app = express();
@@ -37,6 +39,8 @@ app.use("/api/import", importRoutes);
 app.use("/api/translations", translationsRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/qr", qrRoutes);
+app.use("/api/tables", tablesRoutes);
+app.use("/api/orders", ordersRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/analytics", analyticsRoutes);
 

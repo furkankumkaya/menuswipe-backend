@@ -1,0 +1,2767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>MenuSwipe — Dashboard</title>
+<meta name="theme-color" content="#8E1616"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--accent:#8E1616;--accent2:#7a1313;--accent-soft:#fef2f2;--nav-h:64px;--gold:#f59e0b}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f8fafc;color:#1e293b}
+
+/* AUTH */
+#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#1D1616}
+.auth-box{background:#2a1d1d;border-radius:20px;padding:32px;width:100%;max-width:360px;border:1px solid #3d2828}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.auth-logo-icon{width:44px;height:44px;border-radius:10px;background:#8E1616;display:flex;align-items:center;justify-content:center}
+.auth-logo-text{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px}
+.auth-logo-text span{color:#D84040}
+.auth-sub{font-size:13px;color:#94a3b8;margin-bottom:24px}
+.auth-tabs{display:flex;gap:4px;background:#1D1616;border-radius:12px;padding:4px;margin-bottom:24px;border:1px solid #3d2828}
+.auth-tab{flex:1;padding:11px 8px;border-radius:9px;border:none;background:transparent;color:#94a3b8;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.auth-tab.on{background:#8E1616;color:#fff;box-shadow:0 2px 8px rgba(142,22,22,.3)}
+.auth-lbl{font-size:11px;color:#94a3b8;margin-bottom:5px;margin-top:14px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.auth-inp{width:100%;font-size:14px;color:#f1f5f9;background:#1D1616;border:1.5px solid #3d2828;border-radius:10px;padding:12px 14px;outline:none}
+.auth-inp:focus{border-color:var(--accent)}
+.auth-btn{width:100%;margin-top:20px;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+.auth-err{font-size:12px;color:#f87171;margin-top:10px;text-align:center;min-height:18px}
+
+/* APP */
+#appScreen{display:none;height:100vh;flex-direction:column;overflow:hidden;background:#f8fafc}
+#appScreen.visible{display:flex!important}
+.app-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:var(--nav-h)}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border-bottom:1px solid #e2e8f0;flex-shrink:0;position:sticky;top:0;z-index:10;gap:8px}
+.tbtitle{font-size:15px;font-weight:700;color:#1e293b;flex:1;display:flex;align-items:center;gap:10px;min-width:0}
+.tbtitle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.back-btn{width:32px;height:32px;border-radius:8px;border:none;background:#f1f5f9;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#475569;flex-shrink:0}
+.back-btn:hover{background:#e2e8f0}
+.top-acts{display:flex;gap:6px;align-items:center;flex-shrink:0}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:#fff;border-top:1px solid #e2e8f0;display:flex;align-items:stretch;z-index:20;padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;background:transparent;color:#94a3b8;cursor:pointer;font-size:10px;font-weight:600;padding:8px 4px}
+.nav-btn.on{color:var(--accent)}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0;margin-top:1px}
+.nav-btn.on .nav-dot{opacity:1}
+
+/* PANELS */
+.panel{display:none;padding:16px}
+.panel.on{display:block}
+
+/* BUTTONS */
+.btn-dk{padding:9px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn-dk:hover{background:var(--accent2)}
+.btn-gh{padding:8px 13px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn-gh:hover{background:#f8fafc}
+.btn-danger{padding:9px 16px;border-radius:10px;border:1.5px solid #fca5a5;background:#fef2f2;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer}
+
+/* STATS */
+.sstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.sc{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px}
+.scl{font-size:10px;color:#64748b;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.scv{font-size:22px;font-weight:800;color:#1e293b}
+.sc4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+
+/* ITEM TABLE */
+.itable-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:14px;background:#fff}
+.itable{min-width:660px;width:100%}
+.irow{background:#fff;border-bottom:1px solid #f1f5f9}
+.irow:last-child{border-bottom:none}
+.irow-main{display:grid;grid-template-columns:88px 88px 60px minmax(140px,1fr) 80px 70px 76px 60px;align-items:center}
+.irow.hdr .irow-main{background:#f8fafc;border-radius:14px 14px 0 0}
+.irow.hdr span{font-size:10px;color:#64748b;font-weight:700;padding:10px 12px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px}
+.tag-cell{padding:8px 6px;display:flex;align-items:center;min-height:54px}
+.tag-select{font-size:10px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:5px 6px;cursor:pointer;width:100%;font-weight:700}
+/* Marketing tags */
+.tag-select.t-NEW{background:#3B82F6;color:#fff;border-color:#3B82F6}
+.tag-select.t-BESTSELLER{background:#F59E0B;color:#fff;border-color:#F59E0B}
+.tag-select.t-OFFER{background:#8B5CF6;color:#fff;border-color:#8B5CF6}
+.tag-select.t-LIMITED{background:#F43F5E;color:#fff;border-color:#F43F5E}
+.tag-select.t-SEASONAL{background:#D97706;color:#fff;border-color:#D97706}
+.tag-select.t-LOCAL_FOOD{background:#047857;color:#fff;border-color:#047857}
+.tag-select.t-SOLD_OUT{background:#374151;color:#fff;border-color:#374151}
+/* Dietary tags */
+.tag-select.t-SPICY{background:#EF4444;color:#fff;border-color:#EF4444}
+.tag-select.t-VEGAN{background:#22C55E;color:#fff;border-color:#22C55E}
+.tag-select.t-GLUTEN_FREE{background:#06B6D4;color:#fff;border-color:#06B6D4}
+.tag-select.t-HALAL{background:#84CC16;color:#fff;border-color:#84CC16}
+.tag-select.t-DAIRY_FREE{background:#64748B;color:#fff;border-color:#64748B}
+.tag-select.t-PROTEIN_PLUS{background:#EC4899;color:#fff;border-color:#EC4899}
+.star-cell{padding:10px 6px;display:flex;align-items:center;justify-content:center}
+.star-btn{width:26px;height:26px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#cbd5e1;transition:.15s}
+.star-btn:hover{background:#fef3c7;color:var(--gold)}
+.star-btn.on{color:var(--gold)}
+.iname-area{cursor:pointer;flex:1;min-width:0}
+.iname-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.iname-text{font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bestseller-badge{font-size:9px;padding:2px 6px;border-radius:6px;background:#fef3c7;color:#92400e;font-weight:700;letter-spacing:.3px}
+.idesc-text{font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idesc-text.empty{font-style:italic}
+.ctag{font-size:10px;padding:3px 9px;border-radius:20px;background:#eef2ff;color:var(--accent);white-space:nowrap;font-weight:600}
+.irow.editing .irow-main{background:#f8fafc}
+.edit-inp{font-size:12px;font-weight:600;color:#1e293b;background:transparent;border:none;outline:none;width:100%;padding:0}
+.cat-sel{font-size:11px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:4px 6px;cursor:pointer;width:100%}
+.price-inp{font-size:12px;font-weight:600;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:4px 7px;width:60px}
+.act-cell{display:flex;align-items:center;gap:4px;padding:0 8px}
+.ib{width:30px;height:30px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)}
+.ib:hover{background:var(--accent-soft)}
+.ib.save{background:var(--accent);border-color:var(--accent);color:#fff}
+.ib.cx{color:#94a3b8}
+.photo-ibtn{display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-size:10px;cursor:pointer;white-space:nowrap;font-weight:600}
+.photo-ibtn:hover{background:#f8fafc}
+
+/* DESC */
+.desc-ed{display:none;padding:0 12px 10px}
+.desc-ed.open{display:block}
+.desc-inner{display:flex;align-items:flex-start;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px}
+.desc-ta{flex:1;border:none;background:transparent;font-size:12px;color:#1e293b;outline:none;resize:none;font-family:inherit;line-height:1.5;min-height:44px}
+.desc-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.desc-cnt{font-size:10px;color:#94a3b8;white-space:nowrap}
+.ok-btn{width:28px;height:28px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ai-gen-btn{width:28px;height:28px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#8E1616;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.ai-gen-btn:hover{background:#fef2f2;border-color:#fecaca}
+.ai-gen-btn:disabled{opacity:.5;cursor:wait}
+.ai-gen-btn.spinning svg{animation:spin 1s linear infinite}
+.allergen-chip{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:.15s;background:#fff;font-size:12px;font-weight:600;color:#475569}
+.allergen-chip.on{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+.allergen-chip input{accent-color:#8E1616;width:14px;height:14px;cursor:pointer}
+.allergen-badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:800;background:#fee2e2;color:#991b1b;margin-left:4px;cursor:pointer;border:none;vertical-align:middle}
+
+/* ADD ROW */
+.add-row{display:none;grid-template-columns:88px 88px 60px minmax(140px,1fr) 80px 70px 76px 60px;border-top:1px dashed #e2e8f0;background:#f8fafc}
+.add-row.show{display:grid}
+.add-cell{padding:8px 12px;display:flex;align-items:center}
+.add-inp{border:none;background:transparent;font-size:12px;color:#1e293b;outline:none;width:100%;font-weight:500}
+
+/* SECTIONS & PILLS */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.sec-lbl{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+.pill{font-size:11px;padding:5px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-weight:600}
+.pill.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* CATEGORIES MGMT */
+.cat-mgmt-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.cat-mgmt-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}
+.cat-name-inp{flex:1;border:none;background:transparent;font-size:13px;color:#1e293b;outline:none;font-weight:500}
+
+/* PROFILE */
+.profile-section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:14px;overflow:hidden}
+.profile-section-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-left:4px}
+.profile-row{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #f1f5f9;gap:12px}
+.profile-row:last-child{border-bottom:none}
+.profile-row.clickable{cursor:pointer}
+.profile-row.clickable:hover{background:#f8fafc}
+.profile-lbl{font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px}
+.profile-inp{width:100%;border:none;background:transparent;font-size:13px;color:#1e293b;outline:none;font-weight:500}
+.profile-inp::placeholder{color:#94a3b8}
+.chevron{color:#cbd5e1;flex-shrink:0}
+.collapsible-content{display:none;padding:0 16px 14px}
+.collapsible-content.open{display:block}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.field-grid > div:only-child{grid-column:span 2}
+.field-block{margin-bottom:8px}
+.field-block label{display:block;font-size:10px;color:#64748b;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.field-block input,.field-block select,.field-block textarea{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:9px 11px;font-size:13px;color:#1e293b;outline:none;background:#fff;font-family:inherit}
+.field-block input:focus,.field-block select:focus,.field-block textarea:focus{border-color:var(--accent)}
+.profile-logo-edit{width:64px;height:64px;border-radius:14px;border:2px dashed #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0}
+.profile-logo-edit img{width:100%;height:100%;object-fit:cover}
+
+/* WORKING HOURS */
+.wh-row{display:grid;grid-template-columns:50px 1fr 1fr 38px;gap:6px;align-items:center;margin-bottom:6px}
+.wh-day{font-size:11px;font-weight:600;color:#475569;text-transform:uppercase}
+.wh-row input[type=time]{font-size:12px;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;outline:none;width:100%}
+.wh-row input:disabled{background:#f8fafc;color:#cbd5e1}
+
+/* BRANCHES */
+.branch-item{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:10px;overflow:hidden}
+.branch-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.branch-head:hover{background:#f8fafc}
+.bav{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.binf{flex:1;min-width:0}
+.bn{font-size:13px;font-weight:600;color:#1e293b}
+.bs{font-size:11px;color:#64748b;margin-top:2px}
+.branch-detail{display:none;padding:0 16px 14px;border-top:1px solid #f1f5f9}
+.branch-detail.open{display:block;padding-top:14px}
+
+/* ANALYTICS */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-lbl{font-size:12px;color:#1e293b;width:120px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent);border-radius:3px}
+.bar-val{font-size:11px;color:#64748b;font-weight:600;min-width:32px;text-align:right}
+
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:90;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:#e2e8f0;margin:0 auto 16px}
+.m-title{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:3px}
+.m-sub{font-size:12px;color:#64748b;margin-bottom:16px}
+.m-row{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.photo-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.pslot{aspect-ratio:1;border-radius:12px;border:2px dashed #e2e8f0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:#f8fafc;position:relative}
+.pslot img{width:100%;height:100%;object-fit:cover}
+.pslot .rm{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:12px}
+.pslot:hover .rm{display:flex}
+.pslot-lbl{font-size:10px;color:#94a3b8;margin-top:5px}
+.pslot-plus{font-size:24px;color:#cbd5e1}
+
+.del-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:99;align-items:center;justify-content:center;padding:24px}
+.del-overlay.open{display:flex}
+.del-box{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:300px;text-align:center}
+.del-icon-wrap{width:52px;height:52px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.del-title{font-size:16px;font-weight:700;color:#1e293b;margin-bottom:6px}
+.del-sub{font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5}
+.del-actions{display:flex;gap:10px}
+.del-cancel{flex:1;padding:12px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#1e293b;font-size:13px;cursor:pointer;font-weight:600}
+.del-ok{flex:1;padding:12px;border-radius:10px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+
+/* TOGGLE */
+.tog{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.tog-t{width:44px;height:24px;border-radius:12px;background:#e2e8f0;transition:.2s}
+.tog input:checked+.tog-t{background:var(--accent)}
+.tog-th{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.tog input:checked~.tog-th{transform:translateX(20px)}
+
+/* QR */
+.qr-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:600px){.qr-grid{grid-template-columns:1fr 1fr}}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px}
+.card-t{font-size:11px;font-weight:700;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center}
+.link-row{display:flex;gap:8px;align-items:center;width:100%}
+.link-box{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f8fafc;font-weight:600}
+.copy-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600}
+.dl-btn{width:100%;padding:11px;border-radius:10px;border:none;background:#1D1616;color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;display:block}
+.dl-btn:last-child{margin-bottom:0;background:#475569}
+
+.qr-branch-selector{margin-bottom:14px}
+.qr-branch-selector select{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;outline:none}
+
+/* PREVIEW */
+.preview-outer{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+.phone{width:min(260px,80vw);background:#0f172a;border-radius:36px;padding:8px;border:2px solid #1e293b}
+.pscreen{width:100%;aspect-ratio:9/19;background:#000;border-radius:28px;overflow:hidden;position:relative}
+.ptop{position:absolute;top:0;left:0;right:0;z-index:10;padding:14px 14px 0;display:flex;align-items:center;gap:8px}
+.ptop-logo{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ptop-logo img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.pcats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1}
+.pcats::-webkit-scrollbar{display:none}
+.pcat{padding:5px 13px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);background:rgba(255,255,255,.1)}
+.pcat.on{background:#fff;color:#111;border-color:#fff}
+.slides{position:absolute;inset:0;overflow:hidden}
+.slide{position:absolute;inset:0;transition:transform .4s cubic-bezier(.25,.46,.45,.94)}
+.sgrad{position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to top,rgba(0,0,0,.95),transparent)}
+.sinfo{position:absolute;bottom:0;left:0;right:0;padding:14px 16px}
+.sbest-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.5px;background:var(--gold);color:#fff;padding:2px 7px;border-radius:6px;margin-bottom:6px}
+.scat-tag{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:4px}
+.sname{font-size:18px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:3px}
+.sdesc{font-size:11px;color:rgba(255,255,255,.6);line-height:1.4;margin-bottom:7px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sprice{font-size:17px;font-weight:800;color:#fff;margin-bottom:7px}
+.pprog{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1)}
+.pprogf{height:100%;background:var(--accent);transition:width .3s}
+.prev-controls{display:flex;gap:10px;align-items:center;justify-content:center}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);background:#1D1616;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+.toast.show{opacity:1}
+.loading-msg{text-align:center;padding:32px;color:#94a3b8;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none"><path d="M6 25.5 L6 6.5 L16 19 L26 6.5 L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </div>
+      <div class="auth-logo-text">Menu<span>Swipe</span></div>
+    </div>
+    <div class="auth-sub">Visual menus for modern restaurants</div>
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="tabLogin" onclick="switchTab('login')">Sign in</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Create account</button>
+    </div>
+    <div id="loginForm">
+      <div class="auth-lbl">Email</div>
+      <input class="auth-inp" id="loginEmail" type="email" placeholder="you@restaurant.com"/>
+      <div class="auth-lbl">Password</div>
+      <input class="auth-inp" id="loginPassword" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="auth-btn" onclick="doLogin()">Sign in</button>
+      <div style="text-align:center;margin-top:14px;font-size:12px;color:#94a3b8">
+        Don't have an account? <a onclick="switchTab('register')" style="color:#D84040;font-weight:700;cursor:pointer;text-decoration:none">Create one</a>
+      </div>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="auth-lbl">Restaurant name</div>
+      <input class="auth-inp" id="regName" placeholder="e.g. Ortaya Restaurant"/>
+      <div class="auth-lbl">Email</div>
+      <input class="auth-inp" id="regEmail" type="email" placeholder="you@restaurant.com"/>
+      <div class="auth-lbl">Password</div>
+      <input class="auth-inp" id="regPassword" type="password" placeholder="Min. 6 characters"/>
+      <div class="auth-lbl">Confirm password</div>
+      <input class="auth-inp" id="regPasswordConfirm" type="password" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')doRegister()"/>
+      <button class="auth-btn" onclick="doRegister()">Create account</button>
+      <div style="text-align:center;margin-top:14px;font-size:12px;color:#94a3b8">
+        Already have an account? <a onclick="switchTab('login')" style="color:#D84040;font-weight:700;cursor:pointer;text-decoration:none">Sign in</a>
+      </div>
+    </div>
+    <div class="auth-err" id="authErr"></div>
+  </div>
+</div>
+
+<!-- ONBOARDING WIZARD -->
+<div id="onboardingScreen" style="display:none;min-height:100vh;background:#1D1616;padding:24px 0;overflow-y:auto">
+  <div style="max-width:520px;margin:0 auto;padding:24px">
+    <!-- Logo header -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;justify-content:center">
+      <div style="width:44px;height:44px;border-radius:10px;background:#8E1616;display:flex;align-items:center;justify-content:center">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none"><path d="M6 25.5 L6 6.5 L16 19 L26 6.5 L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </div>
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px">Menu<span style="color:#D84040">Swipe</span></div>
+    </div>
+
+    <!-- Progress bar -->
+    <div style="display:flex;gap:6px;margin-bottom:24px;justify-content:center">
+      <div class="ob-step-dot on" id="obDot1"></div>
+      <div class="ob-step-dot" id="obDot2"></div>
+      <div class="ob-step-dot" id="obDot3"></div>
+    </div>
+
+    <!-- STEP 1: Welcome (skip eder, sadece bilgi) -->
+    <div id="obStep1" class="ob-step on">
+      <h2 style="font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px">Welcome to MenuSwipe</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.6);text-align:center;line-height:1.5;margin-bottom:24px">Let's set up your visual menu in 3 quick steps.</p>
+      <button class="auth-btn" onclick="obNextStep()">Get started</button>
+    </div>
+
+    <!-- STEP 2: Restaurant info -->
+    <div id="obStep2" class="ob-step">
+      <h2 style="font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">Restaurant info</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px">We'll use this to show customers where you are and translate your menu.</p>
+      <div class="auth-lbl">Country</div>
+      <input class="auth-inp" id="obCountry" placeholder="e.g. Turkey"/>
+      <div class="auth-lbl">City</div>
+      <input class="auth-inp" id="obCity" placeholder="e.g. Istanbul"/>
+      <div class="auth-lbl">Menu language (your menu's main language)</div>
+      <select class="auth-inp" id="obLanguage" style="cursor:pointer"></select>
+      <div class="auth-lbl">Currency</div>
+      <select class="auth-inp" id="obCurrency" style="cursor:pointer"></select>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="auth-btn" style="background:transparent;border:1.5px solid #3d2828" onclick="obPrevStep()">Back</button>
+        <button class="auth-btn" onclick="obSaveInfoAndNext()">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Menu setup -->
+    <div id="obStep3" class="ob-step">
+      <h2 style="font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">Add your menu</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px">Upload your existing menu and let AI extract everything in seconds.</p>
+
+      <button class="ob-option-btn" onclick="obOpenImport()">
+        <div class="ob-option-icon" style="background:#8E1616">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3v12M5 9l6-6 6 6M3 19h16" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="text-align:left;flex:1">
+          <div style="font-size:15px;font-weight:700;color:#fff">Upload menu (PDF or photos)</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">AI extracts all dishes, prices, descriptions automatically</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:rgba(255,255,255,.5)"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <button class="ob-option-btn" onclick="obFinish()">
+        <div class="ob-option-icon" style="background:#374151">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 5v12M5 11h12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div style="text-align:left;flex:1">
+          <div style="font-size:15px;font-weight:700;color:#fff">Start from scratch</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">Add menu items one by one in the dashboard</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:rgba(255,255,255,.5)"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div style="margin-top:20px;text-align:center">
+        <button onclick="obPrevStep()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;text-decoration:underline">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.ob-step-dot{width:24px;height:6px;border-radius:3px;background:rgba(255,255,255,.15);transition:.2s}
+.ob-step-dot.on{background:#8E1616;width:36px}
+.ob-step-dot.done{background:rgba(142,22,22,.5)}
+.ob-step{display:none}
+.ob-step.on{display:block}
+.ob-option-btn{width:100%;display:flex;align-items:center;gap:14px;padding:16px;background:#2a1d1d;border:1.5px solid #3d2828;border-radius:14px;cursor:pointer;margin-bottom:10px;transition:.15s}
+.ob-option-btn:hover{background:#332222;border-color:#4d3030}
+.ob-option-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+</style>
+
+<!-- IMPORT MODAL (used in onboarding AND from menu items panel) -->
+<div id="importOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;padding:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)">
+  <div id="importContainer" style="background:#fff;width:100%;max-width:900px;height:100%;max-height:100vh;display:flex;flex-direction:column;overflow:hidden">
+    <!-- Header -->
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex-shrink:0">
+      <button onclick="closeImport()" style="width:32px;height:32px;border-radius:8px;border:none;background:#f1f5f9;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#475569">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:800;color:#1e293b" id="importTitle">Import menu</div>
+        <div style="font-size:11px;color:#64748b" id="importSubtitle">Upload your menu PDF or photos</div>
+      </div>
+    </div>
+
+    <!-- Content area -->
+    <div style="flex:1;overflow-y:auto" id="importContent">
+      <!-- STAGE: Upload -->
+      <div id="importStageUpload" style="padding:40px 24px">
+        <div id="importDropzone" style="border:2px dashed #cbd5e1;border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:.15s;background:#f8fafc" onclick="document.getElementById('importFiles').click()">
+          <div style="margin-bottom:16px">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin:0 auto;display:block"><path d="M24 6v24M14 16l10-10 10 10M8 38h32" stroke="#8E1616" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:6px">Drag & drop or click to upload</div>
+          <div style="font-size:12px;color:#64748b">PDFs and images · Max 25MB total · Multiple files supported</div>
+        </div>
+        <input type="file" id="importFiles" multiple accept="application/pdf,image/*" style="display:none" onchange="handleImportFiles(event)"/>
+
+        <div id="importFilesList" style="margin-top:16px"></div>
+
+        <div style="margin-top:24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Settings</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="font-size:11px;color:#64748b;font-weight:600">Menu language</label>
+              <select id="importLang" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:4px"></select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#64748b;font-weight:600">Currency</label>
+              <select id="importCurr" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-top:4px"></select>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;font-size:11px;color:#94a3b8;line-height:1.5">
+          <strong>Tip:</strong> If your PDF is too large, compress it online or take screenshots of each page and upload them as images.
+        </div>
+
+        <button id="importStartBtn" class="btn-dk" style="width:100%;margin-top:20px;padding:14px;font-size:13px" onclick="startImport()" disabled>Analyze menu with AI</button>
+      </div>
+
+      <!-- STAGE: Processing -->
+      <div id="importStageProcessing" style="display:none;padding:60px 24px;text-align:center">
+        <div style="width:64px;height:64px;border:4px solid #fef2f2;border-top-color:#8E1616;border-radius:50%;margin:0 auto 20px;animation:spin 1s linear infinite"></div>
+        <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:6px" id="importStatus">Analyzing your menu...</div>
+        <div style="font-size:13px;color:#64748b" id="importSubStatus">This usually takes 30-60 seconds</div>
+      </div>
+
+      <!-- STAGE: Preview -->
+      <div id="importStagePreview" style="display:none;padding:20px 24px"></div>
+
+      <!-- STAGE: Error -->
+      <div id="importStageError" style="display:none;padding:48px 24px;text-align:center">
+        <div style="width:56px;height:56px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 8v8M14 20.5v.5" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="11" stroke="#ef4444" stroke-width="2"/></svg>
+        </div>
+        <div style="font-size:16px;font-weight:700;color:#1e293b;margin-bottom:6px">Import failed</div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5" id="importErrorMsg">Something went wrong.</div>
+        <button class="btn-gh" onclick="resetImport()">Try again</button>
+      </div>
+    </div>
+
+    <!-- Footer (only on preview stage) -->
+    <div id="importFooter" style="display:none;padding:14px 20px;border-top:1px solid #e2e8f0;background:#fff;flex-shrink:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="font-size:12px;color:#64748b" id="importSelectedCount">0 items selected</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-gh" onclick="resetImport()">Re-upload</button>
+          <button class="btn-dk" onclick="applyImport()" id="importApplyBtn">Import items</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.import-file-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;font-size:12px}
+.import-file-icon{width:28px;height:28px;border-radius:6px;background:#fef2f2;display:flex;align-items:center;justify-content:center;color:#8E1616;flex-shrink:0}
+.import-file-name{flex:1;color:#1e293b;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.import-file-size{color:#64748b;font-size:11px}
+.import-file-remove{width:24px;height:24px;border-radius:6px;border:none;background:transparent;cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center}
+.import-file-remove:hover{background:#fef2f2;color:#ef4444}
+
+.preview-table{width:100%;border-collapse:collapse;font-size:12px}
+.preview-table th{text-align:left;padding:8px 10px;background:#f8fafc;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e2e8f0;position:sticky;top:0}
+.preview-table td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.preview-table input,.preview-table select,.preview-table textarea{width:100%;border:1px solid transparent;background:transparent;padding:5px 7px;border-radius:6px;font-size:12px;color:#1e293b;font-family:inherit;outline:none}
+.preview-table input:focus,.preview-table select:focus,.preview-table textarea:focus{background:#fff;border-color:#8E1616}
+.preview-table textarea{resize:none;line-height:1.4}
+.preview-table tr.disabled td{opacity:.4}
+.preview-row-checkbox{width:16px;height:16px;cursor:pointer;accent-color:#8E1616}
+</style>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="topbar">
+    <div class="tbtitle">
+      <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span id="ptitle">Menu items</span>
+    </div>
+    <div class="top-acts" id="topActs">
+      <button class="btn-gh" onclick="openImport(false)" title="Import menu from PDF or photos">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4-4 4 4M2 12h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Import
+      </button>
+      <button class="btn-dk" onclick="showAddRow()">+ Add</button>
+    </div>
+  </div>
+
+  <div class="app-content" id="appContent">
+
+    <!-- DELETE OVERLAY -->
+    <div class="del-overlay" id="delOverlay">
+      <div class="del-box">
+        <div class="del-icon-wrap"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 6h14M9 6V4.5A.5.5 0 019.5 4h3a.5.5 0 01.5.5V6M8 9v8M11 9v8M14 9v8M5.5 6l1.2 13a1 1 0 001 .9h6.6a1 1 0 001-.9L16.5 6" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="del-title">Delete?</div>
+        <div class="del-sub" id="delSub">This cannot be undone.</div>
+        <div class="del-actions">
+          <button class="del-cancel" id="delCancelBtn">Cancel</button>
+          <button class="del-ok" id="delOkBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHOTO OVERLAY -->
+    <div class="overlay" id="photoOverlay">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="m-title" id="photoTitle">Photos</div>
+        <div class="m-sub">Up to 3 photos. Customers swipe through them.</div>
+        <div class="photo-slots" id="photoSlots"></div>
+        <input type="file" id="photoInp" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"/>
+        <div class="m-row"><button class="btn-dk" onclick="closePhotoOverlay()">Done</button></div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES OVERLAY -->
+    <div class="overlay" id="catsOverlay">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="m-title">Manage categories</div>
+        <div class="m-sub">Customize categories shown on your menu.</div>
+        <div class="cat-mgmt-list" id="catMgmtList"></div>
+        <button class="btn-gh" onclick="addCategory()" style="font-size:12px;width:100%;justify-content:center">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Add category
+        </button>
+        <div class="m-row"><button class="btn-dk" onclick="closeCatsOverlay()">Done</button></div>
+      </div>
+    </div>
+
+    <!-- BRANCH EDIT OVERLAY -->
+    <div class="overlay" id="branchEditOverlay">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="m-title" id="branchEditTitle">Edit branch</div>
+        <div class="m-sub">Each branch has its own QR code and address.</div>
+        <div id="branchEditFields"></div>
+        <div class="m-row" style="justify-content:space-between">
+          <button class="btn-danger" id="branchDeleteBtn" onclick="deleteBranch()">Delete branch</button>
+          <div style="display:flex;gap:8px"><button class="btn-gh" onclick="closeBranchEdit()">Cancel</button><button class="btn-dk" onclick="saveBranch()">Save</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALLERGEN EDIT OVERLAY -->
+    <div class="overlay" id="allergenOverlay">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="m-title">Allergens</div>
+        <div class="m-sub" id="allergenItemName" style="color:#8E1616;font-weight:700;margin-bottom:4px"></div>
+        <div class="m-sub">Select all allergens present in this dish. Customers with allergies will be warned before ordering.</div>
+        <div id="allergenGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0"></div>
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;font-size:11px;color:#92400e;line-height:1.5;margin-bottom:14px">
+          ⚠️ Allergen information is the restaurant's responsibility. Always verify with your kitchen. MenuSwipe displays what you enter.
+        </div>
+        <div class="m-row"><button class="btn-gh" onclick="closeAllergenOverlay()">Cancel</button><button class="btn-dk" onclick="saveAllergens()">Save</button></div>
+      </div>
+    </div>
+
+    <!-- CROSS-SELL OVERLAY -->
+    <div class="overlay" id="crossSellOverlay">
+      <div class="modal" style="max-width:600px">
+        <div class="modal-handle"></div>
+        <div class="m-title">Cross-sell suggestions</div>
+        <div class="m-sub">For each item, choose what to suggest when a customer adds it to their order. Leave blank for no suggestion.</div>
+        <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:9px 12px;font-size:11px;color:#713f12;line-height:1.5;margin:10px 0 14px">
+          Example: Customer adds Köfte → suggest Ayran. Customer adds Pizza → suggest Cola.
+        </div>
+        <div id="crossSellList" style="max-height:55vh;overflow-y:auto;margin-bottom:14px"></div>
+        <div class="m-row"><button class="btn-gh" onclick="closeCrossSellOverlay()">Cancel</button><button class="btn-dk" onclick="saveCrossSells()">Save all</button></div>
+      </div>
+    </div>
+
+    <!-- MENU PANEL -->
+    <div class="panel on" id="p-menu">
+      <div class="sstrip">
+        <div class="sc"><div class="scl">Items</div><div class="scv" id="statItems">0</div></div>
+        <div class="sc"><div class="scl">Photos</div><div class="scv" id="statPhotos">0</div></div>
+        <div class="sc"><div class="scl">Bestsellers</div><div class="scv" id="statBest">0</div></div>
+      </div>
+      <div class="sec-hd">
+        <div class="sec-lbl">Filter</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-gh" onclick="openCrossSellOverlay()" style="font-size:11px">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5L4 7.5L9 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Cross-sell
+          </button>
+          <button class="btn-gh" onclick="openCatsOverlay()" style="font-size:11px">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="6.5" y="1" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="6.5" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/><rect x="6.5" y="6.5" width="3.5" height="3.5" rx=".8" stroke="currentColor" stroke-width="1.2"/></svg>
+            Categories
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="catPills"></div>
+      <div class="itable-wrap">
+        <div class="itable">
+          <div class="irow hdr"><div class="irow-main"><span>Marketing</span><span>Dietary</span><span style="font-size:9px">Allergen</span><span>Name</span><span>Category</span><span>Price</span><span>Photos</span><span style="text-align:center">Edit</span></div></div>
+          <div id="itemRows"><div class="loading-msg">Loading...</div></div>
+          <div class="add-row" id="addRow">
+            <div class="add-cell"></div>
+            <div class="add-cell"></div>
+            <div class="add-cell"><input class="add-inp" id="newName" placeholder="Item name..." onkeydown="if(event.key==='Enter')confirmAdd()"/></div>
+            <div class="add-cell"><select class="cat-sel" id="newCat" style="font-size:11px"></select></div>
+            <div class="add-cell"><input class="add-inp" id="newPrice" type="number" step="0.01" placeholder="0" style="width:56px" onkeydown="if(event.key==='Enter')confirmAdd()"/></div>
+            <div class="add-cell"></div>
+            <div class="add-cell" style="gap:5px">
+              <button class="btn-dk" onclick="confirmAdd()" style="font-size:11px;padding:5px 10px">Add</button>
+              <button class="btn-gh" onclick="hideAddRow()" style="font-size:11px;padding:5px 8px">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIEW PANEL -->
+    <!-- TABLES PANEL -->
+    <div class="panel" id="p-tables">
+      <div style="padding:14px">
+        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
+          <strong>Tables let customers order to a specific table.</strong> Add your tables here. Customers will pick from this list when sending an order.
+        </div>
+        
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn-pr" onclick="openAddTableSingle()" style="flex:1;min-width:140px">+ Add table</button>
+          <button class="btn-gh" onclick="openAddTablesBulk()" style="flex:1;min-width:140px">Generate multiple</button>
+        </div>
+        
+        <div id="tablesList"></div>
+      </div>
+    </div>
+
+    <!-- QR PANEL -->
+    <div class="panel" id="p-qr">
+      <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
+        <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
+        <select id="qrBranchSelect" onchange="qrGenerate()"></select>
+      </div>
+      <div class="qr-grid">
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-t">Menu link</div>
+            <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
+            <div style="font-size:11px;color:#94a3b8">Each branch has its own unique URL.</div>
+          </div>
+          <div class="card">
+            <div class="card-t">Download</div>
+            <button class="dl-btn" onclick="qrDlPNG()">⬇ Download PNG (Print)</button>
+            <button class="dl-btn" onclick="qrDlSVG()">⬇ Download SVG (Vector)</button>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Ready to scan</div>
+          </div>
+          <div class="card">
+            <div class="card-t">Share</div>
+            <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PANEL -->
+    <div class="panel" id="p-analytics">
+      <div class="sstrip" style="margin-bottom:14px">
+        <div class="sc"><div class="scl">Today</div><div class="scv" id="anTodayViews">—</div></div>
+        <div class="sc"><div class="scl">This week</div><div class="scv" id="anWeekViews">—</div></div>
+        <div class="sc"><div class="scl">This month</div><div class="scv" id="anMonthViews">—</div></div>
+      </div>
+      <div class="sc4" style="margin-bottom:14px">
+        <div class="sc"><div class="scl">QR scans (30d)</div><div class="scv" id="anQrScans">—</div></div>
+        <div class="sc"><div class="scl">Top item</div><div class="scv" id="anTopItem" style="font-size:13px">—</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-t">Branch performance (30 days)</div>
+        <div id="branchStatsList"><div class="loading-msg">Loading...</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-t">Top viewed items</div>
+        <div id="topItemsList"><div class="loading-msg">No data yet — tracking begins when customers view items.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Category distribution</div>
+        <div id="catDistList"><div class="loading-msg">No data</div></div>
+      </div>
+    </div>
+
+    <!-- PROFILE PANEL -->
+    <div class="panel" id="p-profile">
+      <div class="profile-section-title">Restaurant</div>
+      <div class="profile-section">
+        <div class="profile-row">
+          <div class="profile-logo-edit" onclick="document.getElementById('logoInpP').click()">
+            <svg id="logoSvgP" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="3" stroke="#cbd5e1" stroke-width="1.5"/><circle cx="8" cy="8" r="2" stroke="#cbd5e1" stroke-width="1.5"/><path d="M2 17l5-5 4 4 3-4 8 7" stroke="#cbd5e1" stroke-width="1.5" fill="none"/></svg>
+            <img id="logoImgP" style="display:none"/>
+          </div>
+          <input type="file" id="logoInpP" accept="image/*" style="display:none" onchange="handleLogo(event)"/>
+          <div style="flex:1">
+            <div class="profile-lbl">Restaurant name</div>
+            <input class="profile-inp" id="profileName" placeholder="Restaurant name" oninput="debounceSaveOrg()"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="profile-section-title">Address & contact</div>
+      <div class="profile-section">
+        <div class="profile-row clickable" onclick="toggleSection('addrSection',this)">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b">Address & location</div>
+            <div style="font-size:11px;color:#64748b" id="addrSummary">Set country, city, address</div>
+          </div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="collapsible-content" id="addrSection">
+          <div class="field-grid">
+            <div class="field-block"><label>Country</label><input id="orgCountry" placeholder="United States" oninput="debounceSaveOrg()"/></div>
+            <div class="field-block"><label>City</label><input id="orgCity" placeholder="New York" oninput="debounceSaveOrg()"/></div>
+          </div>
+          <div class="field-block"><label>Street address</label><input id="orgAddress" placeholder="123 Main St" oninput="debounceSaveOrg()"/></div>
+          <div class="field-grid">
+            <div class="field-block"><label>Postal code</label><input id="orgPostal" placeholder="10001" oninput="debounceSaveOrg()"/></div>
+            <div class="field-block"><label>Currency</label><select id="orgCurrency" onchange="debounceSaveOrg()"></select></div>
+          </div>
+          <div class="field-block"><label>Menu language</label><select id="orgLanguage" onchange="debounceSaveOrg()"></select></div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:-4px;margin-bottom:8px">The main language your menu is written in</div>
+          <div class="field-block"><label>Google Maps URL (optional)</label><input id="orgMapsUrl" placeholder="https://maps.google.com/..." oninput="debounceSaveOrg()"/></div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:-4px;margin-bottom:8px">Customers will use this for navigation and reviews</div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-row clickable" onclick="toggleSection('contactSection',this)">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b">Phone, website & social</div>
+            <div style="font-size:11px;color:#64748b">Contact details for customers</div>
+          </div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="collapsible-content" id="contactSection">
+          <div class="field-block"><label>Phone</label><input id="orgPhone" placeholder="+1 555 123 4567" oninput="debounceSaveOrg()"/></div>
+          <div class="field-block"><label>Website</label><input id="orgWebsite" placeholder="https://yoursite.com" oninput="debounceSaveOrg()"/></div>
+          <div class="field-grid">
+            <div class="field-block"><label>Instagram</label><input id="orgInstagram" placeholder="@yourrestaurant" oninput="debounceSaveOrg()"/></div>
+            <div class="field-block"><label>Facebook</label><input id="orgFacebook" placeholder="yourrestaurant" oninput="debounceSaveOrg()"/></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-row clickable" onclick="toggleSection('hoursSection',this)">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b">Working hours</div>
+            <div style="font-size:11px;color:#64748b">Opening times for each day</div>
+          </div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="collapsible-content" id="hoursSection">
+          <div id="hoursGrid"></div>
+        </div>
+      </div>
+
+      <!-- Languages section -->
+      <div class="profile-section-title" style="margin-top:16px">Languages & translations</div>
+      <div class="profile-section">
+        <div class="profile-row clickable" onclick="toggleSection('langSection',this);if(!event.target.closest('.collapsible-content'))loadLanguages();">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b" id="langSectionTitle">Menu translations</div>
+            <div style="font-size:11px;color:#64748b" id="langSectionSub">Show your menu in multiple languages</div>
+          </div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="collapsible-content" id="langSection">
+          <div id="langContent" style="padding:8px 0">
+            <div style="font-size:12px;color:#94a3b8;text-align:center;padding:20px">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="profile-section-title" style="margin-top:16px">Customer features</div>
+      <div class="profile-section">
+        <div class="profile-row" style="cursor:default">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b">Online ordering</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;line-height:1.4">Customers can build an order and send it to your Orders dashboard. New orders trigger a full-screen alert with sound.</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" id="orgOrderListEnabled" onchange="toggleOrderList(this)"/>
+            <div class="tog-t"></div>
+            <div class="tog-th"></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Branches -->
+      <div class="profile-section-title">Branches</div>
+      <div class="profile-section" style="background:transparent;border:none;padding:0">
+        <div id="branchListProfile" style="margin-bottom:10px"></div>
+        <button class="btn-gh" onclick="openBranchEdit(null)" style="width:100%;justify-content:center">+ Add branch</button>
+      </div>
+
+      <!-- Plans -->
+      <div class="profile-section-title" style="margin-top:16px">Plan & billing</div>
+      <div class="profile-section">
+        <div class="profile-row clickable" onclick="toggleSection('billingSection',this)">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#1e293b">Free plan · Beta access</div>
+            <div style="font-size:11px;color:#64748b">View payment history and plans</div>
+          </div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="collapsible-content" id="billingSection">
+          <div style="background:#fef2f2;border-radius:10px;padding:14px;margin-bottom:10px">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px">Beta access — Free</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5">All features unlocked during beta period. Paid plans launching soon.</div>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600">Coming soon</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.7">• Payment methods<br>• Invoice history<br>• Plan upgrades<br>• Receipts via email</div>
+        </div>
+      </div>
+
+      <button onclick="doLogout()" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid #fca5a5;background:#fef2f2;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px">Sign out</button>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn" id="nav-orders" onclick="location.href='/admin.html'" title="Back to orders">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 6h12l-1 11H6L5 6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 6V4a3 3 0 016 0v2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span>Orders</span>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn on" id="nav-menu" onclick="go('menu',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 5.5h16M3 11h10M3 16.5h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Menu</span>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-tables" onclick="go('tables',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 5v13M15 5v13" stroke="currentColor" stroke-width="2"/></svg>
+      <span>Tables</span>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-qr" onclick="go('qr',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M12 12h3v3H12zM15 15h4M15 19v-4M19 12v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>QR & Link</span>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-analytics" onclick="go('analytics',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17l5-6 4 4 5-8 4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Analytics</span>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="go('profile',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="currentColor" stroke-width="2"/><path d="M4 19c0-4.4 3.1-7 7-7s7 2.6 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Profile</span>
+      <div class="nav-dot"></div>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+const API='';
+let token=localStorage.getItem('ms_token')||'';
+let org=JSON.parse(localStorage.getItem('ms_org')||'null');
+let items=[],cats=[],branches=[];
+let editingId=null,openDescId=null,currentFilter='all';
+let photoItemId=null,activeSlot=null,pendingDeleteId=null,pendingDeleteType=null;
+let pCur=0,pCat='all';
+let editingBranchId=null;
+const DESC_MAX=120;
+
+const CURRENCIES=[
+  {code:'USD',symbol:'$',name:'US Dollar'},{code:'EUR',symbol:'€',name:'Euro'},
+  {code:'GBP',symbol:'£',name:'British Pound'},{code:'TRY',symbol:'₺',name:'Turkish Lira'},
+  {code:'JPY',symbol:'¥',name:'Japanese Yen'},{code:'CNY',symbol:'¥',name:'Chinese Yuan'},
+  {code:'AED',symbol:'د.إ',name:'UAE Dirham'},{code:'SAR',symbol:'﷼',name:'Saudi Riyal'},
+  {code:'CAD',symbol:'$',name:'Canadian Dollar'},{code:'AUD',symbol:'$',name:'Australian Dollar'},
+  {code:'CHF',symbol:'Fr',name:'Swiss Franc'},{code:'INR',symbol:'₹',name:'Indian Rupee'},
+  {code:'BRL',symbol:'R$',name:'Brazilian Real'},{code:'MXN',symbol:'$',name:'Mexican Peso'},
+  {code:'KRW',symbol:'₩',name:'Korean Won'},{code:'SGD',symbol:'$',name:'Singapore Dollar'},
+  {code:'HKD',symbol:'$',name:'Hong Kong Dollar'},{code:'NOK',symbol:'kr',name:'Norwegian Krone'},
+  {code:'SEK',symbol:'kr',name:'Swedish Krona'},{code:'DKK',symbol:'kr',name:'Danish Krone'},
+  {code:'PLN',symbol:'zł',name:'Polish Zloty'},{code:'RUB',symbol:'₽',name:'Russian Ruble'},
+  {code:'ZAR',symbol:'R',name:'South African Rand'},{code:'THB',symbol:'฿',name:'Thai Baht'},
+  {code:'IDR',symbol:'Rp',name:'Indonesian Rupiah'},{code:'MYR',symbol:'RM',name:'Malaysian Ringgit'},
+  {code:'PHP',symbol:'₱',name:'Philippine Peso'},{code:'VND',symbol:'₫',name:'Vietnamese Dong'},
+  {code:'EGP',symbol:'£',name:'Egyptian Pound'},{code:'ILS',symbol:'₪',name:'Israeli Shekel'},
+  {code:'NZD',symbol:'$',name:'New Zealand Dollar'},{code:'ARS',symbol:'$',name:'Argentine Peso'},
+  {code:'CLP',symbol:'$',name:'Chilean Peso'},{code:'COP',symbol:'$',name:'Colombian Peso'},
+  {code:'CZK',symbol:'Kč',name:'Czech Koruna'},{code:'HUF',symbol:'Ft',name:'Hungarian Forint'},
+  {code:'RON',symbol:'lei',name:'Romanian Leu'},{code:'PKR',symbol:'₨',name:'Pakistani Rupee'},
+  {code:'BDT',symbol:'৳',name:'Bangladeshi Taka'},{code:'NGN',symbol:'₦',name:'Nigerian Naira'},
+  {code:'KES',symbol:'KSh',name:'Kenyan Shilling'},{code:'GHS',symbol:'GH₵',name:'Ghanaian Cedi'},
+  {code:'MAD',symbol:'د.م.',name:'Moroccan Dirham'},{code:'QAR',symbol:'ر.ق',name:'Qatari Riyal'},
+];
+function getCurrencySymbol(){const c=CURRENCIES.find(x=>x.code===(org?.currency||'USD'));return c?c.symbol:'$';}
+
+const PENCIL='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5a1.5 1.5 0 012.12 2.12L4.5 11.75l-3 .75.75-3L9.5 2.5z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 4l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+const TRASH='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V4M5.5 6.5v5M8.5 6.5v5M2.5 4l.9 8a1 1 0 001 .9h6.2a1 1 0 001-.9l.9-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHECK='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const XMARK='<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 2l7 7M9 2l-7 7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+const PHOTO_ICO='<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><rect x="1" y="2" width="9" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1"/><circle cx="4" cy="5" r="1.2" stroke="currentColor" stroke-width=".9"/><path d="M1 8l3-3 2.5 2.5 1.5-2 3 3" stroke="currentColor" stroke-width=".8" fill="none"/></svg>';
+const STAR_FILL='<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l1.94 4.07 4.49.65-3.25 3.16.77 4.46L8 11.74l-4.01 2.1.77-4.46L1.51 6.22l4.49-.65L8 1.5z"/></svg>';
+const STAR_OUTLINE='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.94 4.07 4.49.65-3.25 3.16.77 4.46L8 11.74l-4.01 2.1.77-4.46L1.51 6.22l4.49-.65L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+const SPARK='<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 4 4 1.5-4 1.5L7 12l-1.5-4-4-1.5 4-1.5L7 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>';
+const TRANSLATE_ICO='<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 4h6M5 2v8M2 10l3-6 3 6M9 11l3-3 3 3M11 8v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+const ALLERGENS = [
+  {code:'GLUTEN',    label:'Gluten',          emoji:'🌾'},
+  {code:'CRUSTACEANS',label:'Crustaceans',    emoji:'🦐'},
+  {code:'EGGS',      label:'Eggs',            emoji:'🥚'},
+  {code:'FISH',      label:'Fish',            emoji:'🐟'},
+  {code:'PEANUTS',   label:'Peanuts',         emoji:'🥜'},
+  {code:'SOYBEANS',  label:'Soybeans',        emoji:'🫘'},
+  {code:'MILK',      label:'Milk',            emoji:'🥛'},
+  {code:'NUTS',      label:'Tree Nuts',       emoji:'🌰'},
+  {code:'CELERY',    label:'Celery',          emoji:'🥬'},
+  {code:'MUSTARD',   label:'Mustard',         emoji:'🌿'},
+  {code:'SESAME',    label:'Sesame',          emoji:'🌱'},
+  {code:'SULPHITES', label:'Sulphites',       emoji:'🧪'},
+  {code:'LUPIN',     label:'Lupin',           emoji:'🌼'},
+  {code:'MOLLUSCS',  label:'Molluscs',        emoji:'🐚'},
+];
+
+async function api(method,path,body){
+  const opts={method,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}};
+  if(body)opts.body=JSON.stringify(body);
+  const r=await fetch(API+path,opts);
+  if(r.status===401){
+    // Token geçersiz veya süresi dolmuş — localStorage temizle ve login'e yönlendir
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('ms_org');
+    location.reload();
+    throw new Error('Session expired');
+  }
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error||'Request failed');
+  return data;
+}
+async function apiForm(method,path,fd){
+  const r=await fetch(API+path,{method,headers:{'Authorization':`Bearer ${token}`},body:fd});
+  if(r.status===401){
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('ms_org');
+    location.reload();
+    throw new Error('Session expired');
+  }
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error||'Upload failed');
+  return data;
+}
+
+function toast(msg,dur=2200){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),dur);}
+
+/* AUTH */
+function switchTab(tab){
+  document.getElementById('loginForm').style.display=tab==='login'?'':'none';
+  document.getElementById('registerForm').style.display=tab==='register'?'':'none';
+  document.getElementById('tabLogin').classList.toggle('on',tab==='login');
+  document.getElementById('tabRegister').classList.toggle('on',tab==='register');
+}
+async function doLogin(){
+  document.getElementById('authErr').textContent='';
+  try{
+    const data=await api('POST','/api/auth/login',{email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});
+    token=data.token;org=data.organization;
+    localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
+    startApp();
+  }catch(e){document.getElementById('authErr').textContent=e.message;}
+}
+async function doRegister(){
+  const restaurantName=document.getElementById('regName').value.trim();
+  const password=document.getElementById('regPassword').value;
+  const passwordConfirm=document.getElementById('regPasswordConfirm').value;
+  if(!restaurantName)return document.getElementById('authErr').textContent='Please enter your restaurant name';
+  if(password.length<6)return document.getElementById('authErr').textContent='Password must be at least 6 characters';
+  if(password!==passwordConfirm)return document.getElementById('authErr').textContent='Passwords do not match';
+  document.getElementById('authErr').textContent='';
+  try{
+    const data=await api('POST','/api/auth/register',{restaurantName,email:document.getElementById('regEmail').value.trim(),password});
+    token=data.token;org=data.organization;
+    localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
+    startApp();
+  }catch(e){document.getElementById('authErr').textContent=e.message;}
+}
+function doLogout(){localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');location.reload();}
+
+/* ============== ONBOARDING ============== */
+const LANGUAGES = [
+  {code:'en',name:'English'},{code:'tr',name:'Türkçe'},{code:'es',name:'Español'},
+  {code:'fr',name:'Français'},{code:'de',name:'Deutsch'},{code:'it',name:'Italiano'},
+  {code:'pt',name:'Português'},{code:'ru',name:'Русский'},{code:'ar',name:'العربية'},
+  {code:'zh',name:'中文'},{code:'ja',name:'日本語'},{code:'ko',name:'한국어'},
+  {code:'hi',name:'हिन्दी'},{code:'th',name:'ไทย'},{code:'vi',name:'Tiếng Việt'},
+  {code:'id',name:'Bahasa Indonesia'},{code:'nl',name:'Nederlands'},{code:'pl',name:'Polski'},
+  {code:'uk',name:'Українська'},{code:'el',name:'Ελληνικά'},{code:'he',name:'עברית'},
+  {code:'fa',name:'فارسی'},{code:'ms',name:'Bahasa Melayu'},{code:'sv',name:'Svenska'},
+  {code:'no',name:'Norsk'},{code:'da',name:'Dansk'},{code:'fi',name:'Suomi'},
+  {code:'cs',name:'Čeština'},{code:'hu',name:'Magyar'},{code:'ro',name:'Română'},
+];
+
+function showOnboarding(){
+  document.getElementById('onboardingScreen').style.display='block';
+  // Populate dropdowns
+  document.getElementById('obLanguage').innerHTML = LANGUAGES.map(l=>`<option value="${l.code}">${l.name}</option>`).join('');
+  document.getElementById('obCurrency').innerHTML = CURRENCIES.map(c=>`<option value="${c.code}">${c.code} (${c.symbol}) — ${c.name}</option>`).join('');
+  // Default değerler
+  document.getElementById('obLanguage').value = navigator.language?.split('-')[0] || 'en';
+  document.getElementById('obCurrency').value = org.currency || 'USD';
+  if(org.country) document.getElementById('obCountry').value = org.country;
+  if(org.city) document.getElementById('obCity').value = org.city;
+}
+
+function obSetStep(n){
+  for(let i=1;i<=3;i++){
+    document.getElementById('obStep'+i).classList.toggle('on', i===n);
+    const dot = document.getElementById('obDot'+i);
+    dot.classList.remove('on','done');
+    if(i<n) dot.classList.add('done');
+    else if(i===n) dot.classList.add('on');
+  }
+}
+let obCurrentStep = 1;
+function obNextStep(){ obCurrentStep++; obSetStep(obCurrentStep); }
+function obPrevStep(){ obCurrentStep--; obSetStep(obCurrentStep); }
+
+async function obSaveInfoAndNext(){
+  const country = document.getElementById('obCountry').value.trim();
+  const city = document.getElementById('obCity').value.trim();
+  const defaultLanguage = document.getElementById('obLanguage').value;
+  const currency = document.getElementById('obCurrency').value;
+  
+  try{
+    const updated = await api('PATCH','/api/auth/organization', {
+      country: country || null,
+      city: city || null,
+      defaultLanguage,
+      currency,
+    });
+    org = {...org, ...updated};
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    obNextStep();
+  }catch(e){ toast('Failed to save: '+e.message); }
+}
+
+async function obFinish(){
+  // Onboarding tamamlandı işaretle
+  try{
+    const updated = await api('PATCH','/api/auth/organization', { onboardingCompleted: true });
+    org = {...org, ...updated};
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    document.getElementById('onboardingScreen').style.display = 'none';
+    startApp();
+  }catch(e){ toast('Failed: '+e.message); }
+}
+
+function obOpenImport(){
+  // Step 3'te import modal'ını aç
+  openImport(true); // fromOnboarding = true
+}
+
+/* ============== IMPORT MODAL ============== */
+let importFiles = [];
+let importJobId = null;
+let importPolling = null;
+let importParsedData = null;
+let importFromOnboarding = false;
+
+function openImport(fromOnboarding = false){
+  importFromOnboarding = fromOnboarding;
+  importFiles = [];
+  importJobId = null;
+  importParsedData = null;
+  
+  // Populate language and currency selects
+  document.getElementById('importLang').innerHTML = LANGUAGES.map(l=>`<option value="${l.code}">${l.name}</option>`).join('');
+  document.getElementById('importCurr').innerHTML = CURRENCIES.map(c=>`<option value="${c.code}">${c.code} (${c.symbol}) — ${c.name}</option>`).join('');
+  document.getElementById('importLang').value = org.defaultLanguage || 'en';
+  document.getElementById('importCurr').value = org.currency || 'USD';
+  
+  resetImport();
+  document.getElementById('importOverlay').style.display = 'flex';
+}
+
+function closeImport(){
+  if(importPolling){ clearInterval(importPolling); importPolling = null; }
+  if(importJobId){
+    api('DELETE','/api/import/job/'+importJobId).catch(()=>{});
+    importJobId = null;
+  }
+  document.getElementById('importOverlay').style.display = 'none';
+}
+
+function resetImport(){
+  importFiles = [];
+  importParsedData = null;
+  if(importPolling){ clearInterval(importPolling); importPolling = null; }
+  document.getElementById('importStageUpload').style.display = 'block';
+  document.getElementById('importStageProcessing').style.display = 'none';
+  document.getElementById('importStagePreview').style.display = 'none';
+  document.getElementById('importStageError').style.display = 'none';
+  document.getElementById('importFooter').style.display = 'none';
+  document.getElementById('importFiles').value = '';
+  document.getElementById('importFilesList').innerHTML = '';
+  document.getElementById('importStartBtn').disabled = true;
+}
+
+function handleImportFiles(e){
+  const files = Array.from(e.target.files || []);
+  for(const f of files){
+    importFiles.push(f);
+  }
+  renderImportFiles();
+}
+
+function removeImportFile(idx){
+  importFiles.splice(idx, 1);
+  renderImportFiles();
+}
+
+function renderImportFiles(){
+  const container = document.getElementById('importFilesList');
+  if(importFiles.length === 0){
+    container.innerHTML = '';
+    document.getElementById('importStartBtn').disabled = true;
+    return;
+  }
+  
+  let totalSize = 0;
+  container.innerHTML = importFiles.map((f, idx) => {
+    totalSize += f.size;
+    const ico = f.type === 'application/pdf' 
+      ? '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 1h6l3 3v9H3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/><path d="M9 1v3h3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'
+      : '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="5" cy="6" r="1.3" fill="currentColor"/><path d="M1 10l3-3 3 3 2-2 4 3" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>';
+    return `<div class="import-file-row">
+      <div class="import-file-icon">${ico}</div>
+      <div class="import-file-name">${f.name}</div>
+      <div class="import-file-size">${(f.size/1024/1024).toFixed(1)} MB</div>
+      <button class="import-file-remove" onclick="removeImportFile(${idx})"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>`;
+  }).join('');
+  
+  // Toplam boyut uyarısı
+  if(totalSize > 25 * 1024 * 1024){
+    container.innerHTML += `<div style="font-size:11px;color:#ef4444;margin-top:6px;font-weight:600">Total size exceeds 25MB. Please remove some files or compress them.</div>`;
+    document.getElementById('importStartBtn').disabled = true;
+  } else {
+    document.getElementById('importStartBtn').disabled = false;
+  }
+}
+
+async function startImport(){
+  if(importFiles.length === 0) return;
+  
+  const fd = new FormData();
+  for(const f of importFiles) fd.append('files', f);
+  fd.append('sourceLanguage', document.getElementById('importLang').value);
+  fd.append('currency', document.getElementById('importCurr').value);
+  
+  document.getElementById('importStageUpload').style.display = 'none';
+  document.getElementById('importStageProcessing').style.display = 'block';
+  document.getElementById('importStatus').textContent = 'Uploading files...';
+  
+  try{
+    const res = await fetch('/api/import/upload', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: fd,
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Upload failed');
+    
+    importJobId = data.jobId;
+    document.getElementById('importStatus').textContent = 'AI is reading your menu...';
+    document.getElementById('importSubStatus').textContent = 'Identifying dishes, prices, and categories';
+    
+    // Poll for status
+    importPolling = setInterval(checkImportStatus, 3000);
+    setTimeout(checkImportStatus, 1000); // ilk check daha hızlı
+  }catch(e){
+    showImportError(e.message);
+  }
+}
+
+async function checkImportStatus(){
+  if(!importJobId) return;
+  try{
+    const data = await api('GET','/api/import/job/'+importJobId);
+    if(data.status === 'ready'){
+      clearInterval(importPolling);
+      importPolling = null;
+      importParsedData = data.result;
+      showImportPreview();
+    } else if(data.status === 'failed'){
+      clearInterval(importPolling);
+      importPolling = null;
+      showImportError(data.error || 'Failed to parse menu');
+    }
+    // 'processing' durumu - bekle
+  }catch(e){
+    // sessizce devam et, bir sonraki polling tekrar dener
+  }
+}
+
+function showImportError(msg){
+  document.getElementById('importStageUpload').style.display = 'none';
+  document.getElementById('importStageProcessing').style.display = 'none';
+  document.getElementById('importStagePreview').style.display = 'none';
+  document.getElementById('importStageError').style.display = 'block';
+  document.getElementById('importErrorMsg').textContent = msg || 'Something went wrong.';
+}
+
+function showImportPreview(){
+  if(!importParsedData) return;
+  
+  document.getElementById('importStageUpload').style.display = 'none';
+  document.getElementById('importStageProcessing').style.display = 'none';
+  document.getElementById('importStagePreview').style.display = 'block';
+  document.getElementById('importFooter').style.display = 'block';
+  
+  const items = importParsedData.items || [];
+  if(items.length === 0){
+    showImportError("We couldn't read your menu clearly. Please try a higher quality photo or PDF.");
+    return;
+  }
+  
+  // Mevcut kategori etiketleri
+  const existingCatLabels = cats.map(c => c.label);
+  
+  // AI'nin bulduğu yeni kategoriler
+  const aiCats = (importParsedData.categories || []).map(c => c.name);
+  const allCatOptions = [...new Set([...existingCatLabels, ...aiCats])];
+  
+  // Item state'i
+  window._importItems = items.map((it, idx) => ({
+    ...it,
+    _idx: idx,
+    _selected: true,
+    _isProperOverride: it.isProperName,
+  }));
+  
+  const html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#1e293b">Found ${items.length} items in ${(importParsedData.categories||[]).length} categories</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px">Review, edit, or uncheck items you don't want to import</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn-gh" style="font-size:11px" onclick="importToggleAll(true)">Select all</button>
+        <button class="btn-gh" style="font-size:11px" onclick="importToggleAll(false)">Deselect all</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:10px">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th style="width:32px"></th>
+            <th style="width:180px">Name</th>
+            <th style="width:130px">Category</th>
+            <th style="width:80px">Price</th>
+            <th>Description</th>
+            <th style="width:90px">Proper name</th>
+          </tr>
+        </thead>
+        <tbody id="importPreviewTbody"></tbody>
+      </table>
+    </div>`;
+  
+  document.getElementById('importStagePreview').innerHTML = html;
+  renderImportPreviewRows(allCatOptions);
+  updateImportSelectedCount();
+}
+
+function renderImportPreviewRows(catOptions){
+  const tbody = document.getElementById('importPreviewTbody');
+  if(!tbody) return;
+  tbody.innerHTML = window._importItems.map((it, idx) => `
+    <tr class="${it._selected ? '' : 'disabled'}">
+      <td><input type="checkbox" class="preview-row-checkbox" ${it._selected?'checked':''} onchange="importToggleRow(${idx}, this.checked)"/></td>
+      <td><input type="text" value="${escapeHtml(it.name)}" oninput="importUpdateField(${idx},'name',this.value)"/></td>
+      <td>
+        <select onchange="importUpdateField(${idx},'category',this.value)">
+          ${catOptions.map(c => `<option value="${escapeAttr(c)}"${c===it.category?' selected':''}>${escapeHtml(c)}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="number" step="0.01" value="${it.price || 0}" oninput="importUpdateField(${idx},'price',parseFloat(this.value)||0)"/></td>
+      <td><textarea rows="2" oninput="importUpdateField(${idx},'description',this.value)" maxlength="200">${escapeHtml(it.description || '')}</textarea></td>
+      <td style="text-align:center"><input type="checkbox" class="preview-row-checkbox" ${it._isProperOverride?'checked':''} onchange="importUpdateField(${idx},'_isProperOverride',this.checked)" title="Don't translate this name"/></td>
+    </tr>
+  `).join('');
+}
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
+
+function importToggleRow(idx, checked){
+  if(window._importItems[idx]){
+    window._importItems[idx]._selected = checked;
+    const tr = document.getElementById('importPreviewTbody').children[idx];
+    if(tr) tr.className = checked ? '' : 'disabled';
+    updateImportSelectedCount();
+  }
+}
+
+function importToggleAll(checked){
+  if(!window._importItems) return;
+  for(const it of window._importItems) it._selected = checked;
+  // Tam re-render - güvenli
+  const allCatLabels = [...new Set([...cats.map(c=>c.label), ...(importParsedData.categories||[]).map(c=>c.name)])];
+  renderImportPreviewRows(allCatLabels);
+  updateImportSelectedCount();
+}
+
+function importUpdateField(idx, field, value){
+  if(window._importItems[idx]){
+    window._importItems[idx][field] = value;
+  }
+}
+
+function updateImportSelectedCount(){
+  const count = (window._importItems || []).filter(i => i._selected).length;
+  document.getElementById('importSelectedCount').textContent = `${count} item${count===1?'':'s'} selected`;
+  document.getElementById('importApplyBtn').disabled = count === 0;
+  document.getElementById('importApplyBtn').textContent = `Import ${count} item${count===1?'':'s'}`;
+}
+
+async function applyImport(){
+  const selected = (window._importItems || []).filter(i => i._selected);
+  if(selected.length === 0) return;
+  
+  // Yeni kategorileri tespit et
+  const existingLabels = new Set(cats.map(c => c.label.toLowerCase()));
+  const newCatLabels = new Set();
+  for(const it of selected){
+    if(it.category && !existingLabels.has(it.category.toLowerCase())){
+      newCatLabels.add(it.category);
+    }
+  }
+  const createCategories = [...newCatLabels].map(label => ({ label, color: '#8E1616' }));
+  
+  const itemsPayload = selected.map(it => ({
+    name: it.name,
+    description: it.description,
+    price: it.price,
+    category: it.category,
+    isProperName: !!it._isProperOverride,
+  }));
+  
+  document.getElementById('importApplyBtn').disabled = true;
+  document.getElementById('importApplyBtn').textContent = 'Importing...';
+  
+  try{
+    const res = await api('POST','/api/import/job/'+importJobId+'/apply', {
+      items: itemsPayload,
+      createCategories,
+    });
+    
+    importJobId = null;
+    closeImport();
+    toast(`✓ Imported ${res.createdCount} items`);
+    
+    // Onboarding'den geliyorsa onboarding'i bitir
+    if(importFromOnboarding){
+      await obFinish();
+    } else {
+      // Mevcut menüyü yeniden yükle
+      await loadCats();
+      await loadMenu();
+    }
+  }catch(e){
+    toast('Import failed: '+e.message);
+    document.getElementById('importApplyBtn').disabled = false;
+    updateImportSelectedCount();
+  }
+}
+
+async function startApp(){
+  document.getElementById('authScreen').style.display='none';
+  
+  // Subscription kontrolü
+  if(org.subscriptionStatus === 'EXPIRED'){
+    showSubscriptionExpiredScreen();
+    return;
+  }
+  
+  // Onboarding kontrolü - tamamlanmamışsa wizard göster
+  if(!org.onboardingCompleted){
+    showOnboarding();
+    return;
+  }
+  
+  document.getElementById('appScreen').classList.add('visible');
+  populateCurrencies();
+  loadProfile();
+  buildHoursGrid();
+  await loadCats();
+  await loadBranches();
+  populateAddSel();
+  buildCatPills();
+  loadMenu();
+  qrGenerate();
+  // Hash routing: #tables, #qr, #profile, #analytics
+  setTimeout(applyHash, 100);
+}
+
+function showSubscriptionExpiredScreen(){
+  document.body.innerHTML = `
+    <div style="min-height:100vh;background:#1D1616;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;font-family:system-ui,sans-serif">
+      <div style="max-width:400px;text-align:center">
+        <div style="width:64px;height:64px;border-radius:16px;background:#8E1616;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 25.5 L6 6.5 L16 19 L26 6.5 L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+        <div style="font-size:22px;font-weight:800;margin-bottom:8px">Trial ended</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:24px">Choose a plan to continue managing your menu and reactivate customer access.</div>
+        <button onclick="alert('Stripe integration coming soon. Contact support to upgrade.')" style="width:100%;padding:14px;border-radius:12px;border:none;background:#8E1616;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Choose a plan</button>
+        <button onclick="doLogout()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer">Sign out</button>
+      </div>
+    </div>`;
+}
+
+/* NAV */
+function go(id,el){
+  document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('on'));
+  if(el)el.classList.add('on');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  const targetPanel=document.getElementById('p-'+id);
+  if(targetPanel)targetPanel.classList.add('on');
+  const titles={menu:'Menu items',tables:'Tables',qr:'QR & link',analytics:'Analytics',profile:'Profile'};
+  document.getElementById('ptitle').textContent=titles[id]||id;
+  document.getElementById('topActs').style.display=id==='menu'?'flex':'none';
+  document.getElementById('backBtn').style.display='none';
+  if(id==='qr'){buildQrBranchSelector();qrGenerate();}
+  if(id==='analytics')loadAnalytics();
+  if(id==='profile')loadBranches();
+  if(id==='tables')loadTables();
+  // hash güncelle
+  if(history.replaceState)history.replaceState(null,'','#'+id);
+  document.getElementById('appContent').scrollTop=0;
+}
+function goBack(){go('profile',document.getElementById('nav-profile'));}
+
+// Hash routing: /editor.html#tables, #qr, #profile, #analytics, #menu
+function applyHash(){
+  const h=(location.hash||'').replace('#','').toLowerCase();
+  const allowed=['menu','tables','qr','analytics','profile'];
+  if(!h)return;
+  if(allowed.includes(h)){
+    const btn=document.getElementById('nav-'+h);
+    if(btn)go(h, btn);
+  }
+}
+window.addEventListener('hashchange',applyHash);
+
+function toggleSection(id,row){
+  const el=document.getElementById(id);
+  el.classList.toggle('open');
+  const chev=row.querySelector('.chevron');
+  if(chev)chev.style.transform=el.classList.contains('open')?'rotate(90deg)':'';
+}
+
+/* PROFILE */
+function populateCurrencies(){
+  document.getElementById('orgCurrency').innerHTML=CURRENCIES.map(c=>`<option value="${c.code}">${c.code} (${c.symbol}) — ${c.name}</option>`).join('');
+  document.getElementById('orgLanguage').innerHTML=LANGUAGES.map(l=>`<option value="${l.code}">${l.name}</option>`).join('');
+}
+
+function loadProfile(){
+  if(!org)return;
+  document.getElementById('profileName').value=org.name||'';
+  document.getElementById('orgCountry').value=org.country||'';
+  document.getElementById('orgCity').value=org.city||'';
+  document.getElementById('orgAddress').value=org.address||'';
+  document.getElementById('orgPostal').value=org.postalCode||'';
+  document.getElementById('orgCurrency').value=org.currency||'USD';
+  document.getElementById('orgLanguage').value=org.defaultLanguage||'en';
+  document.getElementById('orgOrderListEnabled').checked = org.orderListEnabled !== false;
+  document.getElementById('orgMapsUrl').value=org.googleMapsUrl||'';
+  document.getElementById('orgPhone').value=org.phone||'';
+  document.getElementById('orgWebsite').value=org.website||'';
+  document.getElementById('orgInstagram').value=org.instagram||'';
+  document.getElementById('orgFacebook').value=org.facebook||'';
+  if(org.logoUrl){document.getElementById('logoImgP').src=org.logoUrl;document.getElementById('logoImgP').style.display='block';document.getElementById('logoSvgP').style.display='none';}
+  updateAddrSummary();
+  loadHours();
+}
+function updateAddrSummary(){
+  const parts=[];
+  if(document.getElementById('orgCity').value)parts.push(document.getElementById('orgCity').value);
+  if(document.getElementById('orgCountry').value)parts.push(document.getElementById('orgCountry').value);
+  document.getElementById('addrSummary').textContent=parts.length?parts.join(', '):'Set country, city, address';
+}
+
+let saveTimer;
+function debounceSaveOrg(){
+  clearTimeout(saveTimer);
+  updateAddrSummary();
+  saveTimer=setTimeout(saveOrg,800);
+}
+async function saveOrg(){
+  const data={
+    name:document.getElementById('profileName').value.trim()||org.name,
+    country:document.getElementById('orgCountry').value.trim()||null,
+    city:document.getElementById('orgCity').value.trim()||null,
+    address:document.getElementById('orgAddress').value.trim()||null,
+    postalCode:document.getElementById('orgPostal').value.trim()||null,
+    currency:document.getElementById('orgCurrency').value,
+    defaultLanguage:document.getElementById('orgLanguage').value,
+    googleMapsUrl:document.getElementById('orgMapsUrl').value.trim()||null,
+    phone:document.getElementById('orgPhone').value.trim()||null,
+    website:document.getElementById('orgWebsite').value.trim()||null,
+    instagram:document.getElementById('orgInstagram').value.trim()||null,
+    facebook:document.getElementById('orgFacebook').value.trim()||null,
+    workingHours:collectHours(),
+  };
+  try{
+    const updated=await api('PATCH','/api/auth/organization',data);
+    org={...org,...updated};
+    localStorage.setItem('ms_org',JSON.stringify(org));
+    renderItems();
+  }catch(e){toast('Save failed: '+e.message);}
+}
+
+const DAYS=['mon','tue','wed','thu','fri','sat','sun'];
+const DAY_LABELS={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
+function buildHoursGrid(){
+  document.getElementById('hoursGrid').innerHTML=DAYS.map(d=>`
+    <div class="wh-row">
+      <div class="wh-day">${DAY_LABELS[d]}</div>
+      <input type="time" id="hop-${d}" oninput="debounceSaveOrg()"/>
+      <input type="time" id="hcl-${d}" oninput="debounceSaveOrg()"/>
+      <label class="tog"><input type="checkbox" id="hen-${d}" onchange="toggleHourDay('${d}',this);debounceSaveOrg()" checked/><div class="tog-t"></div><div class="tog-th"></div></label>
+    </div>`).join('');
+}
+function loadHours(){
+  const wh=org.workingHours||{};
+  for(const d of DAYS){
+    const dat=wh[d];
+    const en=document.getElementById('hen-'+d);
+    const op=document.getElementById('hop-'+d);
+    const cl=document.getElementById('hcl-'+d);
+    if(!en||!op||!cl)continue;
+    if(dat&&dat.open&&dat.close){en.checked=true;op.value=dat.open;cl.value=dat.close;op.disabled=false;cl.disabled=false;}
+    else if(dat&&dat.closed){en.checked=false;op.value='';cl.value='';op.disabled=true;cl.disabled=true;}
+    else{en.checked=true;op.value='09:00';cl.value='22:00';op.disabled=false;cl.disabled=false;}
+  }
+}
+function toggleHourDay(d,cb){
+  document.getElementById('hop-'+d).disabled=!cb.checked;
+  document.getElementById('hcl-'+d).disabled=!cb.checked;
+}
+function collectHours(){
+  const wh={};
+  for(const d of DAYS){
+    const en=document.getElementById('hen-'+d).checked;
+    if(!en){wh[d]={closed:true};continue;}
+    const op=document.getElementById('hop-'+d).value;
+    const cl=document.getElementById('hcl-'+d).value;
+    if(op&&cl)wh[d]={open:op,close:cl};
+  }
+  return wh;
+}
+
+function handleLogo(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{document.getElementById('logoImgP').src=ev.target.result;document.getElementById('logoImgP').style.display='block';document.getElementById('logoSvgP').style.display='none';};
+  r.readAsDataURL(f);
+  // Upload to backend
+  const fd=new FormData();fd.append('logo',f);
+  toast('Uploading logo...',4000);
+  apiForm('POST','/api/menu/_logo',fd).then(res=>{
+    org.logoUrl=res.logoUrl;localStorage.setItem('ms_org',JSON.stringify(org));
+    toast('Logo updated');
+  }).catch(err=>toast('Upload failed: '+err.message));
+}
+
+/* CATEGORIES — backend'den yüklenir */
+async function loadCats(){
+  try{
+    const data = await api('GET','/api/categories');
+    cats = data.map(c => ({ id: c.id, code: c.code, label: c.label, color: c.color, visible: c.visible }));
+  }catch(e){
+    console.error('loadCats failed', e);
+    cats = [];
+  }
+}
+function catById(code){
+  // Hem code hem id ile arama (geriye dönük uyumluluk)
+  return cats.find(c=>c.code===code) || cats.find(c=>c.id===code) || {code:code, label:code, color:'#888', visible:true};
+}
+function visCats(){return cats.filter(c=>c.visible);}
+
+function openCatsOverlay(){renderCatMgmt();document.getElementById('catsOverlay').classList.add('open');}
+function closeCatsOverlay(){document.getElementById('catsOverlay').classList.remove('open');loadMenu();}
+function renderCatMgmt(){
+  document.getElementById('catMgmtList').innerHTML=cats.map(c=>`
+    <div class="cat-mgmt-item">
+      <input type="color" value="${c.color}" oninput="onCatColorInput('${c.id}',this.value)" onchange="onCatColorChange('${c.id}',this.value)" style="width:24px;height:24px;border:none;background:none;cursor:pointer;padding:0"/>
+      <input class="cat-name-inp" value="${c.label}" oninput="onCatLabelInput('${c.id}',this.value)" onblur="onCatLabelBlur('${c.id}',this.value)"/>
+      <label class="tog"><input type="checkbox" ${c.visible?'checked':''} onchange="onCatVisibleToggle('${c.id}',this)"/><div class="tog-t"></div><div class="tog-th"></div></label>
+      <button onclick="deleteCat('${c.id}')" style="width:30px;height:30px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#ef4444">${TRASH}</button>
+    </div>`).join('');
+}
+
+const catUpdateTimers = {};
+function onCatLabelInput(id, val){
+  const c = cats.find(x=>x.id===id); if(!c) return;
+  c.label = val;
+  buildCatPills();
+  populateAddSel();
+  clearTimeout(catUpdateTimers[id]);
+  catUpdateTimers[id] = setTimeout(()=>saveCatRemote(id,{label:val}), 600);
+}
+function onCatLabelBlur(id, val){
+  clearTimeout(catUpdateTimers[id]);
+  saveCatRemote(id,{label:val});
+}
+function onCatColorInput(id, val){
+  const c = cats.find(x=>x.id===id); if(!c) return;
+  c.color = val;
+  buildCatPills();
+}
+function onCatColorChange(id, val){
+  saveCatRemote(id,{color:val});
+}
+function onCatVisibleToggle(id, cb){
+  const c = cats.find(x=>x.id===id); if(!c) return;
+  c.visible = cb.checked;
+  buildCatPills();
+  saveCatRemote(id,{visible:cb.checked});
+}
+
+async function saveCatRemote(id, data){
+  try{
+    const updated = await api('PATCH','/api/categories/'+id, data);
+    const c = cats.find(x=>x.id===id);
+    if(c) Object.assign(c, { label: updated.label, color: updated.color, visible: updated.visible });
+    renderItems();
+  }catch(e){toast('Save failed: '+e.message);}
+}
+
+async function deleteCat(id){
+  if(cats.length<=1) return toast('Cannot delete the only category');
+  try{
+    await api('DELETE','/api/categories/'+id);
+    cats = cats.filter(c=>c.id!==id);
+    renderCatMgmt();
+    buildCatPills();
+    populateAddSel();
+    loadMenu(); // çünkü silinen kategorideki itemlar fallback'a taşındı
+    toast('Category deleted');
+  }catch(e){toast('Delete failed: '+e.message);}
+}
+
+async function addCategory(){
+  const colors=['#BA7517','#993556','#1D9E75','#378ADD','#A855F7'];
+  try{
+    const created = await api('POST','/api/categories', {
+      label: 'New category',
+      color: colors[cats.length%5],
+    });
+    cats.push({ id: created.id, code: created.code, label: created.label, color: created.color, visible: created.visible });
+    renderCatMgmt();
+    buildCatPills();
+    populateAddSel();
+    toast('Category added');
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+function buildCatPills(){
+  const all=[{code:'all',label:'All'},...cats];
+  document.getElementById('catPills').innerHTML=all.map(c=>`<button class="pill${currentFilter===c.code?' on':''}" onclick="filterItems('${c.code}')">${c.label}</button>`).join('');
+}
+
+/* MENU */
+async function loadMenu(){
+  try{const data=await api('GET','/api/menu');items=data;renderItems();updateStats();buildPreview();}
+  catch(e){document.getElementById('itemRows').innerHTML='<div class="loading-msg">Failed to load.</div>';}
+}
+function updateStats(){
+  document.getElementById('statItems').textContent=items.length;
+  document.getElementById('statPhotos').textContent=items.reduce((s,i)=>s+(i.photos?i.photos.length:0),0);
+  document.getElementById('statBest').textContent=items.filter(i=>i.isBestseller).length;
+}
+
+function tagSelectHTML(itemId, type, current){
+  const groups = type === 'marketing'
+    ? [
+        {val:'',label:'— None —'},
+        {val:'NEW',label:'NEW'},
+        {val:'BESTSELLER',label:'BESTSELLER'},
+        {val:'OFFER',label:'OFFER'},
+        {val:'LIMITED',label:'LIMITED'},
+        {val:'SEASONAL',label:'SEASONAL'},
+        {val:'LOCAL_FOOD',label:'LOCAL FOOD'},
+        {val:'SOLD_OUT',label:'SOLD OUT'},
+      ]
+    : [
+        {val:'',label:'— None —'},
+        {val:'SPICY',label:'SPICY'},
+        {val:'VEGAN',label:'VEGAN'},
+        {val:'GLUTEN_FREE',label:'GLUTEN-FREE'},
+        {val:'HALAL',label:'HALAL'},
+        {val:'DAIRY_FREE',label:'DAIRY-FREE'},
+        {val:'PROTEIN_PLUS',label:'PROTEIN+'},
+      ];
+  const cur = current || '';
+  const cls = cur ? ' t-'+cur : '';
+  const opts = groups.map(g => `<option value="${g.val}"${g.val===cur?' selected':''}>${g.label}</option>`).join('');
+  return `<select class="tag-select${cls}" onchange="updateTag('${itemId}','${type}',this.value)">${opts}</select>`;
+}
+
+function renderItems(){
+  const sym=getCurrencySymbol();
+  const list=currentFilter==='all'?items:items.filter(i=>i.category===currentFilter);
+  document.getElementById('itemRows').innerHTML=list.map(item=>{
+    const cat=catById(item.category||'MAIN');
+    const isEd=editingId===item.id;
+    const descOpen=openDescId===item.id;
+    const photos=item.photos||[];
+    const desc=item.description||'';
+
+    const tagM = tagSelectHTML(item.id, 'marketing', item.tagMarketing);
+    const tagD = tagSelectHTML(item.id, 'dietary', item.tagDietary);
+    const allergenCount = (item.allergens||[]).length;
+    const allergenCell = `<div class="tag-cell" style="justify-content:center">
+      <button onclick="openAllergenOverlay('${item.id}')" title="Edit allergens" style="width:100%;border:none;background:${allergenCount>0?'#fee2e2':'#f8fafc'};border-radius:7px;padding:5px 3px;cursor:pointer;font-size:10px;font-weight:700;color:${allergenCount>0?'#991b1b':'#94a3b8'};display:flex;flex-direction:column;align-items:center;gap:1px">
+        <span style="font-size:13px">${allergenCount>0?'⚠':'○'}</span>
+        <span>${allergenCount>0?allergenCount:'—'}</span>
+      </button>
+    </div>`;
+
+    const mainRow=isEd
+      ?`<div class="irow-main" style="background:#f8fafc">
+          <div class="tag-cell">${tagM}</div>
+          <div class="tag-cell">${tagD}</div>
+          ${allergenCell}
+          <div class="icell"><input class="edit-inp" id="en-${item.id}" value="${item.name}"/></div>
+          <div class="icell"><select class="cat-sel" id="ec-${item.id}">${cats.map(c=>`<option value="${c.code}"${c.code===(item.category||'MAIN')?' selected':''}>${c.label}</option>`).join('')}</select></div>
+          <div class="icell"><input class="price-inp" id="ep-${item.id}" type="number" step="0.01" value="${item.price}"/></div>
+          <div class="icell"><button class="photo-ibtn" onclick="openPhoto('${item.id}')">${PHOTO_ICO} ${photos.length}/3</button></div>
+          <div class="act-cell"><button class="ib save" onclick="saveEdit('${item.id}')">${CHECK}</button><button class="ib cx" onclick="cancelEdit()">${XMARK}</button></div>
+        </div>`
+      :`<div class="irow-main">
+          <div class="tag-cell">${tagM}</div>
+          <div class="tag-cell">${tagD}</div>
+          ${allergenCell}
+          <div class="icell" style="cursor:pointer" onclick="toggleDesc('${item.id}')">
+            <div class="iname-area">
+              <div class="iname-row">
+                <span class="iname-text">${item.name}</span>
+              </div>
+              <div class="idesc-text${desc?'':' empty'}">${desc||'Tap to add description...'}</div>
+            </div>
+          </div>
+          <div class="icell"><span class="ctag" style="border-left:3px solid ${cat.color}">${cat.label}</span></div>
+          <div class="icell" style="font-size:13px;font-weight:700;color:#1e293b">${sym}${item.price}</div>
+          <div class="icell"><button class="photo-ibtn" onclick="openPhoto('${item.id}')">${PHOTO_ICO} ${photos.length}/3</button></div>
+          <div class="act-cell">
+            ${(org?.enabledLanguages||[]).length>0?`<button class="ib" onclick="openItemTranslations('${item.id}')" title="Translations">${TRANSLATE_ICO}</button>`:''}
+            <button class="ib" onclick="startEdit('${item.id}')">${PENCIL}</button>
+            <button class="ib" onclick="askDelete('${item.id}','${(item.name||'').replace(/'/g,"\\'")}',\'item\')">${TRASH}</button>
+          </div>
+        </div>`;
+    const descSec=`<div class="desc-ed${descOpen?' open':''}"><div class="desc-inner"><textarea class="desc-ta" id="dt-${item.id}" maxlength="${DESC_MAX}" placeholder="Describe this dish..." oninput="descCount('${item.id}')">${desc}</textarea><div class="desc-right"><div class="desc-cnt" id="dc-${item.id}">${desc.length}/${DESC_MAX}</div><button class="ai-gen-btn" id="ai-${item.id}" onclick="aiGenerateDesc('${item.id}')" title="Generate with AI">${SPARK}</button><button class="ok-btn" onclick="saveDesc('${item.id}')">${CHECK}</button></div></div></div>`;
+    return `<div class="irow${isEd?' editing':''}">${mainRow}${descSec}</div>`;
+  }).join('')||'<div class="loading-msg">No items yet. Tap + Add to start.</div>';
+  updateStats();buildCatPills();
+}
+
+async function updateTag(id, type, value){
+  const item = items.find(i=>i.id===id);
+  if(!item) return;
+  const field = type === 'marketing' ? 'tagMarketing' : 'tagDietary';
+  const newVal = value || null;
+  try{
+    const updated = await api('PATCH','/api/menu/'+id, { [field]: newVal });
+    Object.assign(item, updated);
+    renderItems();
+    if(newVal) toast('Tag updated');
+  }catch(e){toast('Update failed: '+e.message);}
+}
+
+async function toggleStar(id){
+  const item=items.find(i=>i.id===id);if(!item)return;
+  const newMarketing = item.tagMarketing === 'BESTSELLER' ? null : 'BESTSELLER';
+  try{
+    const updated=await api('PATCH','/api/menu/'+id,{tagMarketing:newMarketing});
+    Object.assign(item,updated);renderItems();
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+function filterItems(cat){currentFilter=cat;editingId=null;openDescId=null;renderItems();}
+function populateAddSel(){document.getElementById('newCat').innerHTML=cats.map(c=>`<option value="${c.code}">${c.label}</option>`).join('');}
+
+function startEdit(id){editingId=id;openDescId=null;renderItems();}
+function cancelEdit(){editingId=null;renderItems();}
+async function saveEdit(id){
+  const item=items.find(i=>i.id===id);
+  const name=document.getElementById('en-'+id).value.trim()||item.name;
+  const category=document.getElementById('ec-'+id).value;
+  const price=parseFloat(document.getElementById('ep-'+id).value)||item.price;
+  try{const updated=await api('PATCH','/api/menu/'+id,{name,category,price});Object.assign(item,updated);editingId=null;renderItems();toast('Saved');}
+  catch(e){toast('Save failed: '+e.message);}
+}
+function askDelete(id,name,type){pendingDeleteId=id;pendingDeleteType=type||'item';document.getElementById('delSub').textContent=`"${name}" will be permanently removed.`;document.getElementById('delOverlay').classList.add('open');}
+document.getElementById('delCancelBtn').addEventListener('click',()=>{pendingDeleteId=null;document.getElementById('delOverlay').classList.remove('open');});
+document.getElementById('delOkBtn').addEventListener('click',async()=>{
+  if(!pendingDeleteId){document.getElementById('delOverlay').classList.remove('open');return;}
+  try{
+    if(pendingDeleteType==='item'){
+      await api('DELETE','/api/menu/'+pendingDeleteId);
+      items=items.filter(i=>i.id!==pendingDeleteId);renderItems();toast('Item deleted');
+    } else if(pendingDeleteType==='branch'){
+      await api('DELETE','/api/branches/'+pendingDeleteId);
+      branches=branches.filter(b=>b.id!==pendingDeleteId);renderBranchesList();
+      closeBranchEdit();toast('Branch deleted');
+    }
+  }catch(e){toast('Delete failed: '+e.message);}
+  pendingDeleteId=null;pendingDeleteType=null;
+  document.getElementById('delOverlay').classList.remove('open');
+});
+
+function toggleDesc(id){
+  if(editingId===id)return;
+  openDescId=openDescId===id?null:id;renderItems();
+  if(openDescId===id)setTimeout(()=>{const ta=document.getElementById('dt-'+id);if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}},30);
+}
+function descCount(id){const ta=document.getElementById('dt-'+id),el=document.getElementById('dc-'+id);if(!ta||!el)return;el.textContent=ta.value.length+'/'+DESC_MAX;}
+async function saveDesc(id){
+  const ta=document.getElementById('dt-'+id);const item=items.find(i=>i.id===id);if(!ta||!item)return;
+  const description=ta.value.trim().slice(0,DESC_MAX);
+  try{await api('PATCH','/api/menu/'+id,{description});item.description=description;openDescId=null;renderItems();toast('Description saved');}
+  catch(e){toast('Save failed');}
+}
+async function aiGenerateDesc(id){
+  const item=items.find(i=>i.id===id);
+  const ta=document.getElementById('dt-'+id);
+  const btn=document.getElementById('ai-'+id);
+  if(!item||!ta||!btn) return;
+  btn.disabled=true;btn.classList.add('spinning');
+  try{
+    const updated=await api('POST','/api/menu/'+id+'/regenerate-description');
+    item.description=updated.description;
+    ta.value=updated.description||'';
+    descCount(id);
+    toast('Description generated');
+  }catch(e){
+    toast('Generation failed: '+e.message);
+  }finally{
+    btn.disabled=false;btn.classList.remove('spinning');
+  }
+}
+
+/* ============== ALLERGENS ============== */
+let _allergenItemId = null;
+let _allergenSelected = new Set();
+
+function openAllergenOverlay(itemId){
+  const item = items.find(i => i.id === itemId);
+  if(!item) return;
+  _allergenItemId = itemId;
+  _allergenSelected = new Set(item.allergens || []);
+  document.getElementById('allergenItemName').textContent = item.name;
+  renderAllergenGrid();
+  document.getElementById('allergenOverlay').classList.add('open');
+}
+
+function renderAllergenGrid(){
+  document.getElementById('allergenGrid').innerHTML = ALLERGENS.map(a => {
+    const on = _allergenSelected.has(a.code);
+    return `<label class="allergen-chip${on?' on':''}">
+      <input type="checkbox" ${on?'checked':''} onchange="toggleAllergen('${a.code}',this.checked)"/>
+      <span>${a.emoji}</span>
+      <span>${a.label}</span>
+    </label>`;
+  }).join('');
+}
+
+function toggleAllergen(code, checked){
+  if(checked) _allergenSelected.add(code);
+  else _allergenSelected.delete(code);
+  // Chip stilini güncelle
+  const chips = document.querySelectorAll('.allergen-chip');
+  ALLERGENS.forEach((a, i) => {
+    if(a.code === code) chips[i]?.classList.toggle('on', checked);
+  });
+}
+
+function closeAllergenOverlay(){
+  document.getElementById('allergenOverlay').classList.remove('open');
+  _allergenItemId = null;
+}
+
+async function saveAllergens(){
+  if(!_allergenItemId) return;
+  try{
+    const updated = await api('PATCH','/api/menu/'+_allergenItemId, { allergens: [..._allergenSelected] });
+    const item = items.find(i => i.id === _allergenItemId);
+    if(item) item.allergens = updated.allergens;
+    closeAllergenOverlay();
+    renderItems();
+    toast('Allergens saved');
+  }catch(e){ toast('Failed: '+e.message); }
+}
+async function toggleOrderList(cb){
+  try{
+    const updated = await api('PATCH','/api/auth/organization', { orderListEnabled: cb.checked });
+    org = {...org, ...updated};
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    toast(cb.checked ? 'Online ordering enabled' : 'Online ordering disabled');
+  }catch(e){
+    toast('Failed: '+e.message);
+    cb.checked = !cb.checked;
+  }
+}
+
+/* ============== CROSS-SELL ============== */
+let _crossSellEdits = {};
+
+function openCrossSellOverlay(){
+  _crossSellEdits = {};
+  items.forEach(it => { _crossSellEdits[it.id] = it.crossSellItemId || ''; });
+  renderCrossSellList();
+  document.getElementById('crossSellOverlay').classList.add('open');
+}
+
+function renderCrossSellList(){
+  const body = document.getElementById('crossSellList');
+  if(items.length === 0){
+    body.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px 16px;font-size:13px">No items yet. Add some menu items first.</div>';
+    return;
+  }
+  // Kategori bazlı sırala
+  const sorted = [...items].sort((a,b) => {
+    const ca = cats.findIndex(c => c.code === (a.category||'MAIN'));
+    const cb = cats.findIndex(c => c.code === (b.category||'MAIN'));
+    if(ca !== cb) return ca - cb;
+    return (a.sortOrder||0) - (b.sortOrder||0);
+  });
+  body.innerHTML = sorted.map(item => {
+    const cat = cats.find(c => c.code === (item.category||'MAIN'));
+    const catLabel = cat?.label || 'MAIN';
+    const currentValue = _crossSellEdits[item.id] || '';
+    const opts = items
+      .filter(i => i.id !== item.id)
+      .map(i => `<option value="${i.id}"${i.id===currentValue?' selected':''}>${escAdm(i.name)}</option>`)
+      .join('');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f1f5f9">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escAdm(item.name)}</div>
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">${escAdm(catLabel)}</div>
+      </div>
+      <div style="font-size:14px;color:#cbd5e1;flex-shrink:0">→</div>
+      <select onchange="_crossSellEdits['${item.id}']=this.value" style="flex:1.2;min-width:0;padding:7px 8px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;cursor:pointer">
+        <option value="">— No suggestion —</option>
+        ${opts}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function escAdm(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function closeCrossSellOverlay(){
+  document.getElementById('crossSellOverlay').classList.remove('open');
+}
+
+async function saveCrossSells(){
+  const changes = [];
+  items.forEach(it => {
+    const newVal = _crossSellEdits[it.id] || null;
+    const oldVal = it.crossSellItemId || null;
+    if(newVal !== oldVal) changes.push({ id: it.id, crossSellItemId: newVal });
+  });
+  if(changes.length === 0){
+    closeCrossSellOverlay();
+    toast('No changes');
+    return;
+  }
+  try {
+    for(const c of changes){
+      await api('PATCH', '/api/menu/'+c.id, { crossSellItemId: c.crossSellItemId });
+    }
+    await loadMenu();
+    closeCrossSellOverlay();
+    toast(`Saved ${changes.length} cross-sell ${changes.length===1?'rule':'rules'}`);
+  } catch(e){
+    toast('Failed: '+e.message);
+  }
+}
+
+let translationData = null;
+let translationJobId = null;
+let translationPolling = null;
+
+async function loadLanguages(){
+  try{
+    translationData = await api('GET','/api/translations');
+    renderLanguages();
+  }catch(e){
+    document.getElementById('langContent').innerHTML = `<div style="color:#ef4444;font-size:12px;padding:12px">Failed to load: ${e.message}</div>`;
+  }
+}
+
+function renderLanguages(){
+  if(!translationData) return;
+  const d = translationData;
+  const defaultLangName = (LANGUAGES.find(l=>l.code===d.defaultLanguage)?.name)||d.defaultLanguage;
+  const enabled = d.enabledLanguages || [];
+  const maxLangs = d.maxLanguages;
+  
+  let limitText = '';
+  if(maxLangs === -1) limitText = 'Unlimited languages';
+  else limitText = `${enabled.length} / ${maxLangs} additional languages`;
+  
+  let html = `
+    <div style="font-size:11px;color:#64748b;margin-bottom:10px;font-weight:600">${limitText}</div>
+    
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <div style="width:28px;height:28px;border-radius:7px;background:#8E1616;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${d.defaultLanguage.toUpperCase()}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#1e293b">${defaultLangName}</div>
+        <div style="font-size:10px;color:#64748b">Main language · ${d.totalItems} items</div>
+      </div>
+      <button onclick="openChangeMainLang()" style="width:28px;height:28px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center" title="Change main language">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 2.5l2.5 2.5M2 12V9.5L9 2.5l2.5 2.5L4.5 12H2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </button>
+    </div>`;
+  
+  // Aktif diller
+  for(const lang of enabled){
+    const langName = (LANGUAGES.find(l=>l.code===lang)?.name)||lang;
+    const cov = (d.coverage||[]).find(c=>c.language===lang);
+    const pct = cov?.percentage||0;
+    html += `
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="width:28px;height:28px;border-radius:7px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${lang.toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#1e293b">${langName}</div>
+          <div style="font-size:10px;color:#64748b">${cov?.translatedCount||0} / ${cov?.totalItems||0} translated · ${pct}%</div>
+        </div>
+        <button onclick="removeLanguage('${lang}')" style="width:28px;height:28px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center" title="Remove">${TRASH}</button>
+      </div>`;
+  }
+  
+  // Add language butonu
+  if(maxLangs === -1 || enabled.length < maxLangs){
+    html += `<button class="btn-gh" onclick="openAddLanguage()" style="width:100%;justify-content:center;margin-top:6px">+ Add language</button>`;
+  } else {
+    html += `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:6px">
+      <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:2px">Plan limit reached</div>
+      <div style="font-size:10px;color:#92400e">Upgrade to Pro for unlimited languages</div>
+    </div>`;
+  }
+  
+  // Translate all butonu
+  if(enabled.length > 0 && d.totalItems > 0){
+    html += `<button class="btn-dk" onclick="startTranslateAll()" style="width:100%;margin-top:10px">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="margin-right:6px"><path d="M2 4h6M5 2v8M2 10l3-6 3 6M9 11l3-3 3 3M11 8v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Re-translate all items
+    </button>`;
+    html += `<div style="font-size:10px;color:#94a3b8;text-align:center;margin-top:6px;line-height:1.4">Manually edited translations will not be overwritten.</div>`;
+  }
+  
+  document.getElementById('langContent').innerHTML = html;
+  document.getElementById('langSectionSub').textContent = enabled.length === 0 
+    ? 'Show your menu in multiple languages' 
+    : `${enabled.length} additional language${enabled.length===1?'':'s'} active`;
+}
+
+async function openChangeMainLang(){
+  const currentDefault = translationData?.defaultLanguage || 'en';
+  const enabled = translationData?.enabledLanguages || [];
+  
+  // Tüm diller seçilebilir (mevcut ana dil dahil değil)
+  const html = `
+    <div id="mainLangOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:420px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#1e293b">Change main language</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">Current: ${(LANGUAGES.find(l=>l.code===currentDefault)?.name)||currentDefault}</div>
+          </div>
+          <button onclick="document.getElementById('mainLangOverlay').remove()" style="width:28px;height:28px;border-radius:6px;border:none;background:#f1f5f9;cursor:pointer;color:#475569">${XMARK}</button>
+        </div>
+        <div style="background:#fef9c3;border-bottom:1px solid #fde047;padding:10px 14px;font-size:11px;color:#713f12;line-height:1.5">
+          <strong>Warning:</strong> Changing the main language means your existing items (in ${(LANGUAGES.find(l=>l.code===currentDefault)?.name)||currentDefault}) will be considered as the new main. Existing translations stay but may need updating. Run "Re-translate all" afterwards if needed.
+        </div>
+        <input type="text" id="mainLangSearch" placeholder="Search..." oninput="filterMainLangPicker(this.value)" style="margin:10px 14px;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"/>
+        <div id="mainLangList" style="flex:1;overflow-y:auto;padding:0 6px 14px">
+          ${LANGUAGES.filter(l=>l.code!==currentDefault).map(l=>`<button onclick="confirmChangeMainLang('${l.code}','${(l.name||'').replace(/'/g,"\\'")}')" data-name="${l.name.toLowerCase()}" style="width:100%;padding:10px 12px;border:none;background:transparent;cursor:pointer;text-align:left;border-radius:8px;display:flex;align-items:center;gap:10px;font-size:13px" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <span style="width:26px;height:26px;border-radius:6px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">${l.code.toUpperCase()}</span>
+            <span style="color:#1e293b;font-weight:600">${l.name}</span>
+            ${enabled.includes(l.code)?'<span style="margin-left:auto;font-size:10px;color:#16a34a;font-weight:700">Currently active</span>':''}
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(()=>document.getElementById('mainLangSearch').focus(), 50);
+}
+
+function filterMainLangPicker(query){
+  const q = query.toLowerCase();
+  document.querySelectorAll('#mainLangList button').forEach(btn=>{
+    const name = btn.getAttribute('data-name');
+    btn.style.display = name.includes(q) ? 'flex' : 'none';
+  });
+}
+
+async function confirmChangeMainLang(code, name){
+  if(!confirm(`Change main language to ${name}?\n\nThis will set ${name} as the primary language of your menu. Existing translations are preserved.`)) return;
+  document.getElementById('mainLangOverlay')?.remove();
+  try{
+    const updated = await api('PATCH','/api/auth/organization', { defaultLanguage: code });
+    org = {...org, ...updated};
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    await loadLanguages();
+    toast('Main language changed to '+name);
+  }catch(e){
+    toast('Failed: '+e.message);
+  }
+}
+
+async function openAddLanguage(){
+  const enabled = (translationData?.enabledLanguages)||[];
+  const defaultLang = translationData?.defaultLanguage||'en';
+  const available = LANGUAGES.filter(l => l.code !== defaultLang && !enabled.includes(l.code));
+  
+  // Mini overlay
+  const html = `
+    <div id="langPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:380px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px">
+          <div style="flex:1;font-size:14px;font-weight:700;color:#1e293b">Add a language</div>
+          <button onclick="document.getElementById('langPickerOverlay').remove()" style="width:28px;height:28px;border-radius:6px;border:none;background:#f1f5f9;cursor:pointer;color:#475569">${XMARK}</button>
+        </div>
+        <input type="text" id="langSearchInput" placeholder="Search..." oninput="filterLangPicker(this.value)" style="margin:10px 14px;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"/>
+        <div id="langPickerList" style="flex:1;overflow-y:auto;padding:0 6px 14px">
+          ${available.map(l=>`<button onclick="addLanguage('${l.code}')" data-name="${l.name.toLowerCase()}" style="width:100%;padding:10px 12px;border:none;background:transparent;cursor:pointer;text-align:left;border-radius:8px;display:flex;align-items:center;gap:10px;font-size:13px" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <span style="width:26px;height:26px;border-radius:6px;background:#f1f5f9;color:#475569;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">${l.code.toUpperCase()}</span>
+            <span style="color:#1e293b;font-weight:600">${l.name}</span>
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(()=>document.getElementById('langSearchInput').focus(), 50);
+}
+
+function filterLangPicker(query){
+  const q = query.toLowerCase();
+  document.querySelectorAll('#langPickerList button').forEach(btn=>{
+    const name = btn.getAttribute('data-name');
+    btn.style.display = name.includes(q) ? 'flex' : 'none';
+  });
+}
+
+async function addLanguage(code){
+  document.getElementById('langPickerOverlay')?.remove();
+  try{
+    await api('POST','/api/translations/languages',{add:[code]});
+    await loadLanguages();
+    toast('Language added. Translating in background...');
+    // Otomatik translate-all başlat
+    startTranslateAll(true);
+  }catch(e){
+    toast('Failed: '+e.message);
+  }
+}
+
+async function removeLanguage(code){
+  if(!confirm(`Remove ${code.toUpperCase()}? Translations will be deleted.`)) return;
+  try{
+    await api('POST','/api/translations/languages',{remove:[code]});
+    await loadLanguages();
+    toast('Language removed');
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+async function startTranslateAll(silent=false){
+  try{
+    const res = await api('POST','/api/translations/translate-all',{});
+    translationJobId = res.jobId;
+    if(!silent) toast('Translation started...');
+    pollTranslationJob();
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+async function pollTranslationJob(){
+  if(!translationJobId) return;
+  if(translationPolling) clearInterval(translationPolling);
+  
+  const updateUI = (job) => {
+    const btn = document.querySelector('[onclick="startTranslateAll()"]');
+    if(!btn) return;
+    if(job.status === 'processing'){
+      const pct = job.total > 0 ? Math.round((job.done/job.total)*100) : 0;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="margin-right:6px;animation:spin 1s linear infinite"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="20 8" fill="none"/></svg> Translating ${pct}% (${job.done}/${job.total})`;
+      btn.disabled = true;
+    } else if(job.status === 'done'){
+      btn.innerHTML = `Re-translate all items`;
+      btn.disabled = false;
+      loadLanguages();
+      toast(`Translation complete${job.failed>0?' ('+job.failed+' failed)':''}`);
+    } else if(job.status === 'failed'){
+      btn.innerHTML = `Re-translate all items`;
+      btn.disabled = false;
+      toast('Translation failed: '+(job.error||''));
+    }
+  };
+  
+  translationPolling = setInterval(async ()=>{
+    try{
+      const job = await api('GET','/api/translations/job/'+translationJobId);
+      updateUI(job);
+      if(job.status !== 'processing'){
+        clearInterval(translationPolling);
+        translationPolling = null;
+        translationJobId = null;
+      }
+    }catch(e){}
+  }, 2500);
+  
+  // İlk hemen kontrol
+  setTimeout(async ()=>{
+    try{
+      const job = await api('GET','/api/translations/job/'+translationJobId);
+      updateUI(job);
+    }catch(e){}
+  }, 800);
+}
+
+/* Item translation editor modal */
+let currentTranslationItem = null;
+let currentTranslationLang = null;
+
+async function openItemTranslations(itemId){
+  try{
+    const data = await api('GET','/api/translations/item/'+itemId);
+    currentTranslationItem = data;
+    
+    if((data.enabledLanguages||[]).length === 0){
+      toast('No additional languages enabled. Add languages in Profile > Languages.');
+      return;
+    }
+    
+    currentTranslationLang = data.enabledLanguages[0];
+    renderItemTranslationModal();
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+function renderItemTranslationModal(){
+  const d = currentTranslationItem;
+  if(!d) return;
+  
+  const lang = currentTranslationLang;
+  const tr = d.translations.find(t=>t.language===lang) || {language:lang, name:'', description:'', isManualOverride:false};
+  
+  const langSelect = d.enabledLanguages.map(l=>{
+    const ln = (LANGUAGES.find(x=>x.code===l)?.name)||l;
+    return `<option value="${l}"${l===lang?' selected':''}>${ln}</option>`;
+  }).join('');
+  
+  // Source dilini göster
+  const sourceLangName = (LANGUAGES.find(l=>l.code===d.sourceLanguage)?.name)||d.sourceLanguage;
+  
+  let existing = document.getElementById('itemTransOverlay');
+  if(existing) existing.remove();
+  
+  const html = `
+    <div id="itemTransOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:250;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)" onclick="if(event.target===this)closeItemTranslations()">
+      <div style="background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:800;color:#1e293b">Translations</div>
+            <div style="font-size:11px;color:#64748b">${d.name}</div>
+          </div>
+          <button onclick="closeItemTranslations()" style="width:30px;height:30px;border-radius:7px;border:none;background:#f1f5f9;cursor:pointer;color:#475569">${XMARK}</button>
+        </div>
+        
+        <div style="padding:14px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+          <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Original (${sourceLangName})</div>
+          <div style="font-size:13px;font-weight:700;color:#1e293b">${d.name}</div>
+          <div style="font-size:12px;color:#475569;margin-top:3px">${d.description||'<em style="color:#94a3b8">No description</em>'}</div>
+        </div>
+        
+        <div style="padding:14px 18px;flex:1;overflow-y:auto">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <label style="font-size:11px;color:#64748b;font-weight:600">Translate to:</label>
+            <select onchange="switchTranslationLang(this.value)" style="flex:1;padding:7px 9px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600">
+              ${langSelect}
+            </select>
+            ${tr.isManualOverride?'<span style="font-size:9px;font-weight:800;color:#8E1616;background:#fef2f2;padding:3px 8px;border-radius:10px">EDITED</span>':''}
+          </div>
+          
+          <div style="margin-bottom:10px">
+            <label style="font-size:11px;color:#64748b;font-weight:600;display:block;margin-bottom:4px">Name</label>
+            <input id="itemTransName" type="text" value="${escapeAttr(tr.name||'')}" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"/>
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="font-size:11px;color:#64748b;font-weight:600;display:block;margin-bottom:4px">Description</label>
+            <textarea id="itemTransDesc" rows="3" maxlength="250" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;resize:none;font-family:inherit">${escapeHtml(tr.description||'')}</textarea>
+          </div>
+        </div>
+        
+        <div style="padding:12px 18px;border-top:1px solid #e2e8f0;display:flex;gap:8px;justify-content:space-between">
+          <button class="btn-gh" onclick="resetItemTranslation()" style="font-size:12px">Reset to AI</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn-gh" onclick="closeItemTranslations()">Cancel</button>
+            <button class="btn-dk" onclick="saveItemTranslation()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function switchTranslationLang(lang){
+  currentTranslationLang = lang;
+  renderItemTranslationModal();
+}
+
+function closeItemTranslations(){
+  document.getElementById('itemTransOverlay')?.remove();
+  currentTranslationItem = null;
+}
+
+async function saveItemTranslation(){
+  const name = document.getElementById('itemTransName').value.trim();
+  const description = document.getElementById('itemTransDesc').value.trim();
+  if(!name) return toast('Name required');
+  
+  try{
+    await api('PATCH','/api/translations/item/'+currentTranslationItem.itemId+'/'+currentTranslationLang, { name, description });
+    toast('Translation saved');
+    // Re-fetch
+    const data = await api('GET','/api/translations/item/'+currentTranslationItem.itemId);
+    currentTranslationItem = data;
+    renderItemTranslationModal();
+  }catch(e){toast('Failed: '+e.message);}
+}
+
+async function resetItemTranslation(){
+  if(!confirm('Reset to AI translation? Your manual edits will be lost.')) return;
+  try{
+    await api('DELETE','/api/translations/item/'+currentTranslationItem.itemId+'/'+currentTranslationLang);
+    // Re-translate this single item to this language
+    await api('POST','/api/translations/item/'+currentTranslationItem.itemId+'/translate', { languages: [currentTranslationLang] });
+    const data = await api('GET','/api/translations/item/'+currentTranslationItem.itemId);
+    currentTranslationItem = data;
+    renderItemTranslationModal();
+    toast('Reset done');
+  }catch(e){toast('Failed: '+e.message);}
+}
+function showAddRow(){populateAddSel();document.getElementById('addRow').classList.add('show');document.getElementById('newName').focus();}
+function hideAddRow(){document.getElementById('addRow').classList.remove('show');document.getElementById('newName').value='';document.getElementById('newPrice').value='';}
+async function confirmAdd(){
+  const name=document.getElementById('newName').value.trim();
+  const price=parseFloat(document.getElementById('newPrice').value)||0;
+  const category=document.getElementById('newCat').value;
+  if(!name)return;
+  try{const item=await api('POST','/api/menu',{name,price,category});item.photos=item.photos||[];items.push(item);hideAddRow();renderItems();toast('Item added');}
+  catch(e){toast('Failed: '+e.message);}
+}
+
+/* PHOTOS */
+function openPhoto(id){photoItemId=id;const item=items.find(i=>i.id===id);document.getElementById('photoTitle').textContent=item.name;renderSlots();document.getElementById('photoOverlay').classList.add('open');}
+function closePhotoOverlay(){document.getElementById('photoOverlay').classList.remove('open');photoItemId=null;}
+function renderSlots(){
+  const item=items.find(i=>i.id===photoItemId);
+  const photos=item.photos||[];
+  const el=document.getElementById('photoSlots');el.innerHTML='';
+  for(let s=0;s<3;s++){
+    const div=document.createElement('div');div.className='pslot';
+    if(photos[s]){
+      div.innerHTML=`<img src="${photos[s].url}"/><button class="rm" onclick="rmPhoto('${photos[s].id}',event)">✕</button>`;
+    }else{
+      div.innerHTML=`<div class="pslot-plus">+</div><div class="pslot-lbl">Photo ${s+1}</div>`;
+      const idx=s;div.onclick=()=>{activeSlot=idx;document.getElementById('photoInp').click();};
+    }
+    el.appendChild(div);
+  }
+}
+async function rmPhoto(photoId,e){
+  e.stopPropagation();
+  const item=items.find(i=>i.id===photoItemId);
+  try{await api('DELETE',`/api/menu/${photoItemId}/photos/${photoId}`);item.photos=item.photos.filter(p=>p.id!==photoId);renderSlots();renderItems();}
+  catch(err){toast('Delete failed');}
+}
+async function handlePhotoUpload(e){
+  const f=e.target.files[0];if(!f)return;
+  const item=items.find(i=>i.id===photoItemId);
+  if(!item||(item.photos||[]).length>=3)return;
+  toast('Uploading...',5000);
+  const fd=new FormData();fd.append('photo',f);
+  try{const photo=await apiForm('POST',`/api/menu/${photoItemId}/photos`,fd);if(!item.photos)item.photos=[];item.photos.push(photo);renderSlots();renderItems();toast('Photo uploaded ✓');}
+  catch(err){toast('Upload failed: '+err.message);}
+  e.target.value='';
+}
+
+/* BRANCHES */
+async function loadBranches(){try{branches=await api('GET','/api/branches');renderBranchesList();}catch(e){}}
+function renderBranchesList(){
+  const colors=['#8E1616','#0F6E56','#185FA5','#BA7517','#534AB7'];
+  document.getElementById('branchListProfile').innerHTML=branches.map((b,i)=>`
+    <div class="branch-item">
+      <div class="branch-head" onclick="openBranchEdit('${b.id}')">
+        <div class="bav" style="background:${colors[i%5]}22;color:${colors[i%5]}">${b.name.slice(0,2).toUpperCase()}</div>
+        <div class="binf">
+          <div class="bn">${b.name}</div>
+          <div class="bs">${[b.city,b.country].filter(Boolean).join(', ')||'No address set'} · ${b.active?'Active':'Inactive'}</div>
+        </div>
+        <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:${b.active?'#dcfce7':'#f1f5f9'};color:${b.active?'#166534':'#64748b'};font-weight:700">${b.active?'ACTIVE':'OFF'}</span>
+      </div>
+    </div>`).join('')||'<div class="loading-msg">No branches yet.</div>';
+}
+
+function openBranchEdit(id){
+  editingBranchId=id;
+  const b=id?branches.find(x=>x.id===id):{name:'',active:true,country:'',city:'',address:'',postalCode:'',phone:'',googleMapsUrl:''};
+  document.getElementById('branchEditTitle').textContent=id?'Edit branch':'Add new branch';
+  document.getElementById('branchDeleteBtn').style.display=id&&branches.length>1?'block':'none';
+  document.getElementById('branchEditFields').innerHTML=`
+    <div class="field-block"><label>Branch name</label><input id="bedit-name" value="${b.name||''}" placeholder="e.g. Downtown"/></div>
+    <div class="field-block" style="display:flex;align-items:center;justify-content:space-between"><label style="margin-bottom:0">Active</label><label class="tog"><input type="checkbox" id="bedit-active" ${b.active?'checked':''}/><div class="tog-t"></div><div class="tog-th"></div></label></div>
+    <div class="field-grid">
+      <div class="field-block"><label>Country</label><input id="bedit-country" value="${b.country||''}"/></div>
+      <div class="field-block"><label>City</label><input id="bedit-city" value="${b.city||''}"/></div>
+    </div>
+    <div class="field-block"><label>Street address</label><input id="bedit-address" value="${b.address||''}"/></div>
+    <div class="field-grid">
+      <div class="field-block"><label>Postal code</label><input id="bedit-postal" value="${b.postalCode||''}"/></div>
+      <div class="field-block"><label>Phone</label><input id="bedit-phone" value="${b.phone||''}"/></div>
+    </div>
+    <div class="field-block"><label>Google Maps URL</label><input id="bedit-maps" value="${b.googleMapsUrl||''}" placeholder="https://maps.google.com/..."/></div>
+  `;
+  document.getElementById('branchEditOverlay').classList.add('open');
+}
+function closeBranchEdit(){document.getElementById('branchEditOverlay').classList.remove('open');editingBranchId=null;}
+async function saveBranch(){
+  const data={
+    name:document.getElementById('bedit-name').value.trim(),
+    active:document.getElementById('bedit-active').checked,
+    country:document.getElementById('bedit-country').value.trim()||null,
+    city:document.getElementById('bedit-city').value.trim()||null,
+    address:document.getElementById('bedit-address').value.trim()||null,
+    postalCode:document.getElementById('bedit-postal').value.trim()||null,
+    phone:document.getElementById('bedit-phone').value.trim()||null,
+    googleMapsUrl:document.getElementById('bedit-maps').value.trim()||null,
+  };
+  if(!data.name)return toast('Branch name required');
+  try{
+    if(editingBranchId){
+      const updated=await api('PATCH','/api/branches/'+editingBranchId,data);
+      const i=branches.findIndex(b=>b.id===editingBranchId);if(i>=0)branches[i]=updated;
+    } else {
+      const created=await api('POST','/api/branches',data);
+      branches.push(created);
+    }
+    renderBranchesList();closeBranchEdit();toast('Branch saved');
+  }catch(e){toast('Save failed: '+e.message);}
+}
+function deleteBranch(){
+  if(!editingBranchId)return;
+  const b=branches.find(x=>x.id===editingBranchId);
+  pendingDeleteId=editingBranchId;pendingDeleteType='branch';
+  document.getElementById('delSub').textContent=`Branch "${b.name}" will be permanently removed.`;
+  document.getElementById('delOverlay').classList.add('open');
+}
+
+/* PREVIEW */
+function buildPreview(){
+  const sym=getCurrencySymbol();
+  const vc=visCats().map(c=>c.code);
+  // Boş kategori filtresi
+  const usedCats=new Set(items.map(i=>i.category));
+  const visibleCatsForPreview=visCats().filter(c=>usedCats.has(c.code));
+  const filtered=(pCat==='all'?items:items.filter(i=>i.category===pCat)).filter(i=>vc.includes(i.category));
+  if(pCur>=filtered.length)pCur=0;
+  const wrap=document.getElementById('pslides');wrap.innerHTML='';
+  
+  const TAG_LABELS = {
+    NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',LIMITED:'LIMITED',SEASONAL:'SEASONAL',LOCAL_FOOD:'LOCAL FOOD',SOLD_OUT:'SOLD OUT',
+    SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'
+  };
+  const TAG_COLORS = {
+    NEW:'#3B82F6', BESTSELLER:'#F59E0B', OFFER:'#8B5CF6', LIMITED:'#F43F5E',
+    SEASONAL:'#D97706', LOCAL_FOOD:'#047857', SOLD_OUT:'#374151',
+    SPICY:'#EF4444', VEGAN:'#22C55E', GLUTEN_FREE:'#06B6D4',
+    HALAL:'#84CC16', DAIRY_FREE:'#64748B', PROTEIN_PLUS:'#EC4899'
+  };
+  function tagHTML(t){
+    if(!t) return '';
+    const c = TAG_COLORS[t]||'#fff';
+    return `<div style="display:inline-flex;padding:3px 8px;border-radius:14px;font-size:9px;font-weight:800;letter-spacing:.4px;background:${c};color:#fff">${TAG_LABELS[t]||t}</div>`;
+  }
+  
+  filtered.forEach((item,i)=>{
+    const cat=catById(item.category||'MAIN');
+    const photos=item.photos||[];
+    const slide=document.createElement('div');slide.className='slide';
+    slide.style.transform=`translateY(${(i-pCur)*100}%)`;
+    const desc=item.description||'';
+    let mTag = item.tagMarketing;
+    if(!mTag && item.isBestseller) mTag = 'BESTSELLER';
+    const dTag = item.tagDietary;
+    const tagsRow = (mTag||dTag) ? `<div style="display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap">${tagHTML(mTag)}${tagHTML(dTag)}</div>` : '';
+    
+    slide.innerHTML=`<div style="width:100%;height:100%;background:${cat.color}22;display:flex;align-items:center;justify-content:center">${photos[0]?`<img src="${photos[0].url}" style="width:100%;height:100%;object-fit:cover"/>`:`<svg width="60" height="60" viewBox="0 0 60 60" fill="none" opacity=".2"><rect x="8" y="8" width="44" height="44" rx="8" stroke="${cat.color}" stroke-width="2"/></svg>`}</div><div class="sgrad"></div><div class="sinfo">${tagsRow}<div class="scat-tag">${cat.label}</div><div class="sname">${item.name}</div>${desc?`<div class="sdesc">${desc}</div>`:''}<div class="sprice">${sym}${item.price}</div></div>`;
+    wrap.appendChild(slide);
+  });
+  document.getElementById('pprogf').style.width=filtered.length?Math.round((pCur+1)/filtered.length*100)+'%':'0%';
+  document.getElementById('pcount').textContent=filtered.length?`${pCur+1} / ${filtered.length}`:'0 / 0';
+  // Top logo - tam ortala, kırpma yok
+  const lg=document.getElementById('pTopLogo');
+  if(org&&org.logoUrl){
+    lg.innerHTML=`<img src="${org.logoUrl}" style="width:100%;height:100%;object-fit:cover;display:block"/>`;
+  }
+  // Cats - only with content
+  const allC=[{code:'all',label:'All'},...visibleCatsForPreview];
+  document.getElementById('pcatBar').innerHTML=allC.map(c=>`<div class="pcat${c.code===pCat?' on':''}" onclick="setPCat('${c.code}')">${c.label}</div>`).join('');
+}
+function setPCat(c){pCat=c;pCur=0;buildPreview();}
+function pnext(){const f=(pCat==='all'?items:items.filter(i=>i.category===pCat)).filter(i=>visCats().map(c=>c.code).includes(i.category));if(pCur<f.length-1){pCur++;buildPreview();}}
+function pprev(){if(pCur>0){pCur--;buildPreview();}}
+
+/* QR */
+function buildQrBranchSelector(){
+  const sel=document.getElementById('qrBranchSelect');
+  if(branches.length>1){
+    document.getElementById('qrBranchSelectorWrap').style.display='block';
+    sel.innerHTML='<option value="">Main menu (all branches)</option>'+branches.map(b=>`<option value="${b.slug}">${b.name}${b.city?' — '+b.city:''}</option>`).join('');
+  } else {
+    document.getElementById('qrBranchSelectorWrap').style.display='none';
+  }
+}
+function getQrUrl(){
+  if(!org)return '';
+  const branchSlug=document.getElementById('qrBranchSelect')?.value;
+  return window.location.origin+'/menu/'+org.slug+(branchSlug?'/'+branchSlug:'')+'?qr=1';
+}
+function qrGenerate(){
+  if(!org)return;
+  const url=getQrUrl();
+  document.getElementById('qrUrlDisplay').textContent=url;
+  document.getElementById('qrLinkBox').textContent=url;
+  const canvas=document.getElementById('qrCanvas');
+  if(typeof QRCode==='undefined'||!canvas)return;
+  QRCode.toCanvas(canvas,url,{width:200,margin:2,color:{dark:'#1D1616',light:'#ffffff'},errorCorrectionLevel:'H'},()=>{});
+}
+function qrDlPNG(){
+  const url=getQrUrl();
+  const tmp=document.createElement('canvas');
+  QRCode.toCanvas(tmp,url,{width:1000,margin:2,errorCorrectionLevel:'H'},()=>{
+    const a=document.createElement('a');a.download='qr-'+org.slug+'.png';a.href=tmp.toDataURL('image/png');
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+  });
+}
+function qrDlSVG(){
+  const url=getQrUrl();
+  QRCode.toString(url,{type:'svg',width:500,margin:2,errorCorrectionLevel:'H'},(err,svgStr)=>{
+    if(err)return;
+    const blob=new Blob([svgStr],{type:'image/svg+xml'});const burl=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=burl;a.download='qr-'+org.slug+'.svg';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(burl),1000);
+  });
+}
+function qrCopy(){
+  const url=getQrUrl();const btn=document.getElementById('qrCopyBtn');
+  navigator.clipboard.writeText(url).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);});
+}
+
+/* TABLES */
+let tablesData = [];
+
+async function loadTables(){
+  try{
+    tablesData = await api('GET','/api/tables');
+    renderTablesList();
+  }catch(e){
+    document.getElementById('tablesList').innerHTML = `<div style="text-align:center;padding:30px;color:#dc2626;font-size:13px">Failed to load tables: ${e.message}</div>`;
+  }
+}
+
+function renderTablesList(){
+  const list = document.getElementById('tablesList');
+  if(tablesData.length === 0){
+    list.innerHTML = `<div style="text-align:center;padding:40px 20px;background:#f8fafc;border-radius:12px;color:#94a3b8">
+      <div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:6px">No tables yet</div>
+      <div style="font-size:12px;max-width:260px;margin:0 auto;line-height:1.5">Add your first table above. Customers won't be required to pick a table if you skip this step.</div>
+    </div>`;
+    return;
+  }
+  list.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">
+    ${tablesData.map(t => `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px;display:flex;align-items:center;gap:8px">
+      <div style="width:34px;height:34px;border-radius:8px;background:#1D1616;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">${escapeHtml(t.label).slice(0,3)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.label)}</div>
+        <div style="font-size:10px;color:${t.active?'#16a34a':'#94a3b8'};font-weight:600">${t.active?'Active':'Inactive'}</div>
+      </div>
+      <button onclick="openEditTable('${t.id}')" style="width:28px;height:28px;border-radius:6px;background:#f1f5f9;border:none;cursor:pointer;color:#475569;display:flex;align-items:center;justify-content:center" title="Edit">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M9 2.5l2.5 2.5M2 12V9.5L9 2.5l2.5 2.5L4.5 12H2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </button>
+      <button onclick="deleteTable('${t.id}')" style="width:28px;height:28px;border-radius:6px;background:#fef2f2;border:none;cursor:pointer;color:#dc2626;display:flex;align-items:center;justify-content:center" title="Delete">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5C5 2 5.5 2 6 2h2c.5 0 1 0 1 .5V4M3.5 4l.5 8h6l.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>`).join('')}
+  </div>`;
+}
+
+function openAddTableSingle(){
+  const label = prompt('Table label (e.g. "1", "Bahçe 1", "VIP"):');
+  if(!label || !label.trim()) return;
+  api('POST','/api/tables',{ label: label.trim() })
+    .then(() => { loadTables(); toast('Table added'); })
+    .catch(e => toast('Failed: '+e.message));
+}
+
+function openAddTablesBulk(){
+  const countStr = prompt('How many tables to create? (1-50)');
+  const count = parseInt(countStr);
+  if(!count || count < 1 || count > 50){ toast('Invalid count'); return; }
+  const prefix = prompt('Prefix (optional, e.g. "Table" or leave blank for just numbers):') || '';
+  api('POST','/api/tables/bulk',{ count, prefix: prefix.trim() })
+    .then(() => { loadTables(); toast(count+' tables created'); })
+    .catch(e => toast('Failed: '+e.message));
+}
+
+function openEditTable(id){
+  const t = tablesData.find(x => x.id === id);
+  if(!t) return;
+  const newLabel = prompt('Edit table label:', t.label);
+  if(newLabel === null) return;
+  if(!newLabel.trim()){ toast('Label cannot be empty'); return; }
+  api('PATCH','/api/tables/'+id,{ label: newLabel.trim() })
+    .then(() => { loadTables(); toast('Updated'); })
+    .catch(e => toast('Failed: '+e.message));
+}
+
+function deleteTable(id){
+  const t = tablesData.find(x => x.id === id);
+  if(!t) return;
+  if(!confirm(`Delete table "${t.label}"?`)) return;
+  api('DELETE','/api/tables/'+id,null)
+    .then(() => { loadTables(); toast('Deleted'); })
+    .catch(e => toast('Failed: '+e.message));
+}
+
+/* ANALYTICS */
+async function loadAnalytics(){
+  try{
+    const data=await api('GET','/api/analytics');
+    document.getElementById('anTodayViews').textContent=data.summary.todayViews;
+    document.getElementById('anWeekViews').textContent=data.summary.weekViews;
+    document.getElementById('anMonthViews').textContent=data.summary.monthViews;
+    document.getElementById('anQrScans').textContent=data.summary.qrScans;
+    document.getElementById('anTopItem').textContent=data.topItems[0]?.name||'No data';
+    
+    if(data.branchStats.length){
+      const max=Math.max(...data.branchStats.map(b=>b.views),1);
+      document.getElementById('branchStatsList').innerHTML=data.branchStats.map(b=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${b.name}${b.city?' — '+b.city:''}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${b.views/max*100}%"></div></div>
+          <div class="bar-val">${b.views}</div>
+        </div>`).join('');
+    } else document.getElementById('branchStatsList').innerHTML='<div class="loading-msg">No branches</div>';
+    
+    if(data.topItems.length){
+      const max=Math.max(...data.topItems.map(i=>i.views),1);
+      document.getElementById('topItemsList').innerHTML=data.topItems.map(it=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${it.name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${it.views/max*100}%;background:#f59e0b"></div></div>
+          <div class="bar-val">${it.views}</div>
+        </div>`).join('');
+    } else document.getElementById('topItemsList').innerHTML='<div class="loading-msg">No item views yet — tracking begins when customers tap items.</div>';
+
+    const cats=Object.entries(data.categoryDistribution||{});
+    if(cats.length){
+      const total=cats.reduce((s,[,n])=>s+n,0);
+      document.getElementById('catDistList').innerHTML=cats.map(([cat,n])=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${catById(cat).label}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${n/total*100}%;background:${catById(cat).color}"></div></div>
+          <div class="bar-val">${n}</div>
+        </div>`).join('');
+    } else document.getElementById('catDistList').innerHTML='<div class="loading-msg">No items yet</div>';
+  }catch(e){console.error(e);}
+}
+
+/* INIT */
+(async () => {
+  if (!token) {
+    // Token yok, login ekranı göster
+    document.getElementById('authScreen').style.display = '';
+    return;
+  }
+  try {
+    // Token'ı backend'e doğrulat
+    const data = await api('GET', '/api/auth/me');
+    org = data.organization;
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    startApp();
+  } catch (e) {
+    // 401 gelirse api() zaten reload yapıyor
+    // Başka hata olursa login'e düş
+    if (e.message !== 'Session expired') {
+      localStorage.removeItem('ms_token');
+      localStorage.removeItem('ms_org');
+      document.getElementById('authScreen').style.display = '';
+    }
+  }
+})();
+</script>
+</body>
+</html>
