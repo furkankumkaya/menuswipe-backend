@@ -319,7 +319,10 @@ router.post("/:orgSlug/order", async (req, res, next) => {
     const org = await prisma.organization.findUnique({
       where: { slug: req.params.orgSlug },
     });
-    if (!org) return res.status(404).json({ error: "not_found" });
+    if (!org) {
+      console.log("[order] org not found:", req.params.orgSlug);
+      return res.status(404).json({ error: "not_found" });
+    }
     
     // Subscription kontrolü
     const sub = getSubscriptionInfo(org);
@@ -328,6 +331,8 @@ router.post("/:orgSlug/order", async (req, res, next) => {
     }
     
     const { tableId, tableLabel, items, note, customerName, customerLanguage } = req.body;
+    
+    console.log("[order] received:", { orgId: org.id, tableId, tableLabel, itemCount: items?.length });
     
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "empty_order" });
@@ -339,6 +344,8 @@ router.post("/:orgSlug/order", async (req, res, next) => {
       where: { organizationId: org.id, id: { in: itemIds }, active: true },
     });
     const menuItemMap = new Map(menuItems.map(mi => [mi.id, mi]));
+    
+    console.log("[order] valid items found:", menuItems.length, "of", items.length);
     
     // Items'ı temizle ve subtotal hesapla
     let subtotal = 0;
@@ -362,7 +369,7 @@ router.post("/:orgSlug/order", async (req, res, next) => {
       });
     
     if (cleanedItems.length === 0) {
-      return res.status(400).json({ error: "invalid_items" });
+      return res.status(400).json({ error: "invalid_items", message: "No valid items in order" });
     }
     
     // Masa kontrolü (opsiyonel)
@@ -378,7 +385,7 @@ router.post("/:orgSlug/order", async (req, res, next) => {
       }
     }
     
-    // Bu restoranın günlük order numarası (yeni gün başlarsa 1'den, aynı gün artar)
+    // Bu restoranın günlük order numarası
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const todayCount = await prisma.order.count({
@@ -404,6 +411,8 @@ router.post("/:orgSlug/order", async (req, res, next) => {
       },
     });
     
+    console.log("[order] created #" + order.orderNumber, "id:", order.id);
+    
     res.json({
       id: order.id,
       orderNumber: order.orderNumber,
@@ -413,8 +422,8 @@ router.post("/:orgSlug/order", async (req, res, next) => {
       currency: order.currency,
     });
   } catch (err) {
-    console.error("Order create error:", err);
-    res.status(500).json({ error: "server_error" });
+    console.error("[order] ERROR:", err.message, err.stack);
+    res.status(500).json({ error: "server_error", message: err.message });
   }
 });
 

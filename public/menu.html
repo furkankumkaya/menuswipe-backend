@@ -1706,21 +1706,35 @@ async function submitOrder(opts){
   // Loading göster
   showOrderStatus({ loading: true });
   
+  const payload = {
+    tableId: opts.tableId || null,
+    tableLabel: opts.tableLabel || null,
+    items,
+    customerLanguage: currentLang || defaultLanguage,
+  };
+  
+  console.log('[order] sending to', `${BASE}/api/public/${slug}/order`, payload);
+  
   try {
     const r = await fetch(`${BASE}/api/public/${slug}/order`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        tableId: opts.tableId || null,
-        tableLabel: opts.tableLabel || null,
-        items,
-        customerLanguage: currentLang || defaultLanguage,
-      }),
+      body: JSON.stringify(payload),
     });
     
-    const data = await r.json();
+    const text = await r.text();
+    console.log('[order] response status:', r.status, 'body:', text);
+    
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch(e) {
+      showOrderStatus({ error: 'Server returned invalid response. Status: '+r.status });
+      return;
+    }
+    
     if(!r.ok){
-      showOrderStatus({ error: data.message || data.error || 'Failed' });
+      showOrderStatus({ error: data.message || data.error || ('HTTP '+r.status) });
       return;
     }
     
@@ -1737,7 +1751,8 @@ async function submitOrder(opts){
       orderId: data.id,
     });
   } catch(e) {
-    showOrderStatus({ error: e.message });
+    console.error('[order] network error:', e);
+    showOrderStatus({ error: 'Network error: '+e.message });
   }
 }
 
