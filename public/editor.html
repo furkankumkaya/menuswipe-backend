@@ -1721,8 +1721,16 @@ function buildCatPills(){
 
 /* MENU */
 async function loadMenu(){
-  try{const data=await api('GET','/api/menu');items=data;renderItems();updateStats();buildPreview();}
-  catch(e){document.getElementById('itemRows').innerHTML='<div class="loading-msg">Failed to load.</div>';}
+  try{
+    const data=await api('GET','/api/menu');
+    items=data;
+    renderItems();
+    updateStats();
+  }
+  catch(e){
+    console.error('loadMenu error:', e);
+    document.getElementById('itemRows').innerHTML='<div class="loading-msg">Failed to load: '+(e.message||'unknown error')+'</div>';
+  }
 }
 function updateStats(){
   document.getElementById('statItems').textContent=items.length;
@@ -2518,8 +2526,10 @@ function deleteBranch(){
   document.getElementById('delOverlay').classList.add('open');
 }
 
-/* PREVIEW */
+/* PREVIEW (artık kullanılmıyor, sadece eski referanslar için no-op) */
 function buildPreview(){
+  // Preview paneli kaldırıldı, gerekli DOM elementleri yok
+  if(!document.getElementById('pslides')) return;
   const sym=getCurrencySymbol();
   const vc=visCats().map(c=>c.code);
   // Boş kategori filtresi

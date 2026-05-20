@@ -202,9 +202,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
       <span id="headerOrgName">Orders</span>
       <small id="headerStatusText">Live</small>
     </div>
-    <a href="/editor.html" class="header-btn" title="Open menu editor">
+    <a href="/editor.html" class="header-btn" title="Open admin panel">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L12 5L5 12L2 12L2 9L9 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      Edit menu
+      Admin
     </a>
     <div class="header-menu">
       <button class="header-btn" onclick="toggleHeaderMenu(event)">
@@ -242,8 +242,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
   </div>
 
   <div class="tabs-bar">
-    <div class="tab on" data-status="pending" onclick="selectTab('pending')">New <span class="tab-badge" id="badgePending">0</span></div>
-    <div class="tab" data-status="active" onclick="selectTab('active')">Active <span class="tab-badge" id="badgeActive">0</span></div>
+    <div class="tab on" data-status="active" onclick="selectTab('active')">Active <span class="tab-badge" id="badgeActive">0</span></div>
     <div class="tab" data-status="completed" onclick="selectTab('completed')">Completed</div>
     <div class="tab" data-status="all" onclick="selectTab('all')">All today</div>
   </div>
@@ -276,7 +275,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 const API='';
 let token=localStorage.getItem('ms_token')||'';
 let org=null;
-let currentTab='pending';
+let currentTab='active';
 let allOrders=[];
 let lastPollTime=null;
 let pollTimer=null;
@@ -396,12 +395,11 @@ async function loadOrders(){
 function renderOrders(){
   const main=document.getElementById('mainContent');
   let filtered=allOrders;
-  if(currentTab==='pending')filtered=allOrders.filter(o=>o.status==='pending');
-  else if(currentTab==='active')filtered=allOrders.filter(o=>['accepted','preparing','ready'].includes(o.status));
+  if(currentTab==='active')filtered=allOrders.filter(o=>['pending','accepted','preparing','ready'].includes(o.status));
   else if(currentTab==='completed')filtered=allOrders.filter(o=>o.status==='completed');
   
   if(filtered.length===0){
-    const msg={pending:'No new orders waiting',active:'No active orders',completed:'No completed orders today',all:'No orders today yet'}[currentTab]||'No orders';
+    const msg={active:'No active orders',completed:'No completed orders today',all:'No orders today yet'}[currentTab]||'No orders';
     main.innerHTML=`<div class="empty-state">
       <div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="2"/></svg></div>
       <div class="empty-state-title">${msg}</div>
@@ -473,9 +471,9 @@ async function updateOrderStatus(orderId,newStatus){
 
 function updateBadges(){
   const pendingCount=allOrders.filter(o=>o.status==='pending').length;
-  const activeCount=allOrders.filter(o=>['accepted','preparing','ready'].includes(o.status)).length;
-  document.getElementById('badgePending').textContent=pendingCount;
-  document.getElementById('badgeActive').textContent=activeCount;
+  const activeCount=allOrders.filter(o=>['pending','accepted','preparing','ready'].includes(o.status)).length;
+  const badge=document.getElementById('badgeActive');
+  if(badge)badge.textContent=activeCount;
   document.title=pendingCount>0?`(${pendingCount}) Orders · MenuSwipe`:'Orders · MenuSwipe';
 }
 
