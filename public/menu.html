@@ -1645,10 +1645,17 @@ async function openTablePicker(){
   if(!_tablesLoaded){
     try {
       const r = await fetch(`${BASE}/api/public/${slug}/tables`);
-      _availableTables = await r.json();
+      if(r.ok){
+        const data = await r.json();
+        _availableTables = Array.isArray(data) ? data : [];
+      } else {
+        _availableTables = [];
+      }
       _tablesLoaded = true;
     } catch(e) {
+      console.error('[tables] fetch error:', e);
       _availableTables = [];
+      _tablesLoaded = true;
     }
   }
   

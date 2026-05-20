@@ -27,6 +27,27 @@ function hashIp(ip) {
   return crypto.createHash("sha256").update(ip + (process.env.JWT_SECRET || "salt")).digest("hex").slice(0, 32);
 }
 
+// ÖNEMLI: Bu specific endpoint menu catch-all'dan ÖNCE olmalı
+// Yoksa /:orgSlug/:branchSlug? pattern'i "tables"'i branchSlug olarak yorumlar
+router.get("/:orgSlug/tables", async (req, res) => {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { slug: req.params.orgSlug },
+    });
+    if (!org) return res.status(404).json({ error: "not_found" });
+    
+    const tables = await prisma.restaurantTable.findMany({
+      where: { organizationId: org.id, active: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: { id: true, label: true },
+    });
+    res.json(tables);
+  } catch (err) {
+    console.error("[tables] error:", err.message);
+    res.json([]);
+  }
+});
+
 router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
   try {
     const { orgSlug, branchSlug } = req.params;
@@ -428,22 +449,4 @@ router.post("/:orgSlug/order", async (req, res, next) => {
 });
 
 // Müşteri: aktif masaları listele
-router.get("/:orgSlug/tables", async (req, res, next) => {
-  try {
-    const org = await prisma.organization.findUnique({
-      where: { slug: req.params.orgSlug },
-    });
-    if (!org) return res.status(404).json({ error: "not_found" });
-    
-    const tables = await prisma.restaurantTable.findMany({
-      where: { organizationId: org.id, active: true },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: { id: true, label: true },
-    });
-    res.json(tables);
-  } catch (err) {
-    res.json([]);
-  }
-});
-
 module.exports = router;
