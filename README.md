@@ -216,4 +216,5 @@ Add `?ref=qr` to the URL when linking from QR codes — it auto-increments the Q
 - [ ] Set `APP_URL` to your production domain
 - [ ] Register Stripe webhook with production endpoint
 - [ ] Switch Stripe keys from `sk_test_` to `sk_live_`
+
 - [ ] Run `npx prisma migrate deploy` (not `db push`) in production
