@@ -65,50 +65,6 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 /* STATS */
 .sstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .sc{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px}
-
-/* ANALYTICS V2 */
-.an-period-btn{flex:1;padding:8px 0;border:none;background:transparent;color:#64748b;font-size:12px;font-weight:600;border-radius:8px;cursor:pointer;transition:.15s}
-.an-period-btn.on{background:#1D1616;color:#fff}
-.an-period-btn:not(.on):hover{background:#e2e8f0}
-
-.an-card{
-  background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:11px 12px;
-  cursor:pointer;transition:.15s;
-  display:flex;flex-direction:column;gap:3px;
-}
-.an-card:hover{border-color:#cbd5e1}
-.an-card.on{background:#fef2f2;border:1.5px solid #8E1616;padding:10.5px 11.5px}
-.an-card-head{display:flex;align-items:center;gap:6px;margin-bottom:1px}
-.an-card-icon{
-  width:18px;height:18px;border-radius:5px;background:#f1f5f9;
-  display:flex;align-items:center;justify-content:center;color:#475569;flex-shrink:0;
-}
-.an-card.on .an-card-icon{background:#8E1616;color:#fff}
-.an-card-label{font-size:10px;font-weight:600;color:#64748b;letter-spacing:.3px;text-transform:uppercase}
-.an-card.on .an-card-label{color:#7f1d1d}
-.an-card-value{font-size:17px;font-weight:700;color:#1e293b;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.an-card-sub{font-size:10px;font-weight:600;line-height:1.2}
-.an-card-sub.up{color:#16a34a}
-.an-card-sub.down{color:#dc2626}
-.an-card-sub.neutral{color:#94a3b8}
-
-.an-hero-label{font-size:11px;color:#64748b;letter-spacing:.6px;text-transform:uppercase;font-weight:600;margin-bottom:8px}
-.an-hero-value{font-size:30px;font-weight:700;color:#1e293b;line-height:1;margin-bottom:6px}
-.an-hero-delta{display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px}
-.an-hero-delta .delta-pill{display:inline-flex;align-items:center;gap:3px;font-weight:600;padding:2px 7px;border-radius:6px}
-.an-hero-delta .delta-pill.up{background:#dcfce7;color:#16a34a}
-.an-hero-delta .delta-pill.down{background:#fee2e2;color:#dc2626}
-.an-hero-delta .delta-pill.neutral{background:#f1f5f9;color:#64748b}
-.an-hero-delta .delta-note{color:#94a3b8;font-size:11px}
-
-.an-bar-row{margin-bottom:8px}
-.an-bar-meta{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px}
-.an-bar-meta .lbl{color:#1e293b;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;margin-right:8px}
-.an-bar-meta .val{color:#64748b;font-weight:600;flex-shrink:0}
-.an-bar-track{height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}
-.an-bar-fill{height:100%;background:#8E1616;transition:width .3s}
-
-.an-empty{text-align:center;color:#94a3b8;padding:30px 16px;font-size:13px}
 .scl{font-size:10px;color:#64748b;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .scv{font-size:22px;font-weight:800;color:#1e293b}
 .sc4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
@@ -750,36 +706,26 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
     <!-- ANALYTICS PANEL -->
     <div class="panel" id="p-analytics">
-      <!-- Tarih sekmesi -->
-      <div style="display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px;margin-bottom:14px">
-        <button class="an-period-btn on" data-period="today" onclick="setAnalyticsPeriod('today')">Today</button>
-        <button class="an-period-btn" data-period="week" onclick="setAnalyticsPeriod('week')">Week</button>
-        <button class="an-period-btn" data-period="month" onclick="setAnalyticsPeriod('month')">Month</button>
-        <button class="an-period-btn" data-period="custom" onclick="openCustomDateRange()">Custom</button>
+      <div class="sstrip" style="margin-bottom:14px">
+        <div class="sc"><div class="scl">Today</div><div class="scv" id="anTodayViews">—</div></div>
+        <div class="sc"><div class="scl">This week</div><div class="scv" id="anWeekViews">—</div></div>
+        <div class="sc"><div class="scl">This month</div><div class="scv" id="anMonthViews">—</div></div>
       </div>
-      
-      <!-- Custom date range (hidden by default) -->
-      <div id="customDateBox" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:14px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="date" id="customStart" style="flex:1;padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px"/>
-          <span style="font-size:12px;color:#64748b">to</span>
-          <input type="date" id="customEnd" style="flex:1;padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px"/>
-          <button onclick="applyCustomRange()" style="padding:7px 12px;background:#1D1616;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Apply</button>
-        </div>
+      <div class="sc4" style="margin-bottom:14px">
+        <div class="sc"><div class="scl">QR scans (30d)</div><div class="scv" id="anQrScans">—</div></div>
+        <div class="sc"><div class="scl">Top item</div><div class="scv" id="anTopItem" style="font-size:13px">—</div></div>
       </div>
-      
-      <!-- HERO: seçili metriğin görseli -->
-      <div id="analyticsHero" style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-bottom:14px;min-height:220px">
-        <div class="loading-msg">Loading...</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-t">Branch performance (30 days)</div>
+        <div id="branchStatsList"><div class="loading-msg">Loading...</div></div>
       </div>
-      
-      <!-- 6 KART -->
-      <div id="analyticsCards" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px"></div>
-      
-      <!-- Eski analytics ile uyumluluk için gizli stat elementleri -->
-      <div style="display:none">
-        <span id="anTodayViews"></span><span id="anWeekViews"></span><span id="anMonthViews"></span><span id="anQrScans"></span><span id="anTopItem"></span>
-        <div id="branchStatsList"></div><div id="topItemsList"></div><div id="catDistList"></div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-t">Top viewed items</div>
+        <div id="topItemsList"><div class="loading-msg">No data yet — tracking begins when customers view items.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Category distribution</div>
+        <div id="catDistList"><div class="loading-msg">No data</div></div>
       </div>
     </div>
 
@@ -2762,292 +2708,46 @@ function deleteTable(id){
 }
 
 /* ANALYTICS */
-/* ANALYTICS V2 */
-let _anPeriod = 'today';
-let _anData = null;
-let _anSelectedCard = 'revenue';
-let _anCustomStart = null;
-let _anCustomEnd = null;
-
-const AN_CARDS = [
-  { key:'revenue', label:'Revenue', icon:`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M3.5 3.5h3.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5h-2c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5h3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>` },
-  { key:'orders', label:'Orders', icon:`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M3 4h6l-1 6H4L3 4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5 4V3a1 1 0 012 0v1" stroke="currentColor" stroke-width="1.3"/></svg>` },
-  { key:'avgCart', label:'Avg cart', icon:`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3.5v3l2 1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>` },
-  { key:'categories', label:'Categories', icon:`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.3"/><path d="M6 2v4l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>` },
-  { key:'topItems', label:'Top seller', icon:`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3 3.5.5-2.5 2.5.5 3.5L6 9l-3 1.5.5-3.5L1 4.5l3.5-.5L6 1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>` },
-  { key:'views', label:'Views', icon:`<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 6c1.5-2.5 3-3.5 5-3.5s3.5 1 5 3.5c-1.5 2.5-3 3.5-5 3.5s-3.5-1-5-3.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="6" r="1.3" stroke="currentColor" stroke-width="1.3"/></svg>` },
-];
-
-function setAnalyticsPeriod(p){
-  if(p === 'custom') return; // custom için ayrı fonksiyon
-  _anPeriod = p;
-  _anCustomStart = null;
-  _anCustomEnd = null;
-  document.getElementById('customDateBox').style.display = 'none';
-  document.querySelectorAll('.an-period-btn').forEach(b => b.classList.toggle('on', b.dataset.period === p));
-  loadAnalytics();
-}
-
-function openCustomDateRange(){
-  document.querySelectorAll('.an-period-btn').forEach(b => b.classList.toggle('on', b.dataset.period === 'custom'));
-  const box = document.getElementById('customDateBox');
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  if(box.style.display === 'block'){
-    // Default: son 7 gün
-    const today = new Date();
-    const weekAgo = new Date(today.getTime() - 7*86400000);
-    document.getElementById('customEnd').value = today.toISOString().slice(0,10);
-    document.getElementById('customStart').value = weekAgo.toISOString().slice(0,10);
-  }
-}
-
-function applyCustomRange(){
-  const s = document.getElementById('customStart').value;
-  const e = document.getElementById('customEnd').value;
-  if(!s || !e){ toast('Pick both dates'); return; }
-  _anCustomStart = s;
-  _anCustomEnd = e + 'T23:59:59';
-  _anPeriod = 'custom';
-  loadAnalytics();
-}
-
-function getCurrencySym(code){
-  const map={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',RUB:'₽',INR:'₹',AED:'د.إ',KRW:'₩',CHF:'CHF',CAD:'$',AUD:'$',SEK:'kr',NOK:'kr',DKK:'kr',PLN:'zł'};
-  return map[code]||code||'$';
-}
-
-function fmtNum(n){
-  if(n === null || n === undefined) return '—';
-  if(n >= 1000000) return (n/1000000).toFixed(1)+'M';
-  if(n >= 1000) return (n/1000).toFixed(1)+'K';
-  return Math.round(n).toString();
-}
-
-function fmtMoney(n, sym){
-  if(n === null || n === undefined) return '—';
-  if(n >= 1000) return sym + (n/1000).toFixed(1) + 'K';
-  return sym + n.toFixed(2);
-}
-
-function fmtDelta(d, isCount){
-  if(d === null || d === undefined) return { text:'', cls:'neutral' };
-  if(isCount){
-    const sign = d >= 0 ? '+' : '';
-    return { text: sign + d, cls: d > 0 ? 'up' : (d < 0 ? 'down' : 'neutral') };
-  }
-  const sign = d >= 0 ? '+' : '';
-  return { text: sign + d.toFixed(1) + '%', cls: d > 0 ? 'up' : (d < 0 ? 'down' : 'neutral') };
-}
-
 async function loadAnalytics(){
-  document.getElementById('analyticsHero').innerHTML = '<div class="an-empty">Loading...</div>';
-  document.getElementById('analyticsCards').innerHTML = '';
-  
-  try {
-    let url = '/api/analytics/v2?period=' + _anPeriod;
-    if(_anPeriod === 'custom' && _anCustomStart && _anCustomEnd){
-      url += '&start='+_anCustomStart+'&end='+_anCustomEnd;
-    }
-    const data = await api('GET', url);
-    _anData = data;
-    renderAnalyticsCards();
-    renderAnalyticsHero();
-  } catch(e) {
-    console.error('analytics error:', e);
-    document.getElementById('analyticsHero').innerHTML = `<div class="an-empty">Failed to load: ${e.message||'unknown error'}</div>`;
-  }
-}
-
-function renderAnalyticsCards(){
-  if(!_anData) return;
-  const sym = getCurrencySym(_anData.currency);
-  const k = _anData.kpis;
-  
-  const topItem = _anData.topItemsByQty[0];
-  const topCat = _anData.categoryBreakdown[0];
-  
-  const cardValues = {
-    revenue: { val: fmtMoney(k.revenue.value, sym), delta: fmtDelta(k.revenue.delta) },
-    orders: { val: fmtNum(k.orders.value), delta: fmtDelta(k.orders.delta, true) },
-    avgCart: { val: k.orders.value > 0 ? fmtMoney(k.avgCart.value, sym) : '—', delta: fmtDelta(k.avgCart.delta) },
-    categories: { val: topCat ? (catById(topCat.category).label + ' ' + Math.round(topCat.percent) + '%') : '—', delta: { text: _anData.categoryBreakdown.length + ' cats', cls: 'neutral' } },
-    topItems: { val: topItem ? topItem.name : '—', delta: { text: topItem ? topItem.qty + ' orders' : '0', cls: 'neutral' } },
-    views: { val: fmtNum(k.views.value), delta: fmtDelta(k.views.delta) },
-  };
-  
-  document.getElementById('analyticsCards').innerHTML = AN_CARDS.map(c => {
-    const v = cardValues[c.key];
-    const active = c.key === _anSelectedCard ? 'on' : '';
-    return `<div class="an-card ${active}" onclick="selectAnalyticsCard('${c.key}')">
-      <div class="an-card-head">
-        <div class="an-card-icon">${c.icon}</div>
-        <span class="an-card-label">${c.label}</span>
-      </div>
-      <div class="an-card-value" style="${(c.key==='categories'||c.key==='topItems')?'font-size:13px':''}">${escapeHtml(v.val)}</div>
-      <div class="an-card-sub ${v.delta.cls}">${v.delta.text}</div>
-    </div>`;
-  }).join('');
-}
-
-function selectAnalyticsCard(key){
-  _anSelectedCard = key;
-  renderAnalyticsCards();
-  renderAnalyticsHero();
-}
-
-function renderAnalyticsHero(){
-  if(!_anData) return;
-  const sym = getCurrencySym(_anData.currency);
-  const hero = document.getElementById('analyticsHero');
-  const k = _anData.kpis;
-  
-  const periodLabel = {today:'today', week:'this week', month:'this month', custom:'selected range'}[_anData.period] || _anData.period;
-  
-  if(_anSelectedCard === 'revenue' || _anSelectedCard === 'orders' || _anSelectedCard === 'avgCart' || _anSelectedCard === 'views'){
-    // Line/sparkline view
-    let label, value, deltaText, deltaCls;
-    if(_anSelectedCard === 'revenue'){
-      label = 'Total revenue · ' + periodLabel;
-      value = fmtMoney(k.revenue.value, sym);
-      const d = fmtDelta(k.revenue.delta);
-      deltaText = d.text; deltaCls = d.cls;
-    } else if(_anSelectedCard === 'orders'){
-      label = 'Orders · ' + periodLabel;
-      value = fmtNum(k.orders.value);
-      const d = fmtDelta(k.orders.delta, true);
-      deltaText = d.text; deltaCls = d.cls;
-    } else if(_anSelectedCard === 'avgCart'){
-      label = 'Average cart · ' + periodLabel;
-      value = k.orders.value > 0 ? fmtMoney(k.avgCart.value, sym) : '—';
-      const d = fmtDelta(k.avgCart.delta);
-      deltaText = d.text; deltaCls = d.cls;
-    } else {
-      label = 'Menu views · ' + periodLabel;
-      value = fmtNum(k.views.value);
-      const d = fmtDelta(k.views.delta);
-      deltaText = d.text; deltaCls = d.cls;
-    }
+  try{
+    const data=await api('GET','/api/analytics');
+    document.getElementById('anTodayViews').textContent=data.summary.todayViews;
+    document.getElementById('anWeekViews').textContent=data.summary.weekViews;
+    document.getElementById('anMonthViews').textContent=data.summary.monthViews;
+    document.getElementById('anQrScans').textContent=data.summary.qrScans;
+    document.getElementById('anTopItem').textContent=data.topItems[0]?.name||'No data';
     
-    // Sparkline çiz
-    const timeline = _anData.timeline || [];
-    const key = _anSelectedCard === 'revenue' ? 'revenue' : (_anSelectedCard === 'views' ? 'revenue' : 'orders');
-    const values = timeline.map(b => b[key] || 0);
-    const sparkline = buildSparkline(values);
+    if(data.branchStats.length){
+      const max=Math.max(...data.branchStats.map(b=>b.views),1);
+      document.getElementById('branchStatsList').innerHTML=data.branchStats.map(b=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${b.name}${b.city?' — '+b.city:''}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${b.views/max*100}%"></div></div>
+          <div class="bar-val">${b.views}</div>
+        </div>`).join('');
+    } else document.getElementById('branchStatsList').innerHTML='<div class="loading-msg">No branches</div>';
     
-    hero.innerHTML = `
-      <div class="an-hero-label">${label}</div>
-      <div class="an-hero-value">${value}</div>
-      <div class="an-hero-delta">
-        ${deltaText ? `<span class="delta-pill ${deltaCls}">${deltaText}</span><span class="delta-note">vs previous</span>` : '<span class="delta-note">No previous data</span>'}
-      </div>
-      ${sparkline}
-    `;
-  } else if(_anSelectedCard === 'categories'){
-    // Donut chart
-    hero.innerHTML = buildCategoryDonut(_anData.categoryBreakdown, sym, periodLabel);
-  } else if(_anSelectedCard === 'topItems'){
-    // Horizontal bar
-    hero.innerHTML = buildTopItemsBars(_anData.topItemsByQty, periodLabel);
-  }
-}
+    if(data.topItems.length){
+      const max=Math.max(...data.topItems.map(i=>i.views),1);
+      document.getElementById('topItemsList').innerHTML=data.topItems.map(it=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${it.name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${it.views/max*100}%;background:#f59e0b"></div></div>
+          <div class="bar-val">${it.views}</div>
+        </div>`).join('');
+    } else document.getElementById('topItemsList').innerHTML='<div class="loading-msg">No item views yet — tracking begins when customers tap items.</div>';
 
-function buildSparkline(values){
-  if(!values || values.length === 0){
-    return '<div class="an-empty" style="padding:24px">No data in this period</div>';
-  }
-  const max = Math.max(...values, 1);
-  const w = 300, h = 60;
-  const stepX = values.length > 1 ? w / (values.length - 1) : w;
-  const points = values.map((v, i) => {
-    const x = i * stepX;
-    const y = h - (v / max) * (h - 8) - 4;
-    return `${x},${y}`;
-  });
-  const pathStr = 'M' + points.join(' L');
-  const fillPath = pathStr + ` L${w},${h} L0,${h} Z`;
-  
-  // Son nokta
-  const lastIdx = values.length - 1;
-  const lastX = lastIdx * stepX;
-  const lastY = h - (values[lastIdx] / max) * (h - 8) - 4;
-  
-  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;max-width:100%" preserveAspectRatio="none">
-    <defs>
-      <linearGradient id="sparkfill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#8E1616" stop-opacity="0.18"/>
-        <stop offset="100%" stop-color="#8E1616" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <path d="${fillPath}" fill="url(#sparkfill)"/>
-    <path d="${pathStr}" fill="none" stroke="#8E1616" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${lastX}" cy="${lastY}" r="3.5" fill="#8E1616" stroke="#fff" stroke-width="1.5"/>
-  </svg>
-  <div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:6px">
-    <span>${_anData.timeline[0]?.label || ''}</span>
-    <span>${_anData.timeline[Math.floor(_anData.timeline.length/2)]?.label || ''}</span>
-    <span>${_anData.timeline[_anData.timeline.length-1]?.label || ''}</span>
-  </div>`;
-}
-
-const DONUT_COLORS = ['#8E1616','#3b82f6','#f59e0b','#1a8754','#a855f7','#ec4899','#06b6d4','#84cc16'];
-
-function buildCategoryDonut(cats, sym, periodLabel){
-  if(!cats || cats.length === 0){
-    return `<div class="an-hero-label">Revenue by category · ${periodLabel}</div><div class="an-empty">No completed orders yet</div>`;
-  }
-  
-  const total = cats.reduce((s,c)=>s+c.revenue,0);
-  const circumference = 2 * Math.PI * 45; // 282.74
-  let offset = 0;
-  
-  const segments = cats.map((c, i) => {
-    const dash = (c.percent / 100) * circumference;
-    const seg = `<circle cx="60" cy="60" r="45" fill="none" stroke="${DONUT_COLORS[i % DONUT_COLORS.length]}" stroke-width="18" stroke-dasharray="${dash.toFixed(2)} ${circumference}" stroke-dashoffset="${-offset}" transform="rotate(-90 60 60)"/>`;
-    offset += dash;
-    return seg;
-  }).join('');
-  
-  const legend = cats.map((c, i) => `
-    <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;margin-bottom:5px">
-      <div style="width:9px;height:9px;border-radius:2px;background:${DONUT_COLORS[i % DONUT_COLORS.length]}"></div>
-      <span style="flex:1;color:#1e293b;font-weight:500">${escapeHtml(catById(c.category).label)}</span>
-      <span style="color:#64748b;font-weight:600">${Math.round(c.percent)}%</span>
-    </div>`).join('');
-  
-  return `<div class="an-hero-label">Revenue by category · ${periodLabel}</div>
-    <div style="display:flex;align-items:center;gap:18px;margin-top:8px">
-      <svg width="120" height="120" viewBox="0 0 120 120" style="flex-shrink:0">
-        <circle cx="60" cy="60" r="45" fill="none" stroke="#f1f5f9" stroke-width="18"/>
-        ${segments}
-        <text x="60" y="56" text-anchor="middle" font-size="10" fill="#64748b" font-weight="500">Total</text>
-        <text x="60" y="72" text-anchor="middle" font-size="13" fill="#1e293b" font-weight="700">${fmtMoney(total, sym)}</text>
-      </svg>
-      <div style="flex:1;min-width:0">${legend}</div>
-    </div>`;
-}
-
-function buildTopItemsBars(items, periodLabel){
-  if(!items || items.length === 0){
-    return `<div class="an-hero-label">Top selling items · ${periodLabel}</div><div class="an-empty">No completed orders yet</div>`;
-  }
-  const max = Math.max(...items.map(i=>i.qty), 1);
-  const rows = items.slice(0, 8).map(it => `
-    <div class="an-bar-row">
-      <div class="an-bar-meta">
-        <span class="lbl">${escapeHtml(it.name)}</span>
-        <span class="val">${it.qty}</span>
-      </div>
-      <div class="an-bar-track">
-        <div class="an-bar-fill" style="width:${(it.qty/max*100).toFixed(1)}%"></div>
-      </div>
-    </div>`).join('');
-  
-  return `<div class="an-hero-label">Top selling items · ${periodLabel}</div>${rows}`;
-}
-
-/* OLD ANALYTICS — uyumluluk için, eski elementler artık gizli */
-async function loadAnalyticsOld(){
-  // No-op
+    const cats=Object.entries(data.categoryDistribution||{});
+    if(cats.length){
+      const total=cats.reduce((s,[,n])=>s+n,0);
+      document.getElementById('catDistList').innerHTML=cats.map(([cat,n])=>`
+        <div class="bar-row">
+          <div class="bar-lbl">${catById(cat).label}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${n/total*100}%;background:${catById(cat).color}"></div></div>
+          <div class="bar-val">${n}</div>
+        </div>`).join('');
+    } else document.getElementById('catDistList').innerHTML='<div class="loading-msg">No items yet</div>';
+  }catch(e){console.error(e);}
 }
 
 /* INIT */
