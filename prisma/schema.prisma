@@ -30,6 +30,9 @@ model Organization {
   latitude        Float?
   longitude       Float?
   
+  // Gemini'den çekilen Google reviews insights (haftalık güncellenir)
+  googleInsights  Json?
+  
   workingHours    Json?
   
   // Subscription

@@ -312,6 +312,48 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 @keyframes ai-spin{to{transform:rotate(360deg)}}
 .ai-loading-text{font-size:12px;color:rgba(255,255,255,.6)}
 
+/* Wok stirring animation - sipariş gönderiliyor */
+.wok-anim{
+  width:88px;height:88px;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.wok-anim-svg{
+  width:100%;height:100%;
+}
+.wok-pan{
+  transform-origin:50% 60%;
+  animation:wok-shake 1.4s ease-in-out infinite;
+}
+@keyframes wok-shake{
+  0%,100%{transform:rotate(-3deg) translateY(0)}
+  25%{transform:rotate(2deg) translateY(-1px)}
+  50%{transform:rotate(-2deg) translateY(0)}
+  75%{transform:rotate(3deg) translateY(-1px)}
+}
+.wok-spoon{
+  transform-origin:50% 50%;
+  animation:wok-stir 1.4s linear infinite;
+}
+@keyframes wok-stir{
+  0%{transform:rotate(0deg) translateX(0)}
+  25%{transform:rotate(8deg) translateX(2px)}
+  50%{transform:rotate(0deg) translateX(0)}
+  75%{transform:rotate(-8deg) translateX(-2px)}
+  100%{transform:rotate(0deg) translateX(0)}
+}
+.wok-steam{
+  animation:wok-steam-rise 1.8s ease-in-out infinite;
+  transform-origin:center bottom;
+}
+.wok-steam-2{animation-delay:0.4s}
+.wok-steam-3{animation-delay:0.8s}
+@keyframes wok-steam-rise{
+  0%{transform:translateY(0) scale(0.7);opacity:0}
+  30%{opacity:0.6}
+  100%{transform:translateY(-12px) scale(1.2);opacity:0}
+}
+
 .ai-intro{
   font-size:13.5px;color:rgba(255,255,255,.85);
   line-height:1.5;margin-bottom:14px;
@@ -323,7 +365,10 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   background:rgba(255,255,255,.04);
   border:0.5px solid rgba(255,255,255,.08);
   border-radius:14px;margin-bottom:9px;
+  cursor:pointer;transition:.15s;
 }
+.ai-rec-card:active{transform:scale(.98);background:rgba(255,255,255,.08)}
+.ai-rec-card:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06)}
 .ai-rec-thumb{
   width:62px;height:62px;border-radius:10px;
   background:rgba(255,255,255,.06);flex-shrink:0;
@@ -342,10 +387,14 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 }
 .ai-rec-bottom{
   display:flex;align-items:center;justify-content:space-between;
-  margin-top:4px;
+  margin-top:6px;
 }
 .ai-rec-price{
-  font-size:13px;font-weight:600;color:#fff;
+  font-size:14px;font-weight:700;color:#fff;
+}
+.ai-rec-select-hint{
+  font-size:11px;font-weight:600;color:#D84040;
+  display:flex;align-items:center;gap:3px;
 }
 .ai-rec-add{
   padding:6px 11px;border-radius:10px;
@@ -354,6 +403,66 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   display:flex;align-items:center;gap:4px;
 }
 .ai-rec-add.added{background:#1a8754}
+
+/* Google quote block in AI rec card */
+.ai-rec-google{
+  margin-top:8px;padding:7px 9px;
+  background:rgba(245,158,11,0.08);
+  border:0.5px solid rgba(245,158,11,0.25);
+  border-radius:8px;
+}
+.ai-rec-google-head{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;color:#fcd34d;
+  font-weight:600;letter-spacing:.3px;
+  margin-bottom:3px;
+}
+.ai-rec-google-quote{
+  font-size:11.5px;color:rgba(255,255,255,.78);
+  line-height:1.4;font-style:italic;
+}
+
+/* Google toggle card (anketin ilk adımında) */
+.google-toggle-card{
+  background:linear-gradient(135deg,rgba(245,158,11,0.12) 0%,rgba(245,158,11,0.06) 100%);
+  border:0.5px solid rgba(245,158,11,0.3);
+  border-radius:12px;
+  padding:11px 12px;
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:18px;
+}
+.google-toggle-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(245,158,11,0.18);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.google-toggle-text{flex:1;min-width:0}
+.google-toggle-title{
+  font-size:12px;font-weight:600;color:#fff;
+  line-height:1.2;margin-bottom:2px;
+}
+.google-toggle-sub{
+  font-size:10.5px;color:rgba(255,255,255,.55);
+  line-height:1.3;
+}
+.google-toggle-switch{
+  position:relative;display:inline-block;
+  width:36px;height:20px;flex-shrink:0;
+}
+.google-toggle-switch input{opacity:0;width:0;height:0}
+.google-toggle-slider{
+  position:absolute;cursor:pointer;inset:0;
+  background:rgba(255,255,255,0.15);
+  border-radius:20px;transition:.2s;
+}
+.google-toggle-slider:before{
+  content:'';position:absolute;
+  height:14px;width:14px;left:3px;top:3px;
+  background:#fff;border-radius:50%;transition:.2s;
+}
+.google-toggle-switch input:checked + .google-toggle-slider{background:#f59e0b}
+.google-toggle-switch input:checked + .google-toggle-slider:before{transform:translateX(16px)}
 
 .ai-error{
   padding:30px 20px;text-align:center;
@@ -1223,12 +1332,17 @@ function renderOrderSheet(){
     const allergens = o.allergens || [];
     const hasAllergens = allergens.length > 0;
     const allergenNames = allergens.map(a => ALLERGEN_LIST.find(x=>x.code===a)?.label||a).join(', ');
+    const hasNote = o.note && o.note.trim().length > 0;
     return `<div class="order-row" data-item-id="${id}">
       <div class="order-thumb">${o.photoUrl?`<img src="${o.photoUrl}" alt=""/>`:'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" opacity=".4"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/></svg>'}</div>
       <div class="order-info">
         <div class="order-name">${escapeHtml(o.name)}</div>
         ${showOriginal?`<div class="order-orig">${escapeHtml(o.originalName)}</div>`:''}
         <div class="order-price">${sym}${o.price} × ${o.qty} = ${sym}${lineTotal.toFixed(2)}</div>
+        ${hasNote?`<div class="order-note-display" onclick="openOrderNoteEdit('${id}')" style="margin-top:5px;padding:5px 8px;background:rgba(245,158,11,0.12);border-left:2px solid #f59e0b;border-radius:4px;font-size:10.5px;color:rgba(255,255,255,.85);font-style:italic;cursor:pointer;display:flex;align-items:center;gap:5px">
+          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M9 2L10.5 3.5L4 10H2V8L9 2Z" stroke="#f59e0b" stroke-width="1.2"/></svg>
+          <span style="flex:1">${escapeHtml(o.note)}</span>
+        </div>`:`<div onclick="openOrderNoteEdit('${id}')" style="margin-top:5px;font-size:10px;color:rgba(255,255,255,.4);cursor:pointer">+ Add note for chef</div>`}
         ${hasAllergens?`<div class="order-allergen-row" onclick="toggleAllergenDetail('${id}')" id="arow-${id}">
           <span style="font-size:10px;font-weight:700;color:#f59e0b">⚠ Contains allergens</span>
           <span id="achev-${id}" style="font-size:10px;color:rgba(255,255,255,.4);margin-left:4px">▸</span>
@@ -1247,6 +1361,18 @@ function renderOrderSheet(){
   
   document.getElementById('orderTotal').textContent = sym + total.toFixed(2);
   document.getElementById('orderSubtitle').textContent = `${totalQty} item${totalQty===1?'':'s'}`;
+}
+
+// Order item'a not eklemek/düzenlemek için prompt
+function openOrderNoteEdit(itemId){
+  const o = orderList[itemId];
+  if(!o) return;
+  const current = o.note || '';
+  const next = prompt('Note for chef:', current);
+  if(next === null) return; // cancelled
+  o.note = next.trim().slice(0, 200) || null;
+  saveOrderList();
+  renderOrderSheet();
 }
 
 // Order items event delegation - bir kere set edilir
@@ -1392,13 +1518,11 @@ const AI_LABELS_BY_LANG = {
     step3Title:"Any dietary preferences?",step3Sub:"Select all that apply, or skip",
     step4Title:"Anything to avoid?",step4Sub:"Allergens to skip — optional",
     step5Title:"What flavors are you craving?",step5Sub:"Pick a few or skip",
-    step6Title:"Anything else?",step6Sub:"Add a note for the chef (optional)",
     food:"Food",drink:"Drink",both:"Food & drink",snack:"Just a snack",
     light:"A bit peckish",medium:"Normal hungry",hearty:"Very hungry",
     vegan:"Vegan",vegetarian:"Vegetarian",glutenFree:"Gluten-free",halal:"Halal",dairyFree:"Dairy-free",
     nothing:"No allergens",
     spicy:"Spicy",mild:"Mild",meat:"Meat-heavy",veggie:"Veggie",creamy:"Creamy",grilled:"Grilled",sweet:"Sweet",fresh:"Fresh",
-    notePlaceholder:"e.g. I love mediterranean, prefer no onion...",
     back:"Back",next:"Next",skip:"Skip",getRec:"Get suggestions",
     findingFood:"Finding the perfect picks for you...",
     addedToOrder:"Added",add:"Add",
@@ -1407,6 +1531,18 @@ const AI_LABELS_BY_LANG = {
     rateLimit:"Too many requests. Try again in an hour.",
     new:"Try again",close:"Close",
     introFallback:"Here's what I'd suggest:",
+    // Google reviews
+    useGoogleTitle:"Use Google reviews",
+    useGoogleSub:"Popular dishes from real customer reviews",
+    googleReviewLabel:"Google review",
+    mentions:"mentions",
+    tapToSelect:"Tap to select",
+    tryAgain:"Try again",
+    // Chef note (yemek seçildikten sonra)
+    chefNoteTitle:"Note to chef",
+    chefNoteSub:"Any preferences? Optional",
+    chefNotePlaceholder:"e.g. no onion, extra spicy...",
+    addAndSendOrder:"Add & review order",
   },
   tr: {
     title:"Menü yardımcısı",sub:"Damak tadına uygun olanı bulalım",
@@ -1415,13 +1551,11 @@ const AI_LABELS_BY_LANG = {
     step3Title:"Diyet tercihiniz var mı?",step3Sub:"Uygun olanları seçin veya atlayın",
     step4Title:"Kaçınmanız gereken bir şey var mı?",step4Sub:"Alerjenleri seçin (opsiyonel)",
     step5Title:"Bugün canınız ne çekiyor?",step5Sub:"Birkaçını seçin veya atlayın",
-    step6Title:"Eklemek istediğiniz bir şey?",step6Sub:"Şefe not (opsiyonel)",
     food:"Yemek",drink:"İçecek",both:"Yemek ve içecek",snack:"Atıştırmalık",
     light:"Hafif acım var",medium:"Normal aç",hearty:"Çok aç",
     vegan:"Vegan",vegetarian:"Vejetaryen",glutenFree:"Glütensiz",halal:"Helal",dairyFree:"Sütsüz",
     nothing:"Alerjen yok",
     spicy:"Acılı",mild:"Hafif",meat:"Et ağırlıklı",veggie:"Sebzeli",creamy:"Kremalı",grilled:"Izgara",sweet:"Tatlı",fresh:"Ferah",
-    notePlaceholder:"Örn. Akdeniz mutfağı, soğansız olabilir...",
     back:"Geri",next:"İleri",skip:"Atla",getRec:"Öneri al",
     findingFood:"Sizin için en uygunlarını arıyorum...",
     addedToOrder:"Eklendi",add:"Ekle",
@@ -1430,6 +1564,18 @@ const AI_LABELS_BY_LANG = {
     rateLimit:"Çok fazla istek. 1 saat sonra tekrar deneyin.",
     new:"Tekrar dene",close:"Kapat",
     introFallback:"İşte size önerilerim:",
+    // Google reviews
+    useGoogleTitle:"Google yorumlarını kullan",
+    useGoogleSub:"Gerçek müşteri yorumlarından popüler yemekler",
+    googleReviewLabel:"Google yorumu",
+    mentions:"övgü",
+    tapToSelect:"Seçmek için dokunun",
+    tryAgain:"Tekrar dene",
+    // Chef note (yemek seçildikten sonra)
+    chefNoteTitle:"Şefe not",
+    chefNoteSub:"Tercihiniz var mı? Opsiyonel",
+    chefNotePlaceholder:"örn. soğansız, ekstra acılı...",
+    addAndSendOrder:"Ekle ve siparişi gözden geçir",
   },
 };
 
@@ -1441,6 +1587,13 @@ function tAi(key){
 const AI_STEPS = ['lookingFor', 'hungerLevel', 'dietary', 'allergens', 'taste', 'note'];
 let _aiAnswers = {};
 let _aiCurrentStep = 0;
+let _aiUseGoogleReviews = true; // default açık
+let _aiResult = null; // son AI sonucu
+let _aiSelectedRecItem = null; // chef note için seçilen item
+
+function toggleGoogleReviews(checked){
+  _aiUseGoogleReviews = !!checked;
+}
 
 function openAiPicker(){
   _aiAnswers = {
@@ -1449,9 +1602,10 @@ function openAiPicker(){
     dietary: [],
     allergens: [],
     taste: [],
-    note: '',
   };
   _aiCurrentStep = 0;
+  _aiResult = null;
+  _aiSelectedRecItem = null;
   document.getElementById('aiHeaderTitle').textContent = tAi('title');
   document.getElementById('aiHeaderSub').textContent = tAi('sub');
   renderAiStep();
@@ -1467,7 +1621,7 @@ document.getElementById('aiOverlay').addEventListener('click', (e) => {
 });
 
 function getAiSteps(){
-  // Tip seçimine göre adaptif adım listesi
+  // Tip seçimine göre adaptif adım listesi (note kaldırıldı - yemek seçildikten sonra geliyor)
   const lookingFor = _aiAnswers.lookingFor;
   const all = ['lookingFor'];
   // Yemek veya ikisi varsa, açlık + diyet + alerjen + tat
@@ -1477,7 +1631,6 @@ function getAiSteps(){
   all.push('dietary');
   all.push('allergens');
   all.push('taste');
-  all.push('note');
   return all;
 }
 
@@ -1499,7 +1652,25 @@ function renderAiStep(){
   let html = progressHtml;
   
   if(stepKey === 'lookingFor'){
-    html += `<div class="ai-step-title">${tAi('step1Title')}</div>
+    // Google reviews toggle (sadece insights varsa)
+    let googleToggle = '';
+    if(orgData?.googleInsightsAvailable){
+      googleToggle = `<div class="google-toggle-card">
+        <div class="google-toggle-icon">
+          <svg viewBox="0 0 24 24" fill="#f59e0b" width="20" height="20"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg>
+        </div>
+        <div class="google-toggle-text">
+          <div class="google-toggle-title">${tAi('useGoogleTitle')}</div>
+          <div class="google-toggle-sub">${tAi('useGoogleSub')}</div>
+        </div>
+        <label class="google-toggle-switch">
+          <input type="checkbox" id="aiGoogleToggle" ${_aiUseGoogleReviews?'checked':''} onchange="toggleGoogleReviews(this.checked)"/>
+          <span class="google-toggle-slider"></span>
+        </label>
+      </div>`;
+    }
+    
+    html += googleToggle + `<div class="ai-step-title">${tAi('step1Title')}</div>
       <div class="ai-step-sub">${tAi('step1Sub')}</div>
       <div class="ai-step-options" style="flex-direction:column">
         ${[
@@ -1552,10 +1723,6 @@ function renderAiStep(){
           {v:'fresh',e:'🍋',l:'fresh'},
         ].map(o => `<div class="ai-opt${_aiAnswers.taste.includes(o.v)?' on':''}" onclick="aiToggleMulti('taste','${o.v}')"><span class="ai-opt-emoji">${o.e}</span> ${tAi(o.l)}</div>`).join('')}
       </div>`;
-  } else if(stepKey === 'note'){
-    html += `<div class="ai-step-title">${tAi('step6Title')}</div>
-      <div class="ai-step-sub">${tAi('step6Sub')}</div>
-      <textarea class="ai-note-input" id="aiNoteInput" placeholder="${tAi('notePlaceholder')}" maxlength="200" oninput="_aiAnswers.note=this.value">${_aiAnswers.note||''}</textarea>`;
   }
   
   body.innerHTML = html;
@@ -1564,10 +1731,6 @@ function renderAiStep(){
   footer.style.display = 'flex';
   const isFirst = _aiCurrentStep === 0;
   const isLast = _aiCurrentStep === steps.length - 1;
-  const canProceed = _aiAnswers[stepKey] !== null && (
-    stepKey === 'note' || 
-    (Array.isArray(_aiAnswers[stepKey]) ? true : _aiAnswers[stepKey] !== null)
-  );
   
   // Step zorunluluğu: lookingFor ve hungerLevel zorunlu, diğerleri opsiyonel
   const isRequired = (stepKey === 'lookingFor' || stepKey === 'hungerLevel');
@@ -1625,6 +1788,7 @@ async function aiSubmit(){
       body: JSON.stringify({
         answers: _aiAnswers,
         language: currentLang || defaultLanguage,
+        useGoogleReviews: _aiUseGoogleReviews,
       }),
     });
     
@@ -1639,6 +1803,7 @@ async function aiSubmit(){
       return;
     }
     
+    _aiResult = data;
     renderAiResults(data);
   } catch(e) {
     renderAiError(tAi('errorTry'));
@@ -1664,21 +1829,32 @@ function renderAiResults(data){
   let html = `<div class="ai-intro">${escapeHtml(intro)}</div>`;
   
   for(const rec of data.items){
-    const inOrder = !!orderList[rec.id];
     const thumb = rec.photoUrl
       ? `<div class="ai-rec-thumb"><img src="${rec.photoUrl}" alt=""/></div>`
       : `<div class="ai-rec-thumb" style="font-size:24px">🍽️</div>`;
+    
+    // Google quote bloğu (varsa)
+    let googleBlock = '';
+    if(rec.googleQuote && rec.googleQuote.quote){
+      googleBlock = `<div class="ai-rec-google">
+        <div class="ai-rec-google-head">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg>
+          <span>${tAi('googleReviewLabel')} · ${rec.googleQuote.mentions} ${tAi('mentions')}</span>
+        </div>
+        <div class="ai-rec-google-quote">"${escapeHtml(rec.googleQuote.quote)}"</div>
+      </div>`;
+    }
+    
     html += `
-      <div class="ai-rec-card">
+      <div class="ai-rec-card" onclick='aiSelectRecItem(${JSON.stringify(rec).replace(/'/g,"&#39;")})'>
         ${thumb}
         <div class="ai-rec-info">
           <div class="ai-rec-name">${escapeHtml(rec.name)}</div>
           <div class="ai-rec-reason">${escapeHtml(rec.reason)}</div>
+          ${googleBlock}
           <div class="ai-rec-bottom">
             <span class="ai-rec-price">${sym}${rec.price}</span>
-            <button class="ai-rec-add${inOrder?' added':''}" id="ai-add-${rec.id}" onclick="aiAddFromRec('${rec.id}', ${JSON.stringify(rec).replace(/"/g,'&quot;')})">
-              ${inOrder ? '✓ '+tAi('addedToOrder') : '+ '+tAi('add')}
-            </button>
+            <span class="ai-rec-select-hint">${tAi('tapToSelect')} →</span>
           </div>
         </div>
       </div>`;
@@ -1687,42 +1863,90 @@ function renderAiResults(data){
   document.getElementById('aiBody').innerHTML = html;
   document.getElementById('aiFooter').innerHTML = `
     <button class="ai-btn-secondary" onclick="closeAiPicker()">${tAi('close')}</button>
-    <button class="ai-btn-primary" onclick="openAiPicker()">${tAi('new')}</button>`;
+    <button class="ai-btn-primary" onclick="aiTryAgain()">${tAi('tryAgain')}</button>`;
   document.getElementById('aiFooter').style.display = 'flex';
 }
 
-function aiAddFromRec(itemId, recData){
-  // recData kullanım: orderList'e ekle, ama allItems'taki gerçek item'ı tercih et
-  let item = allItems.find(i => i.id === itemId);
-  if(!item){
-    // AI'dan gelen rec data ile fallback
-    item = recData;
-  }
-  if(!item) return;
+// Try again: anketi tekrar gönder, yeni öneriler getir
+async function aiTryAgain(){
+  await aiSubmit();
+}
+
+// Bir item seçildi -> chef note ekranı
+function aiSelectRecItem(rec){
+  _aiSelectedRecItem = rec;
+  renderChefNoteStep();
+}
+
+function renderChefNoteStep(){
+  const rec = _aiSelectedRecItem;
+  if(!rec) return;
+  const sym = getSym();
+  const thumb = rec.photoUrl
+    ? `<div class="ai-rec-thumb" style="width:50px;height:50px"><img src="${rec.photoUrl}" alt=""/></div>`
+    : `<div class="ai-rec-thumb" style="width:50px;height:50px;font-size:20px">🍽️</div>`;
   
-  if(!orderList[itemId]){
-    orderList[itemId] = {
+  document.getElementById('aiBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:11px;padding:11px;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.08);border-radius:14px;margin-bottom:14px">
+      ${thumb}
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;color:#fff">${escapeHtml(rec.name)}</div>
+        <div style="font-size:13px;font-weight:600;color:#fff;margin-top:2px">${sym}${rec.price}</div>
+      </div>
+    </div>
+    <div class="ai-step-title">${tAi('chefNoteTitle')}</div>
+    <div class="ai-step-sub">${tAi('chefNoteSub')}</div>
+    <textarea class="ai-note-input" id="chefNoteInput" placeholder="${tAi('chefNotePlaceholder')}" maxlength="200">${_aiSelectedRecItem.note||''}</textarea>
+  `;
+  
+  document.getElementById('aiFooter').innerHTML = `
+    <button class="ai-btn-secondary" onclick="aiBackToRecs()">${tAi('back')}</button>
+    <button class="ai-btn-primary" onclick="aiAddSelectedAndShowOrder()">${tAi('addAndSendOrder')}</button>`;
+  document.getElementById('aiFooter').style.display = 'flex';
+}
+
+function aiBackToRecs(){
+  _aiSelectedRecItem = null;
+  if(_aiResult) renderAiResults(_aiResult);
+}
+
+// Seçili item'ı orderList'e ekle (note ile birlikte), modal'ı kapat, view order aç
+function aiAddSelectedAndShowOrder(){
+  const rec = _aiSelectedRecItem;
+  if(!rec) return;
+  const note = (document.getElementById('chefNoteInput')?.value || '').trim();
+  
+  // orderList'e ekle
+  let item = allItems.find(i => i.id === rec.id);
+  if(!item) item = rec;
+  
+  if(!orderList[rec.id]){
+    orderList[rec.id] = {
       qty: 1,
-      name: item.name,
-      originalName: item.originalName || item.name,
-      price: item.price,
-      photoUrl: item.photos?.[0]?.url || item.photoUrl || null,
+      name: item.name || rec.name,
+      originalName: item.name || rec.name,
+      price: item.price || rec.price,
+      photoUrl: item.photos?.[0]?.url || rec.photoUrl || null,
       allergens: item.allergens || [],
-      category: item.category || 'MAIN',
+      category: item.category || rec.category || 'MAIN',
+      note: note || null,
     };
   } else {
-    orderList[itemId].qty++;
+    orderList[rec.id].qty++;
+    if(note) orderList[rec.id].note = note;
   }
   saveOrderList();
   updateOrderFab();
   renderActiveAddBox();
   
-  // Buton görselini güncelle
-  const btn = document.getElementById('ai-add-'+itemId);
-  if(btn){
-    btn.classList.add('added');
-    btn.innerHTML = '✓ '+tAi('addedToOrder');
-  }
+  // AI modal'ı kapat, view order'ı aç
+  closeAiPicker();
+  setTimeout(() => openOrderSheet(), 250);
+}
+
+function aiAddFromRec(itemId, recData){
+  // Kullanılmıyor artık ama backward compatibility için tutuluyor
+  aiSelectRecItem(recData);
 }
 
 /* SEND ORDER FLOW */
@@ -1798,6 +2022,7 @@ async function submitOrder(opts){
     name: orderList[id].name,
     qty: orderList[id].qty,
     photoUrl: orderList[id].photoUrl,
+    note: orderList[id].note || null,
   }));
   
   if(items.length === 0) return;
@@ -1866,9 +2091,36 @@ function showOrderStatus(opts){
   const badge = document.getElementById('orderStatusBadge');
   
   if(opts.loading){
-    icon.style.background = 'rgba(255,255,255,.08)';
-    icon.style.borderColor = 'rgba(255,255,255,.2)';
-    icon.innerHTML = '<div class="ai-loading-spinner"></div>';
+    icon.style.background = 'transparent';
+    icon.style.borderColor = 'transparent';
+    icon.style.border = 'none';
+    icon.innerHTML = `
+      <div class="wok-anim">
+        <svg class="wok-anim-svg" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+          <!-- Steam -->
+          <ellipse class="wok-steam" cx="35" cy="25" rx="3" ry="6" fill="rgba(255,255,255,0.5)"/>
+          <ellipse class="wok-steam wok-steam-2" cx="44" cy="22" rx="3" ry="6" fill="rgba(255,255,255,0.5)"/>
+          <ellipse class="wok-steam wok-steam-3" cx="53" cy="25" rx="3" ry="6" fill="rgba(255,255,255,0.5)"/>
+          <!-- Wok pan -->
+          <g class="wok-pan">
+            <path d="M 18 50 Q 44 78 70 50 L 70 56 Q 44 82 18 56 Z" fill="#2a2a2a" stroke="#1a1a1a" stroke-width="1.5"/>
+            <ellipse cx="44" cy="50" rx="26" ry="6" fill="#3a3a3a" stroke="#4a4a4a" stroke-width="1"/>
+            <!-- Food in wok -->
+            <circle cx="36" cy="49" r="3" fill="#D84040"/>
+            <circle cx="44" cy="51" r="3.5" fill="#f59e0b"/>
+            <circle cx="52" cy="49" r="3" fill="#1a8754"/>
+            <circle cx="40" cy="52" r="2" fill="#8E1616"/>
+            <circle cx="48" cy="52" r="2" fill="#f59e0b"/>
+            <!-- Handle -->
+            <rect x="68" y="48" width="14" height="3.5" rx="1.5" fill="#1a1a1a"/>
+          </g>
+          <!-- Spoon -->
+          <g class="wok-spoon">
+            <line x1="44" y1="20" x2="44" y2="50" stroke="#d4a373" stroke-width="2.5" stroke-linecap="round"/>
+            <ellipse cx="44" cy="50" rx="4" ry="2.5" fill="#d4a373"/>
+          </g>
+        </svg>
+      </div>`;
     heading.textContent = tOrder('sending');
     sub.textContent = '';
     numLabel.style.display = 'none';
@@ -1882,6 +2134,7 @@ function showOrderStatus(opts){
   if(opts.error){
     icon.style.background = 'rgba(220,38,38,.15)';
     icon.style.borderColor = '#dc2626';
+    icon.style.border = '2px solid #dc2626';
     icon.innerHTML = '<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M13 13l14 14M27 13L13 27" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/></svg>';
     heading.textContent = tOrder('failed');
     sub.textContent = opts.error;
@@ -1895,6 +2148,7 @@ function showOrderStatus(opts){
   if(opts.success){
     icon.style.background = 'rgba(26,135,84,.15)';
     icon.style.borderColor = '#1a8754';
+    icon.style.border = '2px solid #1a8754';
     icon.innerHTML = '<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M10 20l7 7 14-14" stroke="#1a8754" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     heading.textContent = tOrder('orderSent');
     sub.textContent = tOrder('orderSentSub');
@@ -1912,7 +2166,12 @@ function showOrderStatus(opts){
     document.getElementById('orderStatusBadgeText').textContent = tOrder('pending');
     screen.classList.add('open');
     
-    // Status polling başlat
+    // 3 saniye sonra otomatik kapat
+    setTimeout(() => {
+      closeOrderStatus();
+    }, 3000);
+    
+    // Status polling başlat (arka planda)
     if(opts.orderId) pollOrderStatus(opts.orderId);
   }
 }

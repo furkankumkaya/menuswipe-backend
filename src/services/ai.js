@@ -307,7 +307,7 @@ function getLanguageName(code) {
   return map[code] || code;
 }
 
-async function recommendItems(menuItems, answers, language = "en") {
+async function recommendItems(menuItems, answers, language = "en", googleContext = null) {
   const langName = getLanguageName(language);
   
   // Menü datasını compact JSON formatına çevir
@@ -327,6 +327,7 @@ You MUST ONLY recommend items from the JSON menu below. NEVER invent items that 
 
 Menu (JSON):
 ${JSON.stringify(menuCompact)}
+${googleContext || ""}
 
 Respond ONLY in valid JSON with this exact structure:
 {

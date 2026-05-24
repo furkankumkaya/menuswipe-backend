@@ -420,11 +420,13 @@ function renderOrderCard(o){
   const itemsHtml=items.map(it=>{
     const showOrig=it.name&&it.originalName&&it.name!==it.originalName;
     const allergens=it.allergens||[];
+    const note = it.note && it.note.trim();
     return `<div class="order-item-row">
       <div class="order-item-qty">×${it.qty}</div>
       <div class="order-item-info">
         <div class="order-item-name">${escapeHtml(it.originalName||it.name)}</div>
         ${showOrig?`<div class="order-item-orig">${escapeHtml(it.name)}</div>`:''}
+        ${note?`<div style="margin-top:4px;padding:5px 8px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px;font-size:11.5px;color:#78350f;font-weight:500"><strong>Note:</strong> ${escapeHtml(note)}</div>`:''}
         ${allergens.length?`<div class="order-item-allergen">⚠ ${allergens.join(', ')}</div>`:''}
       </div>
     </div>`;

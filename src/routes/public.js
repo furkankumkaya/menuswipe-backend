@@ -200,6 +200,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         latitude: org.latitude, longitude: org.longitude,
         workingHours: org.workingHours,
         orderListEnabled: org.orderListEnabled !== false,
+        googleInsightsAvailable: !!(org.googleInsights && Array.isArray(org.googleInsights.popularDishes) && org.googleInsights.popularDishes.length > 0),
       },
       branch: {
         id: selectedBranch.id, name: selectedBranch.name, slug: selectedBranch.slug,
@@ -267,6 +268,7 @@ router.post("/:orgSlug/ai-recommend", async (req, res, next) => {
     
     const answers = req.body.answers || {};
     const language = (req.body.language || org.defaultLanguage || "en").slice(0, 5);
+    const useGoogleReviews = req.body.useGoogleReviews !== false; // default true
     
     // Menü item'larını çek (translations dahil)
     let items = [];
@@ -305,13 +307,25 @@ router.post("/:orgSlug/ai-recommend", async (req, res, next) => {
       };
     });
     
-    // AI'ya gönder
-    const result = await recommendItems(localizedItems, answers, language);
+    // Google insights - eğer toggle açıksa ve veri varsa eşleştir
+    const { matchInsightsToMenu } = require("../services/gemini");
+    let itemInsights = {};
+    if (useGoogleReviews && org.googleInsights && Array.isArray(org.googleInsights.popularDishes)) {
+      itemInsights = matchInsightsToMenu(org.googleInsights, localizedItems);
+    }
     
-    // Sonucu zenginleştir - item detaylarını ekle
+    // AI'ya gönder - Google verisini ekstra context olarak ekle
+    const googleContext = useGoogleReviews && Object.keys(itemInsights).length > 0 
+      ? buildGoogleContext(itemInsights, localizedItems) 
+      : null;
+    
+    const result = await recommendItems(localizedItems, answers, language, googleContext);
+    
+    // Sonucu zenginleştir - item detaylarını ekle + Google quotes
     const enrichedItems = result.items.map(rec => {
       const item = localizedItems.find(i => i.id === rec.id);
       if (!item) return null;
+      const insight = itemInsights[item.id];
       return {
         id: item.id,
         name: item.name,
@@ -321,6 +335,7 @@ router.post("/:orgSlug/ai-recommend", async (req, res, next) => {
         photoUrl: item.photoUrl,
         allergens: item.allergens,
         reason: rec.reason,
+        googleQuote: insight ? { mentions: insight.mentions, quote: insight.quote } : null,
       };
     }).filter(Boolean);
     
@@ -333,6 +348,19 @@ router.post("/:orgSlug/ai-recommend", async (req, res, next) => {
     res.status(500).json({ error: "ai_error", message: err.message });
   }
 });
+
+// Google context'i AI prompt'una eklemek için string oluştur
+function buildGoogleContext(itemInsights, menuItems) {
+  const lines = [];
+  for (const item of menuItems) {
+    const insight = itemInsights[item.id];
+    if (insight) {
+      lines.push(`- "${item.name}" (mentioned ${insight.mentions} times: "${insight.quote}")`);
+    }
+  }
+  if (lines.length === 0) return null;
+  return `\n\nThe following dishes are highly praised in Google Reviews for this restaurant:\n${lines.join("\n")}\n\nWhen multiple menu items match the customer's preferences equally, prefer these popular ones. In your reason field, you may mention "praised by customers" or similar phrasing when recommending these.`;
+}
 
 // Müşteri: sipariş oluştur
 router.post("/:orgSlug/order", async (req, res, next) => {
@@ -386,6 +414,7 @@ router.post("/:orgSlug/order", async (req, res, next) => {
           allergens: mi.allergens || [],
           photoUrl: i.photoUrl || null,
           category: mi.category,
+          note: (i.note || "").toString().trim().slice(0, 200) || null,
         };
       });
     

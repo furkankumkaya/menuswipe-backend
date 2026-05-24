@@ -21,6 +21,7 @@ const subscriptionRoutes = require("./routes/subscription");
 const importRoutes = require("./routes/import");
 const tablesRoutes = require("./routes/tables");
 const ordersRoutes = require("./routes/orders");
+const googleInsightsRoutes = require("./routes/google-insights");
 const translationsRoutes = require("./routes/translations");
 
 const app = express();
@@ -41,6 +42,7 @@ app.use("/api/stripe", stripeRoutes);
 app.use("/api/qr", qrRoutes);
 app.use("/api/tables", tablesRoutes);
 app.use("/api/orders", ordersRoutes);
+app.use("/api/google-insights", googleInsightsRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
