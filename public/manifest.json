@@ -1,14 +1,34 @@
 {
-  "name": "MenuSwipe",
+  "name": "MenuSwipe Admin",
   "short_name": "MenuSwipe",
-  "description": "Visual menus for modern restaurants",
+  "description": "Manage your restaurant orders and menu",
   "start_url": "/admin",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#8E1616",
+  "background_color": "#1D1616",
   "theme_color": "#8E1616",
   "orientation": "portrait",
+  "categories": ["business", "food"],
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Orders",
+      "short_name": "Orders",
+      "description": "View incoming orders",
+      "url": "/admin",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Edit menu",
+      "short_name": "Menu",
+      "description": "Edit your menu",
+      "url": "/editor.html",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
