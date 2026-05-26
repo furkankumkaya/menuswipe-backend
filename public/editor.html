@@ -798,7 +798,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
           <input type="file" id="logoInpP" accept="image/*" style="display:none" onchange="handleLogo(event)"/>
           <div style="flex:1">
             <div class="profile-lbl">Restaurant name</div>
-            <input class="profile-inp" id="profileName" placeholder="Restaurant name" oninput="debounceSaveOrg()"/>
+            <input class="profile-inp" id="profileName" placeholder="Restaurant name" oninput="debounceSaveOrg()" style="font-weight:600;font-size:14px"/>
+            <div style="font-size:10px;color:#94a3b8;margin-top:3px">Edit and it saves automatically</div>
           </div>
         </div>
       </div>
@@ -1635,6 +1636,10 @@ async function saveOrg(){
     org={...org,...updated};
     localStorage.setItem('ms_org',JSON.stringify(org));
     renderItems();
+    // Header'da org adını güncelle
+    const headerName = document.getElementById('headerOrgName');
+    if(headerName && updated.name) headerName.textContent = updated.name;
+    toast('Saved ✓');
   }catch(e){toast('Save failed: '+e.message);}
 }
 
