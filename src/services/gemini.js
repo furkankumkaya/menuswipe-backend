@@ -30,36 +30,21 @@ async function fetchGoogleInsights(org) {
   const locationParts = [address, city, country].filter(Boolean);
   const locationStr = locationParts.join(", ");
   
-  const prompt = `You are analyzing Google Maps reviews for a specific restaurant.
+  const prompt = `Search Google Maps and Google reviews for this restaurant and find the most mentioned dishes in customer reviews.
 
-Restaurant: ${name}
+Restaurant name: ${name}
 ${locationStr ? `Location: ${locationStr}` : ""}
 ${url ? `Google Maps URL: ${url}` : ""}
 
-Search Google Maps reviews for this restaurant. Based on what real customers say in their reviews, identify the dishes that are most frequently praised and recommended.
+Your response must be ONLY a JSON object, nothing else. No explanation, no markdown, no code blocks. Just raw JSON.
 
-Return ONLY valid JSON in this exact format (no markdown, no explanation):
-{
-  "popularDishes": [
-    {
-      "name": "exact dish name as customers mention it",
-      "mentions": 15,
-      "quote": "a short representative quote from a real review (under 80 characters)"
-    }
-  ],
-  "mustTry": ["dish1", "dish2"],
-  "overallSentiment": "positive",
-  "totalReviewsAnalyzed": 50,
-  "notes": "optional brief note about the restaurant's strengths"
-}
+Example of exactly what to return:
+{"popularDishes":[{"name":"Köfte","mentions":15,"quote":"Very tasty and fresh"},{"name":"Baklava","mentions":8,"quote":"Best in the city"}],"mustTry":["Köfte"],"overallSentiment":"positive","totalReviewsAnalyzed":45,"notes":"Known for grilled meats"}
 
-Rules:
-- Include 3-8 dishes maximum, sorted by popularity
-- Only include dishes that are explicitly mentioned in reviews
-- Quotes must be real or paraphrased from actual reviews
-- If you cannot find this restaurant or there are no reviews, return: {"popularDishes": [], "mustTry": [], "overallSentiment": "unknown", "totalReviewsAnalyzed": 0, "notes": "Restaurant not found or no reviews available"}
-- Mentions count should be your best estimate based on review frequency
-- Sentiment: "positive", "mixed", or "negative"`;
+If you cannot find the restaurant or reviews, return exactly:
+{"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"Not found"}
+
+Now return the JSON for: ${name}${locationStr ? ', ' + locationStr : ''}`;
 
   const requestBody = {
     contents: [
@@ -68,14 +53,10 @@ Rules:
         parts: [{ text: prompt }],
       },
     ],
-    tools: [
-      {
-        google_search: {},
-      },
-    ],
+    tools: [{ google_search: {} }],
     generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 2048,
+      temperature: 0.1,
+      maxOutputTokens: 1024,
     },
   };
   
@@ -101,18 +82,32 @@ Rules:
     
     const text = candidate.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "";
     
-    // JSON parse - bazen markdown wrap olabiliyor
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.warn("[gemini] no JSON found in response:", text.slice(0, 300));
-      return null;
+    console.log("[gemini] raw response length:", text.length, "first 300:", text.slice(0, 300));
+    
+    // JSON parse - birden fazla strateji dene
+    let parsed = null;
+    
+    // 1. Direkt parse
+    try { parsed = JSON.parse(text.trim()); } catch(e) {}
+    
+    // 2. Markdown code block içinden çıkar
+    if (!parsed) {
+      const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlock) {
+        try { parsed = JSON.parse(codeBlock[1].trim()); } catch(e) {}
+      }
     }
     
-    let parsed;
-    try {
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch (e) {
-      console.warn("[gemini] JSON parse error:", e.message);
+    // 3. İlk { ... } bloğunu bul
+    if (!parsed) {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try { parsed = JSON.parse(jsonMatch[0]); } catch(e) {}
+      }
+    }
+    
+    if (!parsed) {
+      console.warn("[gemini] could not parse JSON. Full response:", text.slice(0, 1000));
       return null;
     }
     
