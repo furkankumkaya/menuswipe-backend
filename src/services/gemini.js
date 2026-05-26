@@ -30,21 +30,22 @@ async function fetchGoogleInsights(org) {
   const locationParts = [address, city, country].filter(Boolean);
   const locationStr = locationParts.join(", ");
   
-  const prompt = `Search Google Maps and Google reviews for this restaurant and find the most mentioned dishes in customer reviews.
+  const prompt = `Search Google Maps for this restaurant and find the most popular dishes mentioned in customer reviews.
 
-Restaurant name: ${name}
-${locationStr ? `Location: ${locationStr}` : ""}
-${url ? `Google Maps URL: ${url}` : ""}
+${url ? `Google Maps URL: ${url}` : `Restaurant: ${name}${locationStr ? ', ' + locationStr : ''}`}
+${url && name ? `Restaurant name hint: ${name}` : ''}
+
+Use Google Search to find reviews for this specific restaurant. Look for dishes that customers frequently mention, praise, or recommend.
 
 Your response must be ONLY a JSON object, nothing else. No explanation, no markdown, no code blocks. Just raw JSON.
 
 Example of exactly what to return:
 {"popularDishes":[{"name":"Köfte","mentions":15,"quote":"Very tasty and fresh"},{"name":"Baklava","mentions":8,"quote":"Best in the city"}],"mustTry":["Köfte"],"overallSentiment":"positive","totalReviewsAnalyzed":45,"notes":"Known for grilled meats"}
 
-If you cannot find the restaurant or reviews, return exactly:
+If you cannot find reviews, return exactly:
 {"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"Not found"}
 
-Now return the JSON for: ${name}${locationStr ? ', ' + locationStr : ''}`;
+Return JSON now:`;
 
   const requestBody = {
     contents: [
