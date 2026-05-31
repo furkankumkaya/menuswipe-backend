@@ -36,15 +36,16 @@ async function uniqueSlug(base) {
 router.post("/register", async (req, res, next) => {
   try {
     const { restaurantName, email, password } = req.body;
-    if (!restaurantName || !email || !password)
-      return res.status(400).json({ error: "restaurantName, email and password are required" });
+    if (!email || !password)
+      return res.status(400).json({ error: "Email and password are required" });
     if (password.length < 6)
       return res.status(400).json({ error: "Password must be at least 6 characters" });
 
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) return res.status(409).json({ error: "This email is already registered" });
 
-    const slug = await uniqueSlug(restaurantName);
+    const name = (restaurantName || "").trim() || "My Restaurant";
+    const slug = await uniqueSlug(name);
     const passwordHash = await bcrypt.hash(password, 12);
     
     // Trial 30 gün
@@ -52,7 +53,7 @@ router.post("/register", async (req, res, next) => {
 
     const org = await prisma.organization.create({
       data: {
-        name: restaurantName,
+        name,
         slug,
         currency: "USD",
         defaultLanguage: "en",
@@ -62,10 +63,10 @@ router.post("/register", async (req, res, next) => {
         trialEndsAt,
         onboardingCompleted: false,
         users: {
-          create: { email, passwordHash, name: restaurantName, role: "OWNER" },
+          create: { email, passwordHash, name, role: "OWNER" },
         },
         branches: {
-          create: { name: restaurantName, slug: "main", active: true },
+          create: { name, slug: "main", active: true },
         },
       },
       include: { users: true, branches: true },

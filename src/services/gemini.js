@@ -208,4 +208,93 @@ function matchInsightsToMenu(insights, menuItems) {
 module.exports = {
   fetchGoogleInsights,
   matchInsightsToMenu,
+  fetchRestaurantInfo,
 };
+
+/**
+ * Google Maps URL'inden restoran bilgilerini çeker.
+ * Gemini Search Grounding ile çalışır.
+ * @param {string} googleMapsUrl
+ * @returns {Promise<object|null>} { name, country, city, address, phone, workingHours, ... }
+ */
+async function fetchRestaurantInfo(googleMapsUrl) {
+  if (!GEMINI_API_KEY) {
+    console.warn("[gemini] GEMINI_API_KEY not set");
+    return null;
+  }
+  if (!googleMapsUrl) return null;
+  
+  // URL'den restoran adını çıkar (ipucu olarak)
+  let hint = "";
+  const placeMatch = googleMapsUrl.match(/\/place\/([^/@]+)/);
+  if (placeMatch) {
+    hint = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+  }
+  
+  console.log("[gemini] extracting restaurant info for:", hint || googleMapsUrl);
+  
+  const prompt = `Search Google for this restaurant and return its details:
+
+${googleMapsUrl}
+${hint ? `Restaurant name hint: ${hint}` : ""}
+
+Find the restaurant's official information from Google Maps or Google Search. Return ONLY a JSON object with these fields:
+
+{"name":"restaurant full name","country":"country name","city":"city name","address":"full street address","postalCode":"postal code or empty string","phone":"phone number with country code or empty string","latitude":0.0,"longitude":0.0,"rating":4.5,"totalReviews":120,"priceLevel":"$$","cuisineType":"Turkish","suggestedCurrency":"TRY","suggestedLanguage":"tr","workingHours":{"mon":{"open":"09:00","close":"22:00"},"tue":{"open":"09:00","close":"22:00"},"wed":{"open":"09:00","close":"22:00"},"thu":{"open":"09:00","close":"22:00"},"fri":{"open":"09:00","close":"23:00"},"sat":{"open":"09:00","close":"23:00"},"sun":{"open":"10:00","close":"21:00"}}}
+
+Rules:
+- Return ONLY JSON, nothing else
+- Use real data from Google
+- Phone must include country code like +90, +1, etc.
+- suggestedCurrency: use the local currency code (TRY for Turkey, USD for US, EUR for Europe, etc.)
+- suggestedLanguage: two-letter code of the restaurant's primary language (tr, en, de, fr, etc.)
+- If a field is unknown, use empty string for text or null for numbers
+- workingHours: use 24h format, if unknown set all days to {"open":"09:00","close":"22:00"}`;
+
+  try {
+    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+      }),
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("[gemini] restaurant info API error:", response.status, errText.slice(0, 300));
+      return null;
+    }
+    
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "";
+    
+    console.log("[gemini] restaurant info response length:", text.length);
+    
+    // JSON parse
+    let parsed = null;
+    try { parsed = JSON.parse(text.trim()); } catch(e) {}
+    if (!parsed) {
+      const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlock) try { parsed = JSON.parse(codeBlock[1].trim()); } catch(e) {}
+    }
+    if (!parsed) {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) try { parsed = JSON.parse(jsonMatch[0]); } catch(e) {}
+    }
+    
+    if (!parsed) {
+      console.warn("[gemini] could not parse restaurant info:", text.slice(0, 500));
+      // Fallback: en azından URL'den çıkan adı dön
+      return hint ? { name: hint } : null;
+    }
+    
+    console.log("[gemini] extracted restaurant:", parsed.name);
+    return parsed;
+  } catch (err) {
+    console.error("[gemini] restaurant info error:", err.message);
+    return hint ? { name: hint } : null;
+  }
+}

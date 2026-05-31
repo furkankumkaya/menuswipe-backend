@@ -1,11 +1,33 @@
 const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
 const { requireAuth } = require("../middleware/auth");
-const { fetchGoogleInsights } = require("../services/gemini");
+const { fetchGoogleInsights, fetchRestaurantInfo } = require("../services/gemini");
 
 const prisma = new PrismaClient();
 
 const STALE_DAYS = 7;
+
+/**
+ * Google Maps URL'inden restoran bilgilerini çek (onboarding).
+ */
+router.post("/extract-info", requireAuth, async (req, res) => {
+  try {
+    const { googleMapsUrl } = req.body;
+    if (!googleMapsUrl) {
+      return res.status(400).json({ error: "googleMapsUrl is required" });
+    }
+    
+    const info = await fetchRestaurantInfo(googleMapsUrl);
+    if (!info) {
+      return res.status(500).json({ error: "Could not extract restaurant info" });
+    }
+    
+    res.json({ ok: true, info });
+  } catch (err) {
+    console.error("[extract-info] error:", err.message);
+    res.status(500).json({ error: "server_error", message: err.message });
+  }
+});
 
 /**
  * Manuel refresh - admin paneli'nden butonla tetiklenir.
