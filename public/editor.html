@@ -1616,8 +1616,9 @@ function debounceSaveOrg(){
   saveTimer=setTimeout(saveOrg,800);
 }
 async function saveOrg(){
+  const nameVal = document.getElementById('profileName').value.trim();
   const data={
-    name:document.getElementById('profileName').value.trim()||org.name,
+    name: nameVal || org.name,
     country:document.getElementById('orgCountry').value.trim()||null,
     city:document.getElementById('orgCity').value.trim()||null,
     address:document.getElementById('orgAddress').value.trim()||null,
@@ -1631,16 +1632,19 @@ async function saveOrg(){
     facebook:document.getElementById('orgFacebook').value.trim()||null,
     workingHours:collectHours(),
   };
+  console.log('[saveOrg] saving name:', data.name);
   try{
     const updated=await api('PATCH','/api/auth/organization',data);
+    console.log('[saveOrg] response name:', updated.name);
     org={...org,...updated};
     localStorage.setItem('ms_org',JSON.stringify(org));
     renderItems();
-    // Header'da org adını güncelle
-    const headerName = document.getElementById('headerOrgName');
-    if(headerName && updated.name) headerName.textContent = updated.name;
-    toast('Saved ✓');
-  }catch(e){toast('Save failed: '+e.message);}
+    toast('Saved');
+  }catch(e){
+    console.error('[saveOrg] error:', e);
+    toast('Save failed: '+e.message);
+  }
+}
 }
 
 const DAYS=['mon','tue','wed','thu','fri','sat','sun'];

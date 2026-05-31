@@ -18,34 +18,39 @@ async function fetchGoogleInsights(org) {
     return null;
   }
   
-  const name = org.name;
-  const url = org.googleMapsUrl;
-  const city = org.city || "";
-  const country = org.country || "";
-  const address = org.address || "";
+  const name = org.name || "";
+  const url = org.googleMapsUrl || "";
   
-  if (!name) return null;
+  // Google Maps URL'inden restoran adını çıkarmaya çalış
+  let extractedName = "";
+  if (url) {
+    // URL format: /maps/place/Restaurant+Name/... veya /maps/place/Restaurant%20Name/...
+    const placeMatch = url.match(/\/place\/([^/@]+)/);
+    if (placeMatch) {
+      extractedName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+    }
+  }
   
-  // Konum bilgisini topla
-  const locationParts = [address, city, country].filter(Boolean);
-  const locationStr = locationParts.join(", ");
+  const searchName = extractedName || name;
   
-  const prompt = `Search Google Maps for this restaurant and find the most popular dishes mentioned in customer reviews.
+  if (!searchName && !url) {
+    console.warn("[gemini] no name and no URL, skipping");
+    return null;
+  }
+  
+  console.log("[gemini] fetching for:", searchName, "url:", url);
 
-${url ? `Google Maps URL: ${url}` : `Restaurant: ${name}${locationStr ? ', ' + locationStr : ''}`}
-${url && name ? `Restaurant name hint: ${name}` : ''}
+  const prompt = `Search for "${searchName}" restaurant on Google. Find customer reviews and identify the most popular dishes that customers mention and recommend.
 
-Use Google Search to find reviews for this specific restaurant. Look for dishes that customers frequently mention, praise, or recommend.
+${url ? `This is the restaurant Google Maps link: ${url}` : ""}
 
-Your response must be ONLY a JSON object, nothing else. No explanation, no markdown, no code blocks. Just raw JSON.
+Based on real customer reviews, list the dishes that are mentioned most often. Include a short quote from reviews for each dish.
 
-Example of exactly what to return:
-{"popularDishes":[{"name":"Köfte","mentions":15,"quote":"Very tasty and fresh"},{"name":"Baklava","mentions":8,"quote":"Best in the city"}],"mustTry":["Köfte"],"overallSentiment":"positive","totalReviewsAnalyzed":45,"notes":"Known for grilled meats"}
+Return ONLY a JSON object. No other text, no markdown code blocks, just the JSON:
+{"popularDishes":[{"name":"dish name","mentions":10,"quote":"short customer quote"}],"mustTry":["dish1","dish2"],"overallSentiment":"positive","totalReviewsAnalyzed":30,"notes":"brief summary of restaurant strengths"}
 
-If you cannot find reviews, return exactly:
-{"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"Not found"}
-
-Return JSON now:`;
+If you truly cannot find any reviews for this restaurant, return:
+{"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"No reviews found"}`;
 
   const requestBody = {
     contents: [
@@ -113,7 +118,7 @@ Return JSON now:`;
     }
     
     if (!Array.isArray(parsed.popularDishes) || parsed.popularDishes.length === 0) {
-      console.log("[gemini] no popular dishes found for", name);
+      console.log("[gemini] no popular dishes found for", url || name);
       return {
         popularDishes: [],
         mustTry: [],
