@@ -30,6 +30,7 @@ app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.static(path.join(__dirname, "../public")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/menu", menuRoutes);
