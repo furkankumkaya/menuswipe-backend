@@ -1,6 +1,5 @@
 /**
- * Gemini API ile Google Reviews insights çekme.
- * Restoran adı + Google Maps URL alır, popüler yemekleri döner.
+ * Gemini API - Google Reviews insights + Restoran bilgisi çekme
  */
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -8,128 +7,185 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 /**
- * Bir restoranın Google yorumlarından popüler yemekleri çıkarır.
- * @param {object} org - Organization (name, googleMapsUrl, city, etc.)
- * @returns {Promise<object|null>} { popularDishes, mustTry, sentiment, fetchedAt }
+ * FIX 1: Mobile share URL'leri (maps.app.goo.gl) uzat.
+ * Bu URL'lerde restoran adı yok, redirect takip ederek tam URL'e dönüştür.
+ */
+async function expandGoogleMapsUrl(url) {
+  if (!url) return url;
+  
+  // Zaten tam URL ise direkt döndür
+  if (url.includes("/maps/place/")) return url;
+  
+  // Kısaltılmış URL: maps.app.goo.gl veya goo.gl/maps
+  if (url.includes("goo.gl") || url.includes("maps.app.goo.gl")) {
+    try {
+      const resp = await fetch(url, {
+        method: "HEAD",
+        redirect: "follow",
+      });
+      const expanded = resp.url;
+      console.log("[gemini] expanded URL:", url, "→", expanded.slice(0, 80));
+      return expanded;
+    } catch (e) {
+      console.warn("[gemini] URL expand failed:", e.message);
+      return url;
+    }
+  }
+  
+  return url;
+}
+
+/**
+ * URL'den ve/veya org'dan en iyi arama terimini çıkar.
+ * FIX 2: Kullanıcı tarafından girilen restoran adını önceliklendir.
+ */
+function extractSearchTerms(org, expandedUrl) {
+  const orgName = (org.name || "").trim();
+  const city = (org.city || "").trim();
+  const country = (org.country || "").trim();
+  
+  // URL'den restoran adı çıkar
+  let urlName = "";
+  if (expandedUrl && expandedUrl.includes("/place/")) {
+    const match = expandedUrl.match(/\/place\/([^/@?]+)/);
+    if (match) {
+      urlName = decodeURIComponent(match[1].replace(/\+/g, " ")).trim();
+    }
+  }
+  
+  // Kullanıcının girdiği org adı "My Restaurant" veya boşsa URL'den al
+  const isDefaultName = !orgName || orgName === "My Restaurant" || orgName === "my restaurant";
+  const bestName = isDefaultName ? (urlName || orgName) : orgName;
+  
+  const location = [city, country].filter(Boolean).join(", ");
+  
+  return { name: bestName, urlName, location };
+}
+
+/**
+ * Gemini'ye istek at - ortak fonksiyon
+ */
+async function callGemini(prompt) {
+  const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      tools: [{ google_search: {} }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+    }),
+  });
+  
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gemini API error ${response.status}: ${errText.slice(0, 200)}`);
+  }
+  
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "";
+  return text;
+}
+
+/**
+ * JSON parse - çok strateji
+ */
+function parseJSON(text) {
+  // 1. Direkt
+  try { return JSON.parse(text.trim()); } catch(e) {}
+  // 2. Markdown code block
+  const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlock) {
+    try { return JSON.parse(codeBlock[1].trim()); } catch(e) {}
+  }
+  // 3. İlk { ... }
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try { return JSON.parse(jsonMatch[0]); } catch(e) {}
+  }
+  return null;
+}
+
+/**
+ * FIX 3: Boş popularDishes durumunda daha anlamlı sonuç döndür.
+ * Restoran bulunduysa ama yorum yoksa farklı mesaj ver.
+ */
+function buildEmptyResult(notes) {
+  return {
+    popularDishes: [],
+    mustTry: [],
+    overallSentiment: "unknown",
+    totalReviewsAnalyzed: 0,
+    notes: notes || "No reviews found",
+    fetchedAt: new Date().toISOString(),
+    notFound: true,
+  };
+}
+
+/**
+ * Ana fonksiyon: Restoran yorumlarından popüler yemekleri çek
  */
 async function fetchGoogleInsights(org) {
   if (!GEMINI_API_KEY) {
-    console.warn("[gemini] GEMINI_API_KEY not set, skipping");
+    console.warn("[gemini] GEMINI_API_KEY not set");
     return null;
   }
   
-  const name = org.name || "";
-  const url = org.googleMapsUrl || "";
+  const rawUrl = org.googleMapsUrl || "";
   
-  // Google Maps URL'inden restoran adını çıkarmaya çalış
-  let extractedName = "";
-  if (url) {
-    // URL format: /maps/place/Restaurant+Name/... veya /maps/place/Restaurant%20Name/...
-    const placeMatch = url.match(/\/place\/([^/@]+)/);
-    if (placeMatch) {
-      extractedName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
-    }
-  }
+  // FIX 1: URL'i genişlet
+  const expandedUrl = rawUrl ? await expandGoogleMapsUrl(rawUrl) : "";
   
-  const searchName = extractedName || name;
+  // FIX 2: En iyi arama terimini bul
+  const { name, urlName, location } = extractSearchTerms(org, expandedUrl);
   
-  if (!searchName && !url) {
-    console.warn("[gemini] no name and no URL, skipping");
+  if (!name && !expandedUrl) {
+    console.warn("[gemini] no search terms available");
     return null;
   }
   
-  console.log("[gemini] fetching for:", searchName, "url:", url);
-
-  const prompt = `Search for "${searchName}" restaurant on Google. Find customer reviews and identify the most popular dishes that customers mention and recommend.
-
-${url ? `This is the restaurant Google Maps link: ${url}` : ""}
-
-Based on real customer reviews, list the dishes that are mentioned most often. Include a short quote from reviews for each dish.
-
-Return ONLY a JSON object. No other text, no markdown code blocks, just the JSON:
-{"popularDishes":[{"name":"dish name","mentions":10,"quote":"short customer quote"}],"mustTry":["dish1","dish2"],"overallSentiment":"positive","totalReviewsAnalyzed":30,"notes":"brief summary of restaurant strengths"}
-
-If you truly cannot find any reviews for this restaurant, return:
-{"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"No reviews found"}`;
-
-  const requestBody = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: prompt }],
-      },
-    ],
-    tools: [{ google_search: {} }],
-    generationConfig: {
-      temperature: 0.1,
-      maxOutputTokens: 1024,
-    },
-  };
+  console.log("[gemini] searching for:", name, "| url name:", urlName, "| location:", location);
   
+  // Arama stratejisi: birden fazla ipucu ver
+  const locationHint = location ? ` in ${location}` : "";
+  const urlHint = expandedUrl ? `\nGoogle Maps link: ${expandedUrl}` : "";
+  const altNameHint = urlName && urlName !== name ? `\nAlternative name from URL: ${urlName}` : "";
+
+  const prompt = `Search Google Maps and Google Reviews to find the most popular dishes at this restaurant:
+
+Restaurant: ${name}${locationHint}${urlHint}${altNameHint}
+
+Instructions:
+1. Search for this restaurant on Google Maps
+2. Look through customer reviews to find which dishes are mentioned most
+3. Return the top dishes customers love
+
+Return ONLY this JSON structure, no other text:
+{"popularDishes":[{"name":"dish name","mentions":10,"quote":"short customer quote under 80 chars"}],"mustTry":["dish1","dish2"],"overallSentiment":"positive","totalReviewsAnalyzed":50,"notes":"one sentence about restaurant"}
+
+Rules:
+- Include 3-8 dishes sorted by how often mentioned
+- Quotes must be from actual customer reviews (paraphrase if needed)
+- If restaurant not found or has no English/Turkish reviews: {"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"Restaurant not found or no reviews available"}
+- ONLY return JSON, nothing else`;
+
   try {
-    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const text = await callGemini(prompt);
+    console.log("[gemini] response length:", text.length, "| preview:", text.slice(0, 150));
     
-    if (!response.ok) {
-      const text = await response.text();
-      console.error("[gemini] API error:", response.status, text.slice(0, 500));
-      return null;
-    }
-    
-    const data = await response.json();
-    const candidate = data.candidates?.[0];
-    if (!candidate) {
-      console.warn("[gemini] no candidates in response");
-      return null;
-    }
-    
-    const text = candidate.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "";
-    
-    console.log("[gemini] raw response length:", text.length, "first 300:", text.slice(0, 300));
-    
-    // JSON parse - birden fazla strateji dene
-    let parsed = null;
-    
-    // 1. Direkt parse
-    try { parsed = JSON.parse(text.trim()); } catch(e) {}
-    
-    // 2. Markdown code block içinden çıkar
-    if (!parsed) {
-      const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlock) {
-        try { parsed = JSON.parse(codeBlock[1].trim()); } catch(e) {}
-      }
-    }
-    
-    // 3. İlk { ... } bloğunu bul
-    if (!parsed) {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try { parsed = JSON.parse(jsonMatch[0]); } catch(e) {}
-      }
-    }
+    const parsed = parseJSON(text);
     
     if (!parsed) {
-      console.warn("[gemini] could not parse JSON. Full response:", text.slice(0, 1000));
-      return null;
+      console.warn("[gemini] JSON parse failed:", text.slice(0, 400));
+      return buildEmptyResult("Could not parse response");
     }
     
+    // FIX 3: popularDishes boşsa anlamlı bilgi dön
     if (!Array.isArray(parsed.popularDishes) || parsed.popularDishes.length === 0) {
-      console.log("[gemini] no popular dishes found for", url || name);
-      return {
-        popularDishes: [],
-        mustTry: [],
-        overallSentiment: parsed.overallSentiment || "unknown",
-        totalReviewsAnalyzed: 0,
-        notes: parsed.notes || "No reviews available",
-        fetchedAt: new Date().toISOString(),
-      };
+      const notes = parsed.notes || "No reviews found for this restaurant";
+      console.log("[gemini] no dishes found. Notes:", notes);
+      return buildEmptyResult(notes);
     }
     
-    // Temizle ve normalize et
     const result = {
       popularDishes: parsed.popularDishes.slice(0, 8).map(d => ({
         name: String(d.name || "").trim(),
@@ -137,35 +193,36 @@ If you truly cannot find any reviews for this restaurant, return:
         quote: String(d.quote || "").trim().slice(0, 120),
       })).filter(d => d.name),
       mustTry: Array.isArray(parsed.mustTry) ? parsed.mustTry.slice(0, 5) : [],
-      overallSentiment: parsed.overallSentiment || "unknown",
+      overallSentiment: parsed.overallSentiment || "positive",
       totalReviewsAnalyzed: parseInt(parsed.totalReviewsAnalyzed) || 0,
       notes: String(parsed.notes || "").slice(0, 300),
       fetchedAt: new Date().toISOString(),
+      notFound: false,
     };
     
-    console.log("[gemini] fetched", result.popularDishes.length, "dishes for", name);
+    console.log("[gemini] success:", result.popularDishes.length, "dishes for", name);
     return result;
+    
   } catch (err) {
-    console.error("[gemini] fetch error:", err.message);
+    console.error("[gemini] error:", err.message);
     return null;
   }
 }
 
 /**
  * Gemini'den gelen yemek isimlerini menü item'larıyla eşleştirir.
- * Basit string matching - fuzzy.
  */
 function matchInsightsToMenu(insights, menuItems) {
   if (!insights || !Array.isArray(insights.popularDishes) || insights.popularDishes.length === 0) {
     return {};
   }
   
-  const result = {}; // itemId -> { mentions, quote }
+  const result = {};
   
   const normalize = (s) => String(s || "").toLowerCase()
     .replace(/[ıİ]/g, "i").replace(/[şŞ]/g, "s").replace(/[ğĞ]/g, "g")
     .replace(/[üÜ]/g, "u").replace(/[öÖ]/g, "o").replace(/[çÇ]/g, "c")
-    .replace(/[^a-z0-9]/g, "");
+    .replace(/[^a-z0-9\s]/g, "").trim();
   
   for (const popDish of insights.popularDishes) {
     const popNorm = normalize(popDish.name);
@@ -179,9 +236,7 @@ function matchInsightsToMenu(insights, menuItems) {
       if (!miNorm) continue;
       
       let score = 0;
-      // Tam eşleşme
       if (miNorm === popNorm) score = 100;
-      // Birbirini içerme
       else if (miNorm.includes(popNorm) || popNorm.includes(miNorm)) {
         const shorter = Math.min(miNorm.length, popNorm.length);
         const longer = Math.max(miNorm.length, popNorm.length);
@@ -205,96 +260,68 @@ function matchInsightsToMenu(insights, menuItems) {
   return result;
 }
 
+/**
+ * Google Maps URL'inden restoran bilgilerini çeker (onboarding için).
+ */
+async function fetchRestaurantInfo(googleMapsUrl, restaurantName) {
+  if (!GEMINI_API_KEY) return null;
+  
+  // FIX 1: URL'i genişlet
+  const expandedUrl = googleMapsUrl ? await expandGoogleMapsUrl(googleMapsUrl) : "";
+  
+  // Restoran adını çıkar
+  let urlName = "";
+  if (expandedUrl && expandedUrl.includes("/place/")) {
+    const match = expandedUrl.match(/\/place\/([^/@?]+)/);
+    if (match) urlName = decodeURIComponent(match[1].replace(/\+/g, " ")).trim();
+  }
+  
+  // Kullanıcının manuel girdiği ad varsa öncelik ona
+  const searchName = restaurantName || urlName || "";
+  
+  if (!searchName && !expandedUrl) {
+    console.warn("[gemini] fetchRestaurantInfo: no name and no URL");
+    return urlName ? { name: urlName } : null;
+  }
+  
+  console.log("[gemini] extracting info for:", searchName, "url:", expandedUrl?.slice(0, 60));
+  
+  const prompt = `Find information about this restaurant on Google Maps:
+
+${searchName ? `Restaurant name: ${searchName}` : ""}
+${expandedUrl ? `Google Maps URL: ${expandedUrl}` : ""}
+
+Search Google Maps for this restaurant and return its official details.
+
+Return ONLY this JSON, no other text:
+{"name":"full restaurant name","country":"country name in English","city":"city name","address":"street address","postalCode":"postal code or empty string","phone":"+country code and number","latitude":0.0,"longitude":0.0,"suggestedCurrency":"TRY","suggestedLanguage":"tr","cuisineType":"Turkish"}
+
+Rules:
+- suggestedCurrency: local currency code (TRY, USD, EUR, GBP, etc.)
+- suggestedLanguage: two-letter code of primary menu language (tr, en, de, etc.)
+- Use empty string for unknown text fields, 0 for unknown numbers
+- ONLY return JSON`;
+
+  try {
+    const text = await callGemini(prompt);
+    console.log("[gemini] restaurant info response:", text.slice(0, 200));
+    
+    const parsed = parseJSON(text);
+    if (!parsed) {
+      console.warn("[gemini] restaurant info parse failed");
+      return searchName ? { name: searchName } : null;
+    }
+    
+    console.log("[gemini] restaurant info found:", parsed.name);
+    return parsed;
+  } catch (err) {
+    console.error("[gemini] restaurant info error:", err.message);
+    return searchName ? { name: searchName } : null;
+  }
+}
+
 module.exports = {
   fetchGoogleInsights,
   matchInsightsToMenu,
   fetchRestaurantInfo,
 };
-
-/**
- * Google Maps URL'inden restoran bilgilerini çeker.
- * Gemini Search Grounding ile çalışır.
- * @param {string} googleMapsUrl
- * @returns {Promise<object|null>} { name, country, city, address, phone, workingHours, ... }
- */
-async function fetchRestaurantInfo(googleMapsUrl) {
-  if (!GEMINI_API_KEY) {
-    console.warn("[gemini] GEMINI_API_KEY not set");
-    return null;
-  }
-  if (!googleMapsUrl) return null;
-  
-  // URL'den restoran adını çıkar (ipucu olarak)
-  let hint = "";
-  const placeMatch = googleMapsUrl.match(/\/place\/([^/@]+)/);
-  if (placeMatch) {
-    hint = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
-  }
-  
-  console.log("[gemini] extracting restaurant info for:", hint || googleMapsUrl);
-  
-  const prompt = `Search Google for this restaurant and return its details:
-
-${googleMapsUrl}
-${hint ? `Restaurant name hint: ${hint}` : ""}
-
-Find the restaurant's official information from Google Maps or Google Search. Return ONLY a JSON object with these fields:
-
-{"name":"restaurant full name","country":"country name","city":"city name","address":"full street address","postalCode":"postal code or empty string","phone":"phone number with country code or empty string","latitude":0.0,"longitude":0.0,"rating":4.5,"totalReviews":120,"priceLevel":"$$","cuisineType":"Turkish","suggestedCurrency":"TRY","suggestedLanguage":"tr","workingHours":{"mon":{"open":"09:00","close":"22:00"},"tue":{"open":"09:00","close":"22:00"},"wed":{"open":"09:00","close":"22:00"},"thu":{"open":"09:00","close":"22:00"},"fri":{"open":"09:00","close":"23:00"},"sat":{"open":"09:00","close":"23:00"},"sun":{"open":"10:00","close":"21:00"}}}
-
-Rules:
-- Return ONLY JSON, nothing else
-- Use real data from Google
-- Phone must include country code like +90, +1, etc.
-- suggestedCurrency: use the local currency code (TRY for Turkey, USD for US, EUR for Europe, etc.)
-- suggestedLanguage: two-letter code of the restaurant's primary language (tr, en, de, fr, etc.)
-- If a field is unknown, use empty string for text or null for numbers
-- workingHours: use 24h format, if unknown set all days to {"open":"09:00","close":"22:00"}`;
-
-  try {
-    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
-      }),
-    });
-    
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("[gemini] restaurant info API error:", response.status, errText.slice(0, 300));
-      return null;
-    }
-    
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "";
-    
-    console.log("[gemini] restaurant info response length:", text.length);
-    
-    // JSON parse
-    let parsed = null;
-    try { parsed = JSON.parse(text.trim()); } catch(e) {}
-    if (!parsed) {
-      const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlock) try { parsed = JSON.parse(codeBlock[1].trim()); } catch(e) {}
-    }
-    if (!parsed) {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) try { parsed = JSON.parse(jsonMatch[0]); } catch(e) {}
-    }
-    
-    if (!parsed) {
-      console.warn("[gemini] could not parse restaurant info:", text.slice(0, 500));
-      // Fallback: en azından URL'den çıkan adı dön
-      return hint ? { name: hint } : null;
-    }
-    
-    console.log("[gemini] extracted restaurant:", parsed.name);
-    return parsed;
-  } catch (err) {
-    console.error("[gemini] restaurant info error:", err.message);
-    return hint ? { name: hint } : null;
-  }
-}

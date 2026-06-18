@@ -388,19 +388,23 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     <!-- STEP 1: Google Maps Link -->
     <div id="obStep1" class="ob-step on">
       <h2 style="font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px">Connect your restaurant</h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5;margin-bottom:24px">Paste your Google Maps link and we'll fill in your restaurant details automatically.</p>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5;margin-bottom:24px">We'll fill in your restaurant details automatically from Google.</p>
       
-      <div class="auth-lbl">Google Maps URL</div>
-      <div style="display:flex;gap:8px">
-        <input class="auth-inp" id="obGoogleUrl" placeholder="https://maps.google.com/..." style="flex:1"/>
-        <button class="auth-btn" id="obFetchBtn" onclick="obFetchFromGoogle()" style="width:90px;flex-shrink:0">
-          <span id="obFetchLabel">Fetch</span>
-        </button>
-      </div>
-      <div id="obFetchStatus" style="font-size:11px;margin-top:8px;color:rgba(255,255,255,.4)"></div>
+      <div class="auth-lbl">Restaurant name</div>
+      <input class="auth-inp" id="obRestaurantName" placeholder="e.g. Karaköy Güllüoğlu" oninput="obNameChanged()"/>
       
-      <div style="text-align:center;margin-top:24px">
-        <button onclick="obSkipGoogle()" style="background:none;border:none;color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;text-decoration:underline">Skip, I'll fill manually</button>
+      <div class="auth-lbl" style="margin-top:12px">Google Maps URL <span style="color:rgba(255,255,255,.35);font-weight:400">(optional)</span></div>
+      <input class="auth-inp" id="obGoogleUrl" placeholder="https://maps.google.com/... or maps.app.goo.gl/..."/>
+      <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px">Paste the link from Google Maps "Share" button</div>
+      
+      <button class="auth-btn" id="obFetchBtn" onclick="obFetchFromGoogle()" style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span id="obFetchLabel">Fetch details from Google</span>
+      </button>
+      <div id="obFetchStatus" style="font-size:12px;margin-top:8px;text-align:center;min-height:18px"></div>
+      
+      <div style="text-align:center;margin-top:16px">
+        <button onclick="obSkipGoogle()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer">Skip, I'll fill manually →</button>
       </div>
     </div>
 
@@ -1175,47 +1179,63 @@ function obSetStep(n){
 function obNextStep(){ obSetStep(obCurrentStep+1); }
 function obPrevStep(){ obSetStep(obCurrentStep-1); }
 
-/* STEP 1: Google Maps Fetch */
+/* STEP 1: adı değişince step 2'ye kopyala */
+function obNameChanged(){
+  const name = document.getElementById('obRestaurantName').value.trim();
+  const nameEl = document.getElementById('obName');
+  if(nameEl && name) nameEl.value = name;
+}
+
+/* STEP 1: Google Fetch */
 async function obFetchFromGoogle(){
   const url = document.getElementById('obGoogleUrl').value.trim();
-  if(!url){ document.getElementById('obFetchStatus').textContent='Please paste a Google Maps link'; return; }
-  if(!url.includes('google.com/maps') && !url.includes('maps.app.goo.gl') && !url.includes('goo.gl/maps')){
-    document.getElementById('obFetchStatus').textContent='This doesn\'t look like a Google Maps link';
+  const name = document.getElementById('obRestaurantName').value.trim();
+  
+  if(!url && !name){
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f87171">Please enter a restaurant name or Google Maps link</span>';
     return;
   }
   
   const btn = document.getElementById('obFetchBtn');
   const lbl = document.getElementById('obFetchLabel');
   btn.disabled = true;
-  lbl.textContent = '...';
-  document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f59e0b">Fetching restaurant details...</span>';
+  lbl.textContent = 'Fetching...';
+  document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f59e0b">Searching Google for your restaurant...</span>';
   
   try {
-    const data = await api('POST', '/api/google-insights/extract-info', { googleMapsUrl: url });
+    const data = await api('POST', '/api/google-insights/extract-info', {
+      googleMapsUrl: url || null,
+      restaurantName: name || null,
+    });
     obFetchedInfo = data.info;
     
-    // Auto-fill step 2
+    // Step 2'yi doldur
     if(obFetchedInfo.name) document.getElementById('obName').value = obFetchedInfo.name;
+    else if(name) document.getElementById('obName').value = name;
     if(obFetchedInfo.country) document.getElementById('obCountry').value = obFetchedInfo.country;
     if(obFetchedInfo.city) document.getElementById('obCity').value = obFetchedInfo.city;
     if(obFetchedInfo.address) document.getElementById('obAddress').value = obFetchedInfo.address;
     if(obFetchedInfo.phone) document.getElementById('obPhone').value = obFetchedInfo.phone;
     
-    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#16a34a">Found! Review your details on the next step.</span>';
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#4ade80">✓ Found! Check your details on the next step.</span>';
     document.getElementById('obStep2Sub').textContent = 'We found your restaurant. Check the details and edit if needed.';
     
-    // 1 saniye sonra otomatik ilerle
-    setTimeout(() => obNextStep(), 1000);
+    setTimeout(() => obNextStep(), 900);
   } catch(e) {
-    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#ef4444">Could not find restaurant. You can fill in manually.</span>';
+    // Hata olsa bile devam et, kullanıcı manuel doldurabilir
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f87171">Couldn\'t auto-fill. You can fill details manually.</span>';
+    if(name) document.getElementById('obName').value = name;
     document.getElementById('obStep2Sub').textContent = 'Fill in your restaurant details.';
+    setTimeout(() => obNextStep(), 1500);
   } finally {
     btn.disabled = false;
-    lbl.textContent = 'Fetch';
+    lbl.textContent = 'Fetch details from Google';
   }
 }
 
 function obSkipGoogle(){
+  const name = document.getElementById('obRestaurantName').value.trim();
+  if(name) document.getElementById('obName').value = name;
   obFetchedInfo = null;
   document.getElementById('obStep2Sub').textContent = 'Fill in your restaurant details.';
   obNextStep();
@@ -3010,7 +3030,11 @@ async function refreshGoogleInsights(){
   try {
     const data = await api('POST','/api/google-insights/refresh');
     renderGoogleInsightsCard({ insights: data.insights, hasGoogleUrl: true });
-    toast('Insights updated');
+    if(data.notFound){
+      toast('⚠ ' + (data.message || 'Restaurant not found on Google. Try updating the restaurant name in Profile.'));
+    } else {
+      toast('✓ ' + (data.message || 'Insights updated'));
+    }
   } catch(e) {
     toast('Failed: '+e.message);
   } finally {
