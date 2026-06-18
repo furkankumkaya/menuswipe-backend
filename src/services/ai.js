@@ -96,95 +96,32 @@ Important rules:
   if (!textBlock) throw new Error("No text response from AI");
 
   let parsed;
-  const rawText = textBlock.text.trim();
-  
-  // Birden fazla strateji ile JSON parse
-  // 1. Direkt parse
   try {
-    let jsonText = rawText;
+    // JSON'u temizle (bazen ```json ... ``` ile sarılı gelir)
+    let jsonText = textBlock.text.trim();
     if (jsonText.startsWith("```")) {
       jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
     }
     parsed = JSON.parse(jsonText);
-  } catch(e) {}
-  
-  // 2. Markdown code block içinden çıkar
-  if (!parsed) {
-    const codeBlock = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (codeBlock) {
-      try { parsed = JSON.parse(codeBlock[1].trim()); } catch(e) {}
-    }
-  }
-  
-  // 3. İlk { ... } bloğunu bul
-  if (!parsed) {
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try { parsed = JSON.parse(jsonMatch[0]); } catch(e) {}
-    }
-  }
-  
-  // 4. Hala parse edemedik — satır satır item çıkarmayı dene
-  if (!parsed) {
-    console.warn("[import] JSON parse failed, trying line extraction. Raw:", rawText.slice(0, 800));
-    const extractedItems = [];
-    const lines = rawText.split('\n').filter(l => l.trim());
-    for (const line of lines) {
-      // "ItemName - $12.50" veya "ItemName    12.50" veya "ItemName ... 150₺" gibi desenleri yakala
-      const match = line.match(/^[\s\-\*]*(.+?)[\s\.\-—:]+(\$|€|£|₺|TL|USD|EUR)?[\s]*(\d+[\.,]?\d*)\s*(\$|€|£|₺|TL|USD|EUR)?[\s]*$/);
-      if (match) {
-        extractedItems.push({
-          name: match[1].trim(),
-          description: "",
-          price: parseFloat(match[3].replace(',','.')) || 0,
-          category: "Other",
-          isProperName: false,
-        });
-      } else if (line.trim().length > 2 && line.trim().length < 80 && !line.match(/^\d+$/) && !line.match(/^[\s\-\*]+$/)) {
-        // İsim gibi görünen satır, fiyatsız
-        const cleanName = line.replace(/^[\s\-\*•]+/, '').trim();
-        if (cleanName.length > 1) {
-          extractedItems.push({
-            name: cleanName,
-            description: "",
-            price: 0,
-            category: "Other",
-            isProperName: false,
-          });
-        }
-      }
-    }
-    if (extractedItems.length > 0) {
-      parsed = { categories: [{ name: "Other" }], items: extractedItems };
-      console.log("[import] extracted", extractedItems.length, "items from raw text");
-    }
-  }
-  
-  if (!parsed || !parsed.items || !Array.isArray(parsed.items) || parsed.items.length === 0) {
-    console.error("[import] all parse strategies failed. Raw text:", rawText.slice(0, 800));
-    throw new Error("Could not extract menu items. Please try with a clearer image or PDF.");
+  } catch (e) {
+    console.error("Failed to parse AI response:", textBlock.text.slice(0, 500));
+    throw new Error("AI returned invalid JSON. Please try again with a clearer menu image.");
   }
 
-  // Items'ı temizle - eksik alanlar için default değer
-  const cleanedItems = parsed.items.map(it => ({
-    name: (it.name || "").trim(),
-    description: (it.description || "").slice(0, 200),
-    price: typeof it.price === "number" ? it.price : parseFloat(it.price) || 0,
-    category: it.category || "Other",
-    isProperName: !!it.isProperName,
-    needsReview: !it.price || it.price === 0, // fiyatı olmayan item'lar review gerektirir
-  })).filter(it => it.name.length > 0); // isimsiz item'ları at
-
-  const itemsNeedingReview = cleanedItems.filter(it => it.needsReview).length;
-  if (itemsNeedingReview > 0) {
-    console.log("[import]", itemsNeedingReview, "items need price review (price=0)");
+  if (!parsed.items || !Array.isArray(parsed.items)) {
+    throw new Error("AI did not return a valid items array");
   }
 
   return {
     categories: parsed.categories || [],
-    items: cleanedItems,
+    items: parsed.items.map(it => ({
+      name: it.name || "",
+      description: (it.description || "").slice(0, 200),
+      price: typeof it.price === "number" ? it.price : parseFloat(it.price) || 0,
+      category: it.category || "Other",
+      isProperName: !!it.isProperName,
+    })),
     usage: response.usage,
-    itemsNeedingReview,
   };
 }
 

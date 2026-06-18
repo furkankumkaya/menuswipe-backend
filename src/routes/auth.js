@@ -36,16 +36,15 @@ async function uniqueSlug(base) {
 router.post("/register", async (req, res, next) => {
   try {
     const { restaurantName, email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ error: "Email and password are required" });
+    if (!restaurantName || !email || !password)
+      return res.status(400).json({ error: "restaurantName, email and password are required" });
     if (password.length < 6)
       return res.status(400).json({ error: "Password must be at least 6 characters" });
 
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) return res.status(409).json({ error: "This email is already registered" });
 
-    const name = (restaurantName || "").trim() || "My Restaurant";
-    const slug = await uniqueSlug(name);
+    const slug = await uniqueSlug(restaurantName);
     const passwordHash = await bcrypt.hash(password, 12);
     
     // Trial 30 gün
@@ -53,7 +52,7 @@ router.post("/register", async (req, res, next) => {
 
     const org = await prisma.organization.create({
       data: {
-        name,
+        name: restaurantName,
         slug,
         currency: "USD",
         defaultLanguage: "en",
@@ -63,10 +62,10 @@ router.post("/register", async (req, res, next) => {
         trialEndsAt,
         onboardingCompleted: false,
         users: {
-          create: { email, passwordHash, name, role: "OWNER" },
+          create: { email, passwordHash, name: restaurantName, role: "OWNER" },
         },
         branches: {
-          create: { name, slug: "main", active: true },
+          create: { name: restaurantName, slug: "main", active: true },
         },
       },
       include: { users: true, branches: true },
@@ -153,43 +152,5 @@ function orgPublic(o) {
     orderListEnabled: o.orderListEnabled !== false,
   };
 }
-
-// Admin: şifre sıfırla veya hesap oluştur (BETA_GRANT_SECRET ile korunur)
-// POST /api/auth/admin-reset { email, newPassword, secret }
-router.post("/admin-reset", async (req, res, next) => {
-  try {
-    const { email, newPassword, secret } = req.body;
-    if (!secret || secret !== process.env.BETA_GRANT_SECRET) {
-      return res.status(401).json({ error: "Invalid secret" });
-    }
-    if (!email || !newPassword || newPassword.length < 6) {
-      return res.status(400).json({ error: "email and newPassword (min 6 chars) required" });
-    }
-
-    const passwordHash = await bcrypt.hash(newPassword, 12);
-    const existing = await prisma.user.findUnique({ where: { email } });
-
-    if (existing) {
-      await prisma.user.update({ where: { email }, data: { passwordHash } });
-      return res.json({ ok: true, action: "password_reset", email });
-    }
-
-    // Hesap yoksa oluştur
-    const name = email.split("@")[0];
-    const slug = await uniqueSlug(name);
-    const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    const org = await prisma.organization.create({
-      data: {
-        name, slug, currency: "USD", defaultLanguage: "en", enabledLanguages: [],
-        plan: "TRIAL", subscriptionStatus: "TRIAL", trialEndsAt, onboardingCompleted: false,
-        users: { create: { email, passwordHash, name, role: "OWNER" } },
-        branches: { create: { name, slug: "main", active: true } },
-      },
-      include: { users: true },
-    });
-    const token = signToken(org.users[0].id);
-    res.status(201).json({ ok: true, action: "created", email, token });
-  } catch (err) { next(err); }
-});
 
 module.exports = router;

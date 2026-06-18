@@ -30,7 +30,6 @@ app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.static(path.join(__dirname, "../public")));
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/menu", menuRoutes);
@@ -61,49 +60,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`MenuSwipe running on port ${PORT}`);
-  seedBetaAccounts().catch(e => console.error("[seed] failed:", e.message));
-});
-
-// Beta hesaplarını otomatik oluştur/güncelle
-async function seedBetaAccounts() {
-  const bcrypt = require("bcryptjs");
-  const { PrismaClient } = require("@prisma/client");
-  const prisma = new PrismaClient();
-
-  const BETA_EMAILS = (process.env.BETA_EMAILS || "").split(",").map(e => e.trim()).filter(Boolean);
-  const SEED_PASSWORD = process.env.BETA_GRANT_SECRET || "MenuSwipe2026";
-
-  for (const email of BETA_EMAILS) {
-    try {
-      const existing = await prisma.user.findUnique({ where: { email } });
-      const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
-
-      if (existing) {
-        await prisma.user.update({ where: { email }, data: { passwordHash } });
-        console.log(`[seed] password reset: ${email}`);
-      } else {
-        const name = email.split("@")[0];
-        let slug = name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 40);
-        const exists = await prisma.organization.findUnique({ where: { slug } });
-        if (exists) slug = slug + "-" + Date.now();
-
-        await prisma.organization.create({
-          data: {
-            name, slug, currency: "USD", defaultLanguage: "en", enabledLanguages: [],
-            plan: "TRIAL", subscriptionStatus: "TRIAL",
-            trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            onboardingCompleted: false,
-            users: { create: { email, passwordHash, name, role: "OWNER" } },
-            branches: { create: { name, slug: "main", active: true } },
-          },
-        });
-        console.log(`[seed] account created: ${email}`);
-      }
-    } catch (e) {
-      console.error(`[seed] error for ${email}:`, e.message);
-    }
-  }
-  await prisma.$disconnect();
-}
+app.listen(PORT, () => console.log(`MenuSwipe running on port ${PORT}`));
