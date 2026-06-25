@@ -1017,6 +1017,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 const API='';
 let token=localStorage.getItem('ms_token')||'';
@@ -2902,69 +2903,148 @@ async function qrDlAllTables(){
   if(!tablesData.length){toast('No tables to generate');return;}
   if(typeof QRCode==='undefined'){toast('QR library not loaded');return;}
 
-  const CARD=800, PAD=60, QR_SIZE=480, HDR=160, FTR=80;
-  const COLS=3;
-  const ROWS=Math.ceil(tablesData.length/COLS);
-  const GAP=30;
-  const sheetW=COLS*CARD+(COLS+1)*GAP;
-  const sheetH=ROWS*CARD+(ROWS+1)*GAP;
+  // Size options: cm, px at 300 DPI
+  const SIZES=[
+    {cm:3, px:354, label:'3 x 3 cm', desc:'Table sticker', rec:true},
+    {cm:5, px:591, label:'5 x 5 cm', desc:'Small stand'},
+    {cm:7, px:827, label:'7 x 7 cm', desc:'Menu insert'},
+    {cm:10, px:1181, label:'10 x 10 cm', desc:'Wall / window'},
+  ];
 
-  const sheet=document.createElement('canvas');
-  sheet.width=sheetW;sheet.height=sheetH;
-  const sctx=sheet.getContext('2d');
-  sctx.fillStyle='#f1f5f9';sctx.fillRect(0,0,sheetW,sheetH);
+  // Build overlay
+  const ov=document.createElement('div');
+  ov.id='qrSizeOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+  ov.innerHTML=`
+    <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.25)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div>
+          <div style="font-size:16px;font-weight:800;color:#1e293b">Download table QR codes</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px">${tablesData.length} table${tablesData.length===1?'':'s'} will be exported as individual PNGs in a ZIP file</div>
+        </div>
+        <button onclick="document.getElementById('qrSizeOverlay').remove()" style="width:32px;height:32px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Print size</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px" id="qrSizeGrid">
+        ${SIZES.map((s,i)=>`
+          <button class="qr-size-opt${s.rec?' on':''}" data-idx="${i}" onclick="pickQrSize(${i})" style="position:relative;padding:14px 12px;border-radius:12px;border:2px solid ${s.rec?'#8E1616':'#e2e8f0'};background:${s.rec?'#fef2f2':'#fff'};cursor:pointer;text-align:left;transition:.15s">
+            ${s.rec?'<div style="position:absolute;top:-8px;right:10px;background:#8E1616;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:6px;letter-spacing:.3px">RECOMMENDED</div>':''}
+            <div style="font-size:15px;font-weight:800;color:#1e293b">${s.label}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">${s.desc}</div>
+            <div style="font-size:10px;color:#94a3b8;margin-top:3px">${s.px} x ${s.px}px (300 DPI)</div>
+          </button>
+        `).join('')}
+      </div>
+      <button id="qrDlBtn" onclick="doQrDlAllTables()" style="width:100%;padding:14px;background:#047857;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 10V2M8 10L5 7M8 10l3-3M3 12v1.5h10V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download ZIP
+      </button>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',(e)=>{if(e.target===ov)ov.remove();});
 
-  const restName=org?.name||'MenuSwipe';
-  const url=getQrUrl();
+  // Store selected index
+  window._qrSelectedSize=SIZES.findIndex(s=>s.rec)||0;
+  window._qrSizes=SIZES;
+}
 
-  for(let i=0;i<tablesData.length;i++){
-    const t=tablesData[i];
-    const col=i%COLS, row=Math.floor(i/COLS);
-    const cx=GAP+col*(CARD+GAP), cy=GAP+row*(CARD+GAP);
+function pickQrSize(idx){
+  window._qrSelectedSize=idx;
+  document.querySelectorAll('#qrSizeGrid button').forEach((b,i)=>{
+    const isOn=i===idx;
+    b.style.borderColor=isOn?'#8E1616':'#e2e8f0';
+    b.style.background=isOn?'#fef2f2':'#fff';
+  });
+}
 
-    // Card background
-    sctx.fillStyle='#ffffff';
-    roundRect(sctx,cx,cy,CARD,CARD,24);sctx.fill();
-    sctx.strokeStyle='#e2e8f0';sctx.lineWidth=2;
-    roundRect(sctx,cx,cy,CARD,CARD,24);sctx.stroke();
+async function doQrDlAllTables(){
+  const sizes=window._qrSizes;
+  const sel=sizes[window._qrSelectedSize];
+  const btn=document.getElementById('qrDlBtn');
+  btn.disabled=true;
+  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="animation:spin 1s linear infinite"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="30 10"/></svg> Generating...';
 
-    // Table icon (simple table shape)
-    const iconX=cx+CARD/2-50, iconY=cy+PAD-10;
-    sctx.fillStyle='#1D1616';
-    roundRect(sctx,iconX,iconY,100,6,3);sctx.fill();
-    sctx.fillRect(iconX+10,iconY+6,8,30);
-    sctx.fillRect(iconX+82,iconY+6,8,30);
+  try{
+    const zip=new JSZip();
+    const url=getQrUrl();
+    const restName=org?.name||'MenuSwipe';
+    const S=sel.px;
 
-    // Table label
-    sctx.fillStyle='#1D1616';
-    sctx.font='bold 56px system-ui,-apple-system,sans-serif';
-    sctx.textAlign='center';
-    sctx.textBaseline='middle';
-    const label=t.label.length>12?t.label.slice(0,11)+'..':t.label;
-    sctx.fillText(label,cx+CARD/2,cy+HDR-10);
+    for(let i=0;i<tablesData.length;i++){
+      const t=tablesData[i];
+      const c=document.createElement('canvas');
+      c.width=S;c.height=S;
+      const ctx=c.getContext('2d');
 
-    // QR code
-    const qrCanvas=document.createElement('canvas');
-    await new Promise(resolve=>{
-      QRCode.toCanvas(qrCanvas,url,{width:QR_SIZE,margin:2,color:{dark:'#1D1616',light:'#ffffff'},errorCorrectionLevel:'H'},resolve);
-    });
-    const qrX=cx+(CARD-QR_SIZE)/2, qrY=cy+HDR+10;
-    sctx.drawImage(qrCanvas,qrX,qrY,QR_SIZE,QR_SIZE);
+      // White background
+      ctx.fillStyle='#ffffff';
+      roundRect(ctx,0,0,S,S,S*0.03);ctx.fill();
 
-    // Restaurant name at bottom
-    sctx.fillStyle='#94a3b8';
-    sctx.font='600 22px system-ui,-apple-system,sans-serif';
-    sctx.textAlign='center';
-    sctx.textBaseline='bottom';
-    sctx.fillText(restName.length>30?restName.slice(0,29)+'..':restName,cx+CARD/2,cy+CARD-PAD/2);
+      // Proportional sizing
+      const pad=S*0.08;
+      const iconScale=S/800;
+
+      // Table icon
+      const iconW=100*iconScale, iconH=6*iconScale, legH=30*iconScale, legW=8*iconScale;
+      const iconX=(S-iconW)/2, iconY=pad;
+      ctx.fillStyle='#1D1616';
+      roundRect(ctx,iconX,iconY,iconW,iconH,3*iconScale);ctx.fill();
+      ctx.fillRect(iconX+10*iconScale,iconY+iconH,legW,legH);
+      ctx.fillRect(iconX+iconW-18*iconScale,iconY+iconH,legW,legH);
+
+      // Table label
+      const labelSize=Math.round(56*iconScale);
+      ctx.fillStyle='#1D1616';
+      ctx.font=`bold ${labelSize}px system-ui,-apple-system,sans-serif`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      const label=t.label.length>12?t.label.slice(0,11)+'..':t.label;
+      const labelY=pad+iconH+legH+labelSize*0.7;
+      ctx.fillText(label,S/2,labelY);
+
+      // QR code
+      const qrTop=labelY+labelSize*0.5+pad*0.3;
+      const qrBot=S-pad-22*iconScale;
+      const qrSpace=qrBot-qrTop;
+      const qrSize=Math.min(S-pad*2, qrSpace);
+      const qrCanvas=document.createElement('canvas');
+      await new Promise(resolve=>{
+        QRCode.toCanvas(qrCanvas,url,{width:qrSize,margin:2,color:{dark:'#1D1616',light:'#ffffff'},errorCorrectionLevel:'H'},resolve);
+      });
+      ctx.drawImage(qrCanvas,(S-qrSize)/2,qrTop,qrSize,qrSize);
+
+      // Restaurant name
+      const footSize=Math.round(22*iconScale);
+      ctx.fillStyle='#94a3b8';
+      ctx.font=`600 ${footSize}px system-ui,-apple-system,sans-serif`;
+      ctx.textAlign='center';ctx.textBaseline='bottom';
+      const rn=restName.length>30?restName.slice(0,29)+'..':restName;
+      ctx.fillText(rn,S/2,S-pad*0.4);
+
+      // Add to ZIP
+      const blob=await new Promise(r=>c.toBlob(r,'image/png'));
+      const safeName=(t.label||'table').replace(/[^a-zA-Z0-9_-]/g,'_');
+      zip.file(`table-${safeName}.png`,blob);
+
+      // Update progress
+      btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="animation:spin 1s linear infinite"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="30 10"/></svg> ${i+1} / ${tablesData.length}`;
+    }
+
+    const content=await zip.generateAsync({type:'blob'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(content);
+    a.download='tables-qr-'+sel.cm+'cm-'+(org?.slug||'menu')+'.zip';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    toast('Downloaded '+tablesData.length+' QR codes');
+    document.getElementById('qrSizeOverlay')?.remove();
+  }catch(e){
+    console.error('QR ZIP error:',e);
+    toast('Failed: '+e.message);
+    btn.disabled=false;
+    btn.innerHTML='Download ZIP';
   }
-
-  // Download
-  const a=document.createElement('a');
-  a.download='tables-qr-'+org.slug+'.png';
-  a.href=sheet.toDataURL('image/png');
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  toast('Downloaded '+tablesData.length+' table QR codes');
 }
 
 function roundRect(ctx,x,y,w,h,r){
