@@ -181,8 +181,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
       </div>
     </div>
     <div id="registerForm" style="display:none">
-      <div class="auth-lbl">Restaurant name</div>
-      <input class="auth-inp" id="regName" placeholder="e.g. Ortaya Restaurant"/>
       <div class="auth-lbl">Email</div>
       <input class="auth-inp" id="regEmail" type="email" placeholder="you@restaurant.com"/>
       <div class="auth-lbl">Password</div>
@@ -329,9 +327,9 @@ async function doRegister(){
   const p=document.getElementById('regPassword').value;
   const pc=document.getElementById('regPasswordConfirm').value;
   if(p!==pc){document.getElementById('authErrReg').textContent='Passwords do not match';return;}
+  if(p.length<6){document.getElementById('authErrReg').textContent='Password must be at least 6 characters';return;}
   try{
     const data=await api('POST','/api/auth/register',{
-      name:document.getElementById('regName').value.trim(),
       email:document.getElementById('regEmail').value.trim(),
       password:p,
     });

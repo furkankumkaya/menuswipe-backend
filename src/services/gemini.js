@@ -18,34 +18,39 @@ async function fetchGoogleInsights(org) {
     return null;
   }
   
-  const name = org.name;
-  const url = org.googleMapsUrl;
-  const city = org.city || "";
-  const country = org.country || "";
-  const address = org.address || "";
+  const name = org.name || "";
+  const url = org.googleMapsUrl || "";
   
-  if (!name) return null;
+  // Google Maps URL'inden restoran adını çıkarmaya çalış
+  let extractedName = "";
+  if (url) {
+    // URL format: /maps/place/Restaurant+Name/... veya /maps/place/Restaurant%20Name/...
+    const placeMatch = url.match(/\/place\/([^/@]+)/);
+    if (placeMatch) {
+      extractedName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+    }
+  }
   
-  // Konum bilgisini topla
-  const locationParts = [address, city, country].filter(Boolean);
-  const locationStr = locationParts.join(", ");
+  const searchName = extractedName || name;
   
-  const prompt = `Search Google Maps for this restaurant and find the most popular dishes mentioned in customer reviews.
+  if (!searchName && !url) {
+    console.warn("[gemini] no name and no URL, skipping");
+    return null;
+  }
+  
+  console.log("[gemini] fetching for:", searchName, "url:", url);
 
-${url ? `Google Maps URL: ${url}` : `Restaurant: ${name}${locationStr ? ', ' + locationStr : ''}`}
-${url && name ? `Restaurant name hint: ${name}` : ''}
+  const prompt = `Search for "${searchName}" restaurant on Google. Find customer reviews and identify the most popular dishes that customers mention and recommend.
 
-Use Google Search to find reviews for this specific restaurant. Look for dishes that customers frequently mention, praise, or recommend.
+${url ? `This is the restaurant Google Maps link: ${url}` : ""}
 
-Your response must be ONLY a JSON object, nothing else. No explanation, no markdown, no code blocks. Just raw JSON.
+Based on real customer reviews, list the dishes that are mentioned most often. Include a short quote from reviews for each dish.
 
-Example of exactly what to return:
-{"popularDishes":[{"name":"Köfte","mentions":15,"quote":"Very tasty and fresh"},{"name":"Baklava","mentions":8,"quote":"Best in the city"}],"mustTry":["Köfte"],"overallSentiment":"positive","totalReviewsAnalyzed":45,"notes":"Known for grilled meats"}
+Return ONLY a JSON object. No other text, no markdown code blocks, just the JSON:
+{"popularDishes":[{"name":"dish name","mentions":10,"quote":"short customer quote"}],"mustTry":["dish1","dish2"],"overallSentiment":"positive","totalReviewsAnalyzed":30,"notes":"brief summary of restaurant strengths"}
 
-If you cannot find reviews, return exactly:
-{"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"Not found"}
-
-Return JSON now:`;
+If you truly cannot find any reviews for this restaurant, return:
+{"popularDishes":[],"mustTry":[],"overallSentiment":"unknown","totalReviewsAnalyzed":0,"notes":"No reviews found"}`;
 
   const requestBody = {
     contents: [
@@ -113,7 +118,7 @@ Return JSON now:`;
     }
     
     if (!Array.isArray(parsed.popularDishes) || parsed.popularDishes.length === 0) {
-      console.log("[gemini] no popular dishes found for", name);
+      console.log("[gemini] no popular dishes found for", url || name);
       return {
         popularDishes: [],
         mustTry: [],
@@ -203,4 +208,93 @@ function matchInsightsToMenu(insights, menuItems) {
 module.exports = {
   fetchGoogleInsights,
   matchInsightsToMenu,
+  fetchRestaurantInfo,
 };
+
+/**
+ * Google Maps URL'inden restoran bilgilerini çeker.
+ * Gemini Search Grounding ile çalışır.
+ * @param {string} googleMapsUrl
+ * @returns {Promise<object|null>} { name, country, city, address, phone, workingHours, ... }
+ */
+async function fetchRestaurantInfo(googleMapsUrl) {
+  if (!GEMINI_API_KEY) {
+    console.warn("[gemini] GEMINI_API_KEY not set");
+    return null;
+  }
+  if (!googleMapsUrl) return null;
+  
+  // URL'den restoran adını çıkar (ipucu olarak)
+  let hint = "";
+  const placeMatch = googleMapsUrl.match(/\/place\/([^/@]+)/);
+  if (placeMatch) {
+    hint = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+  }
+  
+  console.log("[gemini] extracting restaurant info for:", hint || googleMapsUrl);
+  
+  const prompt = `Search Google for this restaurant and return its details:
+
+${googleMapsUrl}
+${hint ? `Restaurant name hint: ${hint}` : ""}
+
+Find the restaurant's official information from Google Maps or Google Search. Return ONLY a JSON object with these fields:
+
+{"name":"restaurant full name","country":"country name","city":"city name","address":"full street address","postalCode":"postal code or empty string","phone":"phone number with country code or empty string","latitude":0.0,"longitude":0.0,"rating":4.5,"totalReviews":120,"priceLevel":"$$","cuisineType":"Turkish","suggestedCurrency":"TRY","suggestedLanguage":"tr","workingHours":{"mon":{"open":"09:00","close":"22:00"},"tue":{"open":"09:00","close":"22:00"},"wed":{"open":"09:00","close":"22:00"},"thu":{"open":"09:00","close":"22:00"},"fri":{"open":"09:00","close":"23:00"},"sat":{"open":"09:00","close":"23:00"},"sun":{"open":"10:00","close":"21:00"}}}
+
+Rules:
+- Return ONLY JSON, nothing else
+- Use real data from Google
+- Phone must include country code like +90, +1, etc.
+- suggestedCurrency: use the local currency code (TRY for Turkey, USD for US, EUR for Europe, etc.)
+- suggestedLanguage: two-letter code of the restaurant's primary language (tr, en, de, fr, etc.)
+- If a field is unknown, use empty string for text or null for numbers
+- workingHours: use 24h format, if unknown set all days to {"open":"09:00","close":"22:00"}`;
+
+  try {
+    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+      }),
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("[gemini] restaurant info API error:", response.status, errText.slice(0, 300));
+      return null;
+    }
+    
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join("\n") || "";
+    
+    console.log("[gemini] restaurant info response length:", text.length);
+    
+    // JSON parse
+    let parsed = null;
+    try { parsed = JSON.parse(text.trim()); } catch(e) {}
+    if (!parsed) {
+      const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlock) try { parsed = JSON.parse(codeBlock[1].trim()); } catch(e) {}
+    }
+    if (!parsed) {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) try { parsed = JSON.parse(jsonMatch[0]); } catch(e) {}
+    }
+    
+    if (!parsed) {
+      console.warn("[gemini] could not parse restaurant info:", text.slice(0, 500));
+      // Fallback: en azından URL'den çıkan adı dön
+      return hint ? { name: hint } : null;
+    }
+    
+    console.log("[gemini] extracted restaurant:", parsed.name);
+    return parsed;
+  } catch (err) {
+    console.error("[gemini] restaurant info error:", err.message);
+    return hint ? { name: hint } : null;
+  }
+}

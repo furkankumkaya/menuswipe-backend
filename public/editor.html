@@ -351,8 +351,6 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       </div>
     </div>
     <div id="registerForm" style="display:none">
-      <div class="auth-lbl">Restaurant name</div>
-      <input class="auth-inp" id="regName" placeholder="e.g. Ortaya Restaurant"/>
       <div class="auth-lbl">Email</div>
       <input class="auth-inp" id="regEmail" type="email" placeholder="you@restaurant.com"/>
       <div class="auth-lbl">Password</div>
@@ -368,7 +366,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
   </div>
 </div>
 
-<!-- ONBOARDING WIZARD -->
+<!-- ONBOARDING WIZARD (4 adım) -->
 <div id="onboardingScreen" style="display:none;min-height:100vh;background:#1D1616;padding:24px 0;overflow-y:auto">
   <div style="max-width:520px;margin:0 auto;padding:24px">
     <!-- Logo header -->
@@ -379,40 +377,76 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px">Menu<span style="color:#D84040">Swipe</span></div>
     </div>
 
-    <!-- Progress bar -->
+    <!-- Progress dots -->
     <div style="display:flex;gap:6px;margin-bottom:24px;justify-content:center">
       <div class="ob-step-dot on" id="obDot1"></div>
       <div class="ob-step-dot" id="obDot2"></div>
       <div class="ob-step-dot" id="obDot3"></div>
+      <div class="ob-step-dot" id="obDot4"></div>
     </div>
 
-    <!-- STEP 1: Welcome (skip eder, sadece bilgi) -->
+    <!-- STEP 1: Google Maps Link -->
     <div id="obStep1" class="ob-step on">
-      <h2 style="font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px">Welcome to MenuSwipe</h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.6);text-align:center;line-height:1.5;margin-bottom:24px">Let's set up your visual menu in 3 quick steps.</p>
-      <button class="auth-btn" onclick="obNextStep()">Get started</button>
+      <h2 style="font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px">Connect your restaurant</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5;margin-bottom:24px">Paste your Google Maps link and we'll fill in your restaurant details automatically.</p>
+      
+      <div class="auth-lbl">Google Maps URL</div>
+      <div style="display:flex;gap:8px">
+        <input class="auth-inp" id="obGoogleUrl" placeholder="https://maps.google.com/..." style="flex:1"/>
+        <button class="auth-btn" id="obFetchBtn" onclick="obFetchFromGoogle()" style="width:90px;flex-shrink:0">
+          <span id="obFetchLabel">Fetch</span>
+        </button>
+      </div>
+      <div id="obFetchStatus" style="font-size:11px;margin-top:8px;color:rgba(255,255,255,.4)"></div>
+      
+      <div style="text-align:center;margin-top:24px">
+        <button onclick="obSkipGoogle()" style="background:none;border:none;color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;text-decoration:underline">Skip, I'll fill manually</button>
+      </div>
     </div>
 
-    <!-- STEP 2: Restaurant info -->
+    <!-- STEP 2: Restaurant Info (auto-filled or manual) -->
     <div id="obStep2" class="ob-step">
-      <h2 style="font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">Restaurant info</h2>
-      <p style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px">We'll use this to show customers where you are and translate your menu.</p>
+      <h2 style="font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">Restaurant details</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px" id="obStep2Sub">Check your details and edit if needed.</p>
+      
+      <div class="auth-lbl">Restaurant name</div>
+      <input class="auth-inp" id="obName" placeholder="Your Restaurant"/>
       <div class="auth-lbl">Country</div>
       <input class="auth-inp" id="obCountry" placeholder="e.g. Turkey"/>
       <div class="auth-lbl">City</div>
       <input class="auth-inp" id="obCity" placeholder="e.g. Istanbul"/>
-      <div class="auth-lbl">Menu language (your menu's main language)</div>
-      <select class="auth-inp" id="obLanguage" style="cursor:pointer"></select>
-      <div class="auth-lbl">Currency</div>
-      <select class="auth-inp" id="obCurrency" style="cursor:pointer"></select>
+      <div class="auth-lbl">Address</div>
+      <input class="auth-inp" id="obAddress" placeholder="Full street address"/>
+      <div class="auth-lbl">Phone (optional)</div>
+      <input class="auth-inp" id="obPhone" placeholder="+90 555 123 4567"/>
+      
       <div style="display:flex;gap:10px;margin-top:20px">
         <button class="auth-btn" style="background:transparent;border:1.5px solid #3d2828" onclick="obPrevStep()">Back</button>
         <button class="auth-btn" onclick="obSaveInfoAndNext()">Continue</button>
       </div>
     </div>
 
-    <!-- STEP 3: Menu setup -->
+    <!-- STEP 3: Currency + Language + Translation -->
     <div id="obStep3" class="ob-step">
+      <h2 style="font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">Menu settings</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px">Set your currency and menu language.</p>
+      
+      <div class="auth-lbl">Currency</div>
+      <select class="auth-inp" id="obCurrency" style="cursor:pointer"></select>
+      <div class="auth-lbl">Menu language (your menu's main language)</div>
+      <select class="auth-inp" id="obLanguage" style="cursor:pointer" onchange="obBuildTranslationGrid()"></select>
+      <div class="auth-lbl" style="margin-top:10px">Auto-translate to (optional)</div>
+      <p style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px">Your menu will be automatically translated for international guests.</p>
+      <div id="obTranslationGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:200px;overflow-y:auto"></div>
+      
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="auth-btn" style="background:transparent;border:1.5px solid #3d2828" onclick="obPrevStep()">Back</button>
+        <button class="auth-btn" onclick="obSaveSettingsAndNext()">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Menu Upload -->
+    <div id="obStep4" class="ob-step">
       <h2 style="font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">Add your menu</h2>
       <p style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px">Upload your existing menu and let AI extract everything in seconds.</p>
 
@@ -429,11 +463,11 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
       <button class="ob-option-btn" onclick="obFinish()">
         <div class="ob-option-icon" style="background:#374151">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 5v12M5 11h12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M8 6l6 5-6 5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div style="text-align:left;flex:1">
-          <div style="font-size:15px;font-weight:700;color:#fff">Start from scratch</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">Add menu items one by one in the dashboard</div>
+          <div style="font-size:15px;font-weight:700;color:#fff">I'll do it later</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">Go straight to dashboard, add items manually</div>
         </div>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:rgba(255,255,255,.5)"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
@@ -1088,15 +1122,13 @@ async function doLogin(){
   }catch(e){document.getElementById('authErr').textContent=e.message;}
 }
 async function doRegister(){
-  const restaurantName=document.getElementById('regName').value.trim();
   const password=document.getElementById('regPassword').value;
   const passwordConfirm=document.getElementById('regPasswordConfirm').value;
-  if(!restaurantName)return document.getElementById('authErr').textContent='Please enter your restaurant name';
   if(password.length<6)return document.getElementById('authErr').textContent='Password must be at least 6 characters';
   if(password!==passwordConfirm)return document.getElementById('authErr').textContent='Passwords do not match';
   document.getElementById('authErr').textContent='';
   try{
-    const data=await api('POST','/api/auth/register',{restaurantName,email:document.getElementById('regEmail').value.trim(),password});
+    const data=await api('POST','/api/auth/register',{email:document.getElementById('regEmail').value.trim(),password});
     token=data.token;org=data.organization;
     localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
     startApp();
@@ -1118,52 +1150,180 @@ const LANGUAGES = [
   {code:'cs',name:'Čeština'},{code:'hu',name:'Magyar'},{code:'ro',name:'Română'},
 ];
 
+let obCurrentStep = 1;
+let obFetchedInfo = null; // Gemini'den gelen bilgi
+
 function showOnboarding(){
   document.getElementById('onboardingScreen').style.display='block';
-  // Populate dropdowns
-  document.getElementById('obLanguage').innerHTML = LANGUAGES.map(l=>`<option value="${l.code}">${l.name}</option>`).join('');
-  document.getElementById('obCurrency').innerHTML = CURRENCIES.map(c=>`<option value="${c.code}">${c.code} (${c.symbol}) — ${c.name}</option>`).join('');
-  // Default değerler
-  document.getElementById('obLanguage').value = navigator.language?.split('-')[0] || 'en';
-  document.getElementById('obCurrency').value = org.currency || 'USD';
-  if(org.country) document.getElementById('obCountry').value = org.country;
-  if(org.city) document.getElementById('obCity').value = org.city;
+  obCurrentStep = 1;
+  obSetStep(1);
 }
 
 function obSetStep(n){
-  for(let i=1;i<=3;i++){
+  obCurrentStep = n;
+  for(let i=1;i<=4;i++){
     document.getElementById('obStep'+i).classList.toggle('on', i===n);
     const dot = document.getElementById('obDot'+i);
     dot.classList.remove('on','done');
     if(i<n) dot.classList.add('done');
     else if(i===n) dot.classList.add('on');
   }
+  // Step 3'te dropdownları doldur
+  if(n===3) obPopulateSettings();
 }
-let obCurrentStep = 1;
-function obNextStep(){ obCurrentStep++; obSetStep(obCurrentStep); }
-function obPrevStep(){ obCurrentStep--; obSetStep(obCurrentStep); }
 
+function obNextStep(){ obSetStep(obCurrentStep+1); }
+function obPrevStep(){ obSetStep(obCurrentStep-1); }
+
+/* STEP 1: Google Maps Fetch */
+async function obFetchFromGoogle(){
+  const url = document.getElementById('obGoogleUrl').value.trim();
+  if(!url){ document.getElementById('obFetchStatus').textContent='Please paste a Google Maps link'; return; }
+  if(!url.includes('google.com/maps') && !url.includes('maps.app.goo.gl') && !url.includes('goo.gl/maps')){
+    document.getElementById('obFetchStatus').textContent='This doesn\'t look like a Google Maps link';
+    return;
+  }
+  
+  const btn = document.getElementById('obFetchBtn');
+  const lbl = document.getElementById('obFetchLabel');
+  btn.disabled = true;
+  lbl.textContent = '...';
+  document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f59e0b">Fetching restaurant details...</span>';
+  
+  try {
+    const data = await api('POST', '/api/google-insights/extract-info', { googleMapsUrl: url });
+    obFetchedInfo = data.info;
+    
+    // Auto-fill step 2
+    if(obFetchedInfo.name) document.getElementById('obName').value = obFetchedInfo.name;
+    if(obFetchedInfo.country) document.getElementById('obCountry').value = obFetchedInfo.country;
+    if(obFetchedInfo.city) document.getElementById('obCity').value = obFetchedInfo.city;
+    if(obFetchedInfo.address) document.getElementById('obAddress').value = obFetchedInfo.address;
+    if(obFetchedInfo.phone) document.getElementById('obPhone').value = obFetchedInfo.phone;
+    
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#16a34a">Found! Review your details on the next step.</span>';
+    document.getElementById('obStep2Sub').textContent = 'We found your restaurant. Check the details and edit if needed.';
+    
+    // 1 saniye sonra otomatik ilerle
+    setTimeout(() => obNextStep(), 1000);
+  } catch(e) {
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#ef4444">Could not find restaurant. You can fill in manually.</span>';
+    document.getElementById('obStep2Sub').textContent = 'Fill in your restaurant details.';
+  } finally {
+    btn.disabled = false;
+    lbl.textContent = 'Fetch';
+  }
+}
+
+function obSkipGoogle(){
+  obFetchedInfo = null;
+  document.getElementById('obStep2Sub').textContent = 'Fill in your restaurant details.';
+  obNextStep();
+}
+
+/* STEP 2: Save info */
 async function obSaveInfoAndNext(){
+  const name = document.getElementById('obName').value.trim();
   const country = document.getElementById('obCountry').value.trim();
   const city = document.getElementById('obCity').value.trim();
-  const defaultLanguage = document.getElementById('obLanguage').value;
-  const currency = document.getElementById('obCurrency').value;
+  const address = document.getElementById('obAddress').value.trim();
+  const phone = document.getElementById('obPhone').value.trim();
+  const googleMapsUrl = document.getElementById('obGoogleUrl')?.value?.trim() || null;
+  
+  if(!name){ toast('Restaurant name is required'); return; }
   
   try{
-    const updated = await api('PATCH','/api/auth/organization', {
+    const updateData = {
+      name,
       country: country || null,
       city: city || null,
-      defaultLanguage,
-      currency,
-    });
+      address: address || null,
+      phone: phone || null,
+      googleMapsUrl,
+    };
+    
+    // Gemini'den koordinatlar geldiyse ekle
+    if(obFetchedInfo){
+      if(obFetchedInfo.latitude) updateData.latitude = obFetchedInfo.latitude;
+      if(obFetchedInfo.longitude) updateData.longitude = obFetchedInfo.longitude;
+    }
+    
+    const updated = await api('PATCH','/api/auth/organization', updateData);
     org = {...org, ...updated};
     localStorage.setItem('ms_org', JSON.stringify(org));
     obNextStep();
   }catch(e){ toast('Failed to save: '+e.message); }
 }
 
+/* STEP 3: Settings */
+function obPopulateSettings(){
+  const langEl = document.getElementById('obLanguage');
+  const currEl = document.getElementById('obCurrency');
+  
+  if(langEl.options.length <= 1){
+    langEl.innerHTML = LANGUAGES.map(l=>`<option value="${l.code}">${l.name}</option>`).join('');
+  }
+  if(currEl.options.length <= 1){
+    currEl.innerHTML = CURRENCIES.map(c=>`<option value="${c.code}">${c.code} (${c.symbol}) — ${c.name}</option>`).join('');
+  }
+  
+  // Gemini'den gelen önerilerle default değer set et
+  if(obFetchedInfo?.suggestedLanguage){
+    langEl.value = obFetchedInfo.suggestedLanguage;
+  } else {
+    langEl.value = navigator.language?.split('-')[0] || 'en';
+  }
+  if(obFetchedInfo?.suggestedCurrency){
+    currEl.value = obFetchedInfo.suggestedCurrency;
+  } else {
+    currEl.value = org.currency || 'USD';
+  }
+  
+  // Translation grid
+  obBuildTranslationGrid();
+}
+
+let obSelectedTranslations = [];
+function obBuildTranslationGrid(){
+  const mainLang = document.getElementById('obLanguage').value;
+  const grid = document.getElementById('obTranslationGrid');
+  grid.innerHTML = LANGUAGES
+    .filter(l => l.code !== mainLang)
+    .map(l => `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#2a1d1d;border:1px solid #3d2828;border-radius:8px;cursor:pointer;font-size:12px;color:#fff">
+      <input type="checkbox" value="${l.code}" onchange="obToggleTranslation('${l.code}',this.checked)" style="accent-color:#8E1616"/>
+      ${l.name}
+    </label>`).join('');
+}
+
+function obToggleTranslation(code, checked){
+  if(checked && !obSelectedTranslations.includes(code)) obSelectedTranslations.push(code);
+  if(!checked) obSelectedTranslations = obSelectedTranslations.filter(c=>c!==code);
+}
+
+async function obSaveSettingsAndNext(){
+  const defaultLanguage = document.getElementById('obLanguage').value;
+  const currency = document.getElementById('obCurrency').value;
+  
+  try{
+    const updated = await api('PATCH','/api/auth/organization', {
+      defaultLanguage,
+      currency,
+      enabledLanguages: obSelectedTranslations,
+    });
+    org = {...org, ...updated};
+    localStorage.setItem('ms_org', JSON.stringify(org));
+    
+    // Google insights da arka planda fetch et (varsa)
+    if(org.googleMapsUrl){
+      api('POST','/api/google-insights/refresh').catch(()=>{});
+    }
+    
+    obNextStep();
+  }catch(e){ toast('Failed to save: '+e.message); }
+}
+
+/* STEP 4: Finish */
 async function obFinish(){
-  // Onboarding tamamlandı işaretle
   try{
     const updated = await api('PATCH','/api/auth/organization', { onboardingCompleted: true });
     org = {...org, ...updated};
@@ -1174,8 +1334,7 @@ async function obFinish(){
 }
 
 function obOpenImport(){
-  // Step 3'te import modal'ını aç
-  openImport(true); // fromOnboarding = true
+  openImport(true);
 }
 
 /* ============== IMPORT MODAL ============== */
@@ -1358,6 +1517,8 @@ function showImportPreview(){
     _isProperOverride: it.isProperName,
   }));
   
+  const pricesMissing = items.filter(it => !it.price || it.price === 0).length;
+  
   const html = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div>
@@ -1369,6 +1530,10 @@ function showImportPreview(){
         <button class="btn-gh" style="font-size:11px" onclick="importToggleAll(false)">Deselect all</button>
       </div>
     </div>
+    ${pricesMissing > 0 ? `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L1.5 13h13L8 2z" stroke="#f59e0b" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 7v3M8 11.5v.5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div style="font-size:12px;color:#92400e"><strong>${pricesMissing} item${pricesMissing>1?'s':''}</strong> couldn't be priced. Highlighted in yellow, please add prices.</div>
+    </div>` : ''}
     <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:10px">
       <table class="preview-table">
         <thead>
@@ -1393,8 +1558,10 @@ function showImportPreview(){
 function renderImportPreviewRows(catOptions){
   const tbody = document.getElementById('importPreviewTbody');
   if(!tbody) return;
-  tbody.innerHTML = window._importItems.map((it, idx) => `
-    <tr class="${it._selected ? '' : 'disabled'}">
+  tbody.innerHTML = window._importItems.map((it, idx) => {
+    const needsPrice = !it.price || it.price === 0;
+    return `
+    <tr class="${it._selected ? '' : 'disabled'}" style="${needsPrice && it._selected ? 'background:#fef3c7' : ''}">
       <td><input type="checkbox" class="preview-row-checkbox" ${it._selected?'checked':''} onchange="importToggleRow(${idx}, this.checked)"/></td>
       <td><input type="text" value="${escapeHtml(it.name)}" oninput="importUpdateField(${idx},'name',this.value)"/></td>
       <td>
@@ -1402,11 +1569,11 @@ function renderImportPreviewRows(catOptions){
           ${catOptions.map(c => `<option value="${escapeAttr(c)}"${c===it.category?' selected':''}>${escapeHtml(c)}</option>`).join('')}
         </select>
       </td>
-      <td><input type="number" step="0.01" value="${it.price || 0}" oninput="importUpdateField(${idx},'price',parseFloat(this.value)||0)"/></td>
+      <td><input type="number" step="0.01" value="${it.price || 0}" oninput="importUpdateField(${idx},'price',parseFloat(this.value)||0)" style="${needsPrice ? 'border-color:#f59e0b;background:#fffbeb' : ''}"/></td>
       <td><textarea rows="2" oninput="importUpdateField(${idx},'description',this.value)" maxlength="200">${escapeHtml(it.description || '')}</textarea></td>
       <td style="text-align:center"><input type="checkbox" class="preview-row-checkbox" ${it._isProperOverride?'checked':''} onchange="importUpdateField(${idx},'_isProperOverride',this.checked)" title="Don't translate this name"/></td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
 
 function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1616,8 +1783,9 @@ function debounceSaveOrg(){
   saveTimer=setTimeout(saveOrg,800);
 }
 async function saveOrg(){
+  const nameVal = document.getElementById('profileName').value.trim();
   const data={
-    name:document.getElementById('profileName').value.trim()||org.name,
+    name: nameVal || org.name,
     country:document.getElementById('orgCountry').value.trim()||null,
     city:document.getElementById('orgCity').value.trim()||null,
     address:document.getElementById('orgAddress').value.trim()||null,
@@ -1631,16 +1799,19 @@ async function saveOrg(){
     facebook:document.getElementById('orgFacebook').value.trim()||null,
     workingHours:collectHours(),
   };
+  console.log('[saveOrg] saving name:', data.name);
   try{
     const updated=await api('PATCH','/api/auth/organization',data);
+    console.log('[saveOrg] response name:', updated.name);
     org={...org,...updated};
     localStorage.setItem('ms_org',JSON.stringify(org));
     renderItems();
-    // Header'da org adını güncelle
-    const headerName = document.getElementById('headerOrgName');
-    if(headerName && updated.name) headerName.textContent = updated.name;
-    toast('Saved ✓');
-  }catch(e){toast('Save failed: '+e.message);}
+    toast('Saved');
+  }catch(e){
+    console.error('[saveOrg] error:', e);
+    toast('Save failed: '+e.message);
+  }
+}
 }
 
 const DAYS=['mon','tue','wed','thu','fri','sat','sun'];
