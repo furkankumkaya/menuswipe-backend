@@ -281,11 +281,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
 /* QR */
 .qr-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.qr-grid>div{min-width:0}
 @media(min-width:600px){.qr-grid{grid-template-columns:1fr 1fr}}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;overflow:hidden}
 .card-t{font-size:11px;font-weight:700;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
-.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center}
-.link-row{display:flex;gap:8px;align-items:center;width:100%}
+.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;max-width:100%}
+.qr-frame canvas{max-width:100%;height:auto}
+.link-row{display:flex;gap:8px;align-items:center;width:100%;min-width:0}
 .link-box{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f8fafc;font-weight:600}
 .copy-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600}
 .dl-btn{width:100%;padding:11px;border-radius:10px;border:none;background:#1D1616;color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;display:block}
@@ -603,6 +605,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <span id="ptitle">Menu items</span>
     </div>
     <div class="top-acts" id="topActs">
+      <a id="previewMenuBtn" href="#" target="_blank" class="btn-gh" title="Preview menu" style="padding:8px 10px">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
+      </a>
       <button class="btn-gh" onclick="openImport(false)" title="Import menu from PDF or photos">
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4-4 4 4M2 12h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Import
@@ -1697,6 +1702,9 @@ async function startApp(){
   }
   
   document.getElementById('appScreen').classList.add('visible');
+  // Set preview menu link
+  const prevBtn=document.getElementById('previewMenuBtn');
+  if(prevBtn&&org?.slug)prevBtn.href='/menu/'+org.slug;
   populateCurrencies();
   loadProfile();
   buildHoursGrid();

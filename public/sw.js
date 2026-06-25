@@ -8,7 +8,7 @@
  * - Images → cache-first
  */
 
-const CACHE_VERSION = "menuswipe-v2.0.0";
+const CACHE_VERSION = "menuswipe-v2.1.0";
 const STATIC_CACHE = "menuswipe-static-" + CACHE_VERSION;
 const IMAGE_CACHE = "menuswipe-images-v1";
 
