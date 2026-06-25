@@ -124,7 +124,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .irow-main{display:grid;grid-template-columns:88px 88px 60px minmax(140px,1fr) 80px 70px 76px 60px;align-items:center}
 .irow.hdr .irow-main{background:#f8fafc;border-radius:14px 14px 0 0}
 .irow.hdr span{font-size:10px;color:#64748b;font-weight:700;padding:10px 12px;display:block;text-transform:uppercase;letter-spacing:.4px}
-.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px}
+.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px;overflow:hidden}
 .tag-cell{padding:8px 6px;display:flex;align-items:center;min-height:54px}
 .tag-select{font-size:10px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:5px 6px;cursor:pointer;width:100%;font-weight:700}
 /* Marketing tags */
@@ -152,7 +152,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .bestseller-badge{font-size:9px;padding:2px 6px;border-radius:6px;background:#fef3c7;color:#92400e;font-weight:700;letter-spacing:.3px}
 .idesc-text{font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idesc-text.empty{font-style:italic}
-.ctag{font-size:10px;padding:3px 9px;border-radius:20px;background:#eef2ff;color:var(--accent);white-space:nowrap;font-weight:600}
+.ctag{font-size:10px;padding:3px 9px;border-radius:20px;background:#eef2ff;color:var(--accent);white-space:nowrap;font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block}
 .irow.editing .irow-main{background:#f8fafc}
 .edit-inp{font-size:12px;font-weight:600;color:#1e293b;background:transparent;border:none;outline:none;width:100%;padding:0}
 .cat-sel{font-size:11px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:4px 6px;cursor:pointer;width:100%}
@@ -740,6 +740,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     <!-- TABLES PANEL -->
     <div class="panel" id="p-tables">
       <div style="padding:14px">
+        <!-- TABLES SECTION -->
         <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
           <strong>Tables let customers order to a specific table.</strong> Add your tables here. Customers will pick from this list when sending an order.
         </div>
@@ -750,36 +751,46 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         </div>
         
         <div id="tablesList"></div>
-      </div>
-    </div>
 
-    <!-- QR PANEL -->
-    <div class="panel" id="p-qr">
-      <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
-        <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
-        <select id="qrBranchSelect" onchange="qrGenerate()"></select>
-      </div>
-      <div class="qr-grid">
-        <div>
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-t">Menu link</div>
-            <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
-            <div style="font-size:11px;color:#94a3b8">Each branch has its own unique URL.</div>
-          </div>
-          <div class="card">
-            <div class="card-t">Download</div>
-            <button class="dl-btn" onclick="qrDlPNG()">⬇ Download PNG (Print)</button>
-            <button class="dl-btn" onclick="qrDlSVG()">⬇ Download SVG (Vector)</button>
-          </div>
+        <!-- DIVIDER -->
+        <div style="border-top:1px solid #e2e8f0;margin:20px 0"></div>
+
+        <!-- QR & LINK SECTION -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#475569" stroke-width="2"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#475569" stroke-width="2"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#475569" stroke-width="2"/><path d="M12 12h3v3H12zM15 15h4M15 19v-4M19 12v3" stroke="#475569" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <div style="font-size:13px;font-weight:700;color:#1e293b">QR & link</div>
         </div>
-        <div>
-          <div class="card" style="margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:12px">
-            <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Ready to scan</div>
+
+        <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
+          <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
+          <select id="qrBranchSelect" onchange="qrGenerate()"></select>
+        </div>
+        <div class="qr-grid">
+          <div>
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-t">Menu link</div>
+              <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
+              <div style="font-size:11px;color:#94a3b8">Each branch has its own unique URL.</div>
+            </div>
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-t">Download</div>
+              <button class="dl-btn" onclick="qrDlPNG()">Download PNG (Print)</button>
+              <button class="dl-btn" onclick="qrDlSVG()">Download SVG (Vector)</button>
+              <div id="dlAllTablesWrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0">
+                <button class="dl-btn" style="background:#047857" onclick="qrDlAllTables()">Download for all tables</button>
+                <div style="font-size:10px;color:#94a3b8;margin-top:4px;text-align:center">Generates a printable QR card for each table</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-t">Share</div>
+              <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
+            </div>
           </div>
-          <div class="card">
-            <div class="card-t">Share</div>
-            <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
+          <div>
+            <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+              <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Ready to scan</div>
+            </div>
           </div>
         </div>
       </div>
@@ -988,11 +999,6 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     <button class="nav-btn" id="nav-tables" onclick="go('tables',this)">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 5v13M15 5v13" stroke="currentColor" stroke-width="2"/></svg>
       <span>Tables</span>
-      <div class="nav-dot"></div>
-    </button>
-    <button class="nav-btn" id="nav-qr" onclick="go('qr',this)">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M12 12h3v3H12zM15 15h4M15 19v-4M19 12v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>QR & Link</span>
       <div class="nav-dot"></div>
     </button>
     <button class="nav-btn" id="nav-analytics" onclick="go('analytics',this)">
@@ -1720,19 +1726,20 @@ function showSubscriptionExpiredScreen(){
 
 /* NAV */
 function go(id,el){
+  // Redirect legacy 'qr' hash to 'tables'
+  if(id==='qr'){id='tables';el=document.getElementById('nav-tables');}
   document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('on'));
   if(el)el.classList.add('on');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   const targetPanel=document.getElementById('p-'+id);
   if(targetPanel)targetPanel.classList.add('on');
-  const titles={menu:'Menu items',tables:'Tables',qr:'QR & link',analytics:'Analytics',profile:'Profile'};
+  const titles={menu:'Menu items',tables:'Tables & QR',analytics:'Analytics',profile:'Profile'};
   document.getElementById('ptitle').textContent=titles[id]||id;
   document.getElementById('topActs').style.display=id==='menu'?'flex':'none';
   document.getElementById('backBtn').style.display='none';
-  if(id==='qr'){buildQrBranchSelector();qrGenerate();}
+  if(id==='tables'){loadTables();buildQrBranchSelector();qrGenerate();}
   if(id==='analytics')loadAnalytics();
   if(id==='profile'){loadBranches();loadGoogleInsights();}
-  if(id==='tables')loadTables();
   // hash güncelle
   if(history.replaceState)history.replaceState(null,'','#'+id);
   document.getElementById('appContent').scrollTop=0;
@@ -1741,8 +1748,9 @@ function goBack(){go('profile',document.getElementById('nav-profile'));}
 
 // Hash routing: /editor.html#tables, #qr, #profile, #analytics, #menu
 function applyHash(){
-  const h=(location.hash||'').replace('#','').toLowerCase();
-  const allowed=['menu','tables','qr','analytics','profile'];
+  let h=(location.hash||'').replace('#','').toLowerCase();
+  if(h==='qr')h='tables'; // legacy redirect
+  const allowed=['menu','tables','analytics','profile'];
   if(!h)return;
   if(allowed.includes(h)){
     const btn=document.getElementById('nav-'+h);
@@ -2890,6 +2898,83 @@ function qrCopy(){
   navigator.clipboard.writeText(url).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);});
 }
 
+async function qrDlAllTables(){
+  if(!tablesData.length){toast('No tables to generate');return;}
+  if(typeof QRCode==='undefined'){toast('QR library not loaded');return;}
+
+  const CARD=800, PAD=60, QR_SIZE=480, HDR=160, FTR=80;
+  const COLS=3;
+  const ROWS=Math.ceil(tablesData.length/COLS);
+  const GAP=30;
+  const sheetW=COLS*CARD+(COLS+1)*GAP;
+  const sheetH=ROWS*CARD+(ROWS+1)*GAP;
+
+  const sheet=document.createElement('canvas');
+  sheet.width=sheetW;sheet.height=sheetH;
+  const sctx=sheet.getContext('2d');
+  sctx.fillStyle='#f1f5f9';sctx.fillRect(0,0,sheetW,sheetH);
+
+  const restName=org?.name||'MenuSwipe';
+  const url=getQrUrl();
+
+  for(let i=0;i<tablesData.length;i++){
+    const t=tablesData[i];
+    const col=i%COLS, row=Math.floor(i/COLS);
+    const cx=GAP+col*(CARD+GAP), cy=GAP+row*(CARD+GAP);
+
+    // Card background
+    sctx.fillStyle='#ffffff';
+    roundRect(sctx,cx,cy,CARD,CARD,24);sctx.fill();
+    sctx.strokeStyle='#e2e8f0';sctx.lineWidth=2;
+    roundRect(sctx,cx,cy,CARD,CARD,24);sctx.stroke();
+
+    // Table icon (simple table shape)
+    const iconX=cx+CARD/2-50, iconY=cy+PAD-10;
+    sctx.fillStyle='#1D1616';
+    roundRect(sctx,iconX,iconY,100,6,3);sctx.fill();
+    sctx.fillRect(iconX+10,iconY+6,8,30);
+    sctx.fillRect(iconX+82,iconY+6,8,30);
+
+    // Table label
+    sctx.fillStyle='#1D1616';
+    sctx.font='bold 56px system-ui,-apple-system,sans-serif';
+    sctx.textAlign='center';
+    sctx.textBaseline='middle';
+    const label=t.label.length>12?t.label.slice(0,11)+'..':t.label;
+    sctx.fillText(label,cx+CARD/2,cy+HDR-10);
+
+    // QR code
+    const qrCanvas=document.createElement('canvas');
+    await new Promise(resolve=>{
+      QRCode.toCanvas(qrCanvas,url,{width:QR_SIZE,margin:2,color:{dark:'#1D1616',light:'#ffffff'},errorCorrectionLevel:'H'},resolve);
+    });
+    const qrX=cx+(CARD-QR_SIZE)/2, qrY=cy+HDR+10;
+    sctx.drawImage(qrCanvas,qrX,qrY,QR_SIZE,QR_SIZE);
+
+    // Restaurant name at bottom
+    sctx.fillStyle='#94a3b8';
+    sctx.font='600 22px system-ui,-apple-system,sans-serif';
+    sctx.textAlign='center';
+    sctx.textBaseline='bottom';
+    sctx.fillText(restName.length>30?restName.slice(0,29)+'..':restName,cx+CARD/2,cy+CARD-PAD/2);
+  }
+
+  // Download
+  const a=document.createElement('a');
+  a.download='tables-qr-'+org.slug+'.png';
+  a.href=sheet.toDataURL('image/png');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('Downloaded '+tablesData.length+' table QR codes');
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
 /* TABLES */
 let tablesData = [];
 
@@ -2904,13 +2989,16 @@ async function loadTables(){
 
 function renderTablesList(){
   const list = document.getElementById('tablesList');
+  const dlWrap = document.getElementById('dlAllTablesWrap');
   if(tablesData.length === 0){
     list.innerHTML = `<div style="text-align:center;padding:40px 20px;background:#f8fafc;border-radius:12px;color:#94a3b8">
       <div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:6px">No tables yet</div>
       <div style="font-size:12px;max-width:260px;margin:0 auto;line-height:1.5">Add your first table above. Customers won't be required to pick a table if you skip this step.</div>
     </div>`;
+    if(dlWrap) dlWrap.style.display='none';
     return;
   }
+  if(dlWrap) dlWrap.style.display='block';
   list.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">
     ${tablesData.map(t => `
       <div style="position:relative;aspect-ratio:1;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:.15s" onmouseover="this.style.borderColor='#cbd5e1';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
