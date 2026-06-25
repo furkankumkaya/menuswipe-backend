@@ -1075,15 +1075,25 @@ const ALLERGENS = [
   {code:'MOLLUSCS',  label:'Molluscs',        emoji:'🐚'},
 ];
 
+const AUTH_ENDPOINTS = ['/api/auth/login', '/api/auth/register'];
+
 async function api(method,path,body){
-  const opts={method,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}};
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  // Auth endpoint'leri token gerektirmez, diğerleri için token ekle
+  if(token && !AUTH_ENDPOINTS.includes(path)){
+    opts.headers['Authorization'] = `Bearer ${token}`;
+  }
   if(body)opts.body=JSON.stringify(body);
   const r=await fetch(API+path,opts);
-  if(r.status===401){
-    // Token geçersiz veya süresi dolmuş — localStorage temizle ve login'e yönlendir
+  if(r.status===401 && !AUTH_ENDPOINTS.includes(path)){
+    // Token geçersiz veya süresi dolmuş — temizle ve login ekranını göster
+    token='';
     localStorage.removeItem('ms_token');
     localStorage.removeItem('ms_org');
-    location.reload();
+    // Reload yapmak yerine direkt auth ekranını göster
+    document.getElementById('authScreen').style.display='';
+    document.getElementById('appScreen').classList.remove('visible');
+    document.getElementById('onboardingScreen').style.display='none';
     throw new Error('Session expired');
   }
   const data=await r.json();
@@ -1091,11 +1101,15 @@ async function api(method,path,body){
   return data;
 }
 async function apiForm(method,path,fd){
-  const r=await fetch(API+path,{method,headers:{'Authorization':`Bearer ${token}`},body:fd});
+  const headers={'Authorization':`Bearer ${token}`};
+  const r=await fetch(API+path,{method,headers,body:fd});
   if(r.status===401){
+    token='';
     localStorage.removeItem('ms_token');
     localStorage.removeItem('ms_org');
-    location.reload();
+    document.getElementById('authScreen').style.display='';
+    document.getElementById('appScreen').classList.remove('visible');
+    document.getElementById('onboardingScreen').style.display='none';
     throw new Error('Session expired');
   }
   const data=await r.json();
@@ -3310,20 +3324,19 @@ async function loadAnalyticsOld(){
 /* INIT */
 (async () => {
   if (!token) {
-    // Token yok, login ekranı göster
     document.getElementById('authScreen').style.display = '';
     return;
   }
   try {
-    // Token'ı backend'e doğrulat
     const data = await api('GET', '/api/auth/me');
     org = data.organization;
     localStorage.setItem('ms_org', JSON.stringify(org));
     startApp();
   } catch (e) {
-    // 401 gelirse api() zaten reload yapıyor
-    // Başka hata olursa login'e düş
+    // api() 401 durumunda zaten authScreen'i gösteriyor, token'ı temizliyor.
+    // Başka hata türleri için de auth ekranına düş.
     if (e.message !== 'Session expired') {
+      token = '';
       localStorage.removeItem('ms_token');
       localStorage.removeItem('ms_org');
       document.getElementById('authScreen').style.display = '';
