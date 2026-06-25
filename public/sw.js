@@ -1,17 +1,17 @@
 /**
- * MenuSwipe Admin PWA Service Worker
+ * MenuSwipe Admin PWA Service Worker v2
  * 
  * Strategy:
- * - HTML/CSS/JS/icons → cache-first, network-fallback
- * - API requests (/api/*) → network-only (siparişler hep güncel)
+ * - HTML files → network-first (always get latest, fall back to cache offline)
+ * - JS/CSS/icons → stale-while-revalidate (serve cache, update in background)
+ * - API requests (/api/*) → network-only
  * - Images → cache-first
  */
 
-const CACHE_VERSION = "menuswipe-v1.0.0";
+const CACHE_VERSION = "menuswipe-v2.0.0";
 const STATIC_CACHE = "menuswipe-static-" + CACHE_VERSION;
 const IMAGE_CACHE = "menuswipe-images-v1";
 
-// Yükleme sırasında cache'lenecek temel dosyalar
 const PRECACHE_URLS = [
   "/",
   "/admin",
@@ -29,12 +29,11 @@ const PRECACHE_URLS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      // Hata olursa hangileri başarılı oldu görelim
-      return Promise.allSettled(
+    caches.open(STATIC_CACHE).then((cache) =>
+      Promise.allSettled(
         PRECACHE_URLS.map((url) => cache.add(url).catch(() => null))
-      );
-    })
+      )
+    )
   );
   self.skipWaiting();
 });
@@ -47,73 +46,70 @@ self.addEventListener("activate", (event) => {
           .filter((k) => k.startsWith("menuswipe-") && k !== STATIC_CACHE && k !== IMAGE_CACHE)
           .map((k) => caches.delete(k))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
-  
-  // Sadece GET istekleri cache'lenir
+
   if (req.method !== "GET") return;
-  
-  // Cross-origin istekleri (Cloudinary, vs) bypass et
   if (url.origin !== self.location.origin) return;
-  
-  // API istekleri network-only (siparişler güncel kalsın)
-  if (url.pathname.startsWith("/api/")) {
-    return; // browser default davranışı
-  }
-  
-  // Müşteri menü sayfaları (slug-based) bypass - cache'lenmesin
-  // Admin sayfaları sabit URL'lerde: /admin, /admin.html, /editor.html, /index.html, /
+  if (url.pathname.startsWith("/api/")) return;
+
   const ADMIN_PATHS = ["/", "/admin", "/admin.html", "/editor.html", "/index.html"];
   const STATIC_EXTS = [".js", ".css", ".png", ".svg", ".json", ".ico", ".woff", ".woff2"];
   const isAdmin = ADMIN_PATHS.includes(url.pathname);
   const isStatic = STATIC_EXTS.some(ext => url.pathname.endsWith(ext));
-  
-  // Restoran müşteri menüleri (/:slug, /:slug/:branch) cache dışı
-  if (!isAdmin && !isStatic) {
-    return; // browser default davranışı (network'ten al)
-  }
-  
-  // Görüntüler: cache-first
+  const isHTML = url.pathname.endsWith(".html") || isAdmin;
+
+  if (!isAdmin && !isStatic) return;
+
+  // Images: cache-first
   if (req.destination === "image") {
     event.respondWith(
       caches.open(IMAGE_CACHE).then((cache) =>
         cache.match(req).then((cached) => {
           if (cached) return cached;
-          return fetch(req)
-            .then((resp) => {
-              if (resp.ok) cache.put(req, resp.clone());
-              return resp;
-            })
-            .catch(() => cached);
+          return fetch(req).then((resp) => {
+            if (resp.ok) cache.put(req, resp.clone());
+            return resp;
+          }).catch(() => cached);
         })
       )
     );
     return;
   }
-  
-  // HTML/CSS/JS: cache-first, network fallback
+
+  // HTML pages: network-first (always get latest, cache as fallback for offline)
+  if (isHTML) {
+    event.respondWith(
+      fetch(req).then((resp) => {
+        if (resp.ok) {
+          const clone = resp.clone();
+          caches.open(STATIC_CACHE).then((cache) => cache.put(req, clone));
+        }
+        return resp;
+      }).catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // JS/CSS/static: stale-while-revalidate
   event.respondWith(
     caches.match(req).then((cached) => {
-      const networkFetch = fetch(req)
-        .then((resp) => {
-          if (resp.ok) {
-            caches.open(STATIC_CACHE).then((cache) => cache.put(req, resp.clone()));
-          }
-          return resp;
-        })
-        .catch(() => cached);
+      const networkFetch = fetch(req).then((resp) => {
+        if (resp.ok) {
+          caches.open(STATIC_CACHE).then((cache) => cache.put(req, resp.clone()));
+        }
+        return resp;
+      }).catch(() => cached);
       return cached || networkFetch;
     })
   );
 });
 
-// Skip waiting message
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });

@@ -21,13 +21,21 @@
           if (!newWorker) return;
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              // Yeni SW hazır, hemen aktive et
+              // Yeni SW hazir, hemen aktive et
               newWorker.postMessage("SKIP_WAITING");
             }
           });
         });
       })
       .catch((err) => console.warn("[PWA] SW registration failed:", err));
+    
+    // Yeni SW kontrol aldiginda sayfayi yenile (eski cache temizlenmis olur)
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   });
   
   // Install prompt management
