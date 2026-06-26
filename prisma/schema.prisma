@@ -66,6 +66,7 @@ model Organization {
   tables          RestaurantTable[]
   orders          Order[]
   transactions    Transaction[]
+  claimTokens     ClaimToken[]   @relation("SourceOrg")
 }
 
 model User {
@@ -305,4 +306,18 @@ model Transaction {
   createdAt       DateTime     @default(now())
 
   @@index([organizationId])
+}
+
+model ClaimToken {
+  id              String       @id @default(uuid())
+  token           String       @unique
+  sourceOrgId     String
+  sourceOrg       Organization @relation("SourceOrg", fields: [sourceOrgId], references: [id], onDelete: Cascade)
+  expiresAt       DateTime
+  claimedAt       DateTime?
+  claimedByOrgId  String?
+
+  createdAt       DateTime     @default(now())
+
+  @@index([token])
 }

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>Your menu is ready — MenuSwipe</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:#1D1616;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border-radius:24px;padding:32px 28px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;justify-content:center}
+.logo-icon{width:40px;height:40px;border-radius:10px;background:#8E1616;display:flex;align-items:center;justify-content:center}
+.logo-text{font-size:20px;font-weight:800;color:#1D1616;letter-spacing:-.5px}
+.logo-text span{color:#D84040}
+.badge{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 16px;margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.badge-icon{width:36px;height:36px;border-radius:10px;background:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.badge-text strong{font-size:14px;color:#166534;display:block;margin-bottom:2px}
+.badge-text span{font-size:12px;color:#4ade80;color:#16a34a;opacity:.8}
+h1{font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;text-align:center}
+.subtitle{font-size:14px;color:#64748b;line-height:1.5;text-align:center;margin-bottom:24px}
+.rest-name{font-weight:700;color:#8E1616}
+label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;margin-top:14px}
+input{width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#1e293b;outline:none;transition:.15s}
+input:focus{border-color:#8E1616;box-shadow:0 0 0 3px rgba(142,22,22,.08)}
+.err{font-size:12px;color:#dc2626;margin-top:6px;display:none}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;background:#8E1616;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:20px;transition:.15s}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.trial-note{font-size:11px;color:#94a3b8;text-align:center;margin-top:12px;line-height:1.5}
+.divider{border:none;border-top:1px solid #f1f5f9;margin:20px 0}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.feature{font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px}
+.feature svg{flex-shrink:0;color:#16a34a}
+#loadingState{text-align:center;padding:40px 0}
+#errorState{text-align:center;padding:40px 0;display:none}
+#successState{display:none}
+.spinner{width:36px;height:36px;border:3px solid #f1f5f9;border-top-color:#8E1616;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><path d="M6 25.5L6 6.5L16 19L26 6.5L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    </div>
+    <div class="logo-text">Menu<span>Swipe</span></div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:#94a3b8">Loading your menu...</div>
+  </div>
+
+  <!-- Error -->
+  <div id="errorState">
+    <div style="font-size:40px;margin-bottom:12px">😔</div>
+    <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px" id="errorTitle">Link expired</h2>
+    <p style="font-size:13px;color:#64748b;line-height:1.5" id="errorMsg">This claim link is no longer valid. Please contact the person who shared it with you.</p>
+  </div>
+
+  <!-- Main claim form -->
+  <div id="mainState" style="display:none">
+    <div class="badge">
+      <div class="badge-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M6 9l2.5 2.5 4-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="9" r="7" stroke="#fff" stroke-width="1.5"/></svg>
+      </div>
+      <div class="badge-text">
+        <strong>Your menu is ready!</strong>
+        <span>Create an account to claim it</span>
+      </div>
+    </div>
+
+    <h1>Claim your menu</h1>
+    <p class="subtitle">Your menu for <span class="rest-name" id="restaurantName"></span> has been prepared. Create a free account to take ownership.</p>
+
+    <hr class="divider">
+
+    <div class="features">
+      <div class="feature">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        QR codes ready
+      </div>
+      <div class="feature">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Order management
+      </div>
+      <div class="feature">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Menu already set up
+      </div>
+      <div class="feature">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        15 days free trial
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <label>Your name</label>
+    <input type="text" id="claimName" placeholder="Your full name" autocomplete="name"/>
+
+    <label>Email address</label>
+    <input type="email" id="claimEmail" placeholder="you@restaurant.com" autocomplete="email"/>
+
+    <label>Password</label>
+    <input type="password" id="claimPassword" placeholder="At least 6 characters" autocomplete="new-password"/>
+
+    <div class="err" id="claimErr"></div>
+
+    <button class="btn" id="claimBtn" onclick="doClaim()">Claim my menu — Start free trial</button>
+    <p class="trial-note">15-day free trial · No credit card required · Cancel anytime</p>
+  </div>
+
+  <!-- Success -->
+  <div id="successState">
+    <div style="text-align:center">
+      <div style="width:64px;height:64px;border-radius:20px;background:#16a34a;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 16l8 8 12-14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:8px">Menu claimed!</h2>
+      <p style="font-size:14px;color:#64748b;line-height:1.5;margin-bottom:24px">Your account is ready. Redirecting to your dashboard...</p>
+      <div class="spinner"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const token = location.pathname.split('/claim/')[1];
+let restaurantName = '';
+
+async function init(){
+  try{
+    const r = await fetch('/api/demo/claim/'+token);
+    const d = await r.json();
+    if(!r.ok){
+      showError(d.error||'Invalid link');
+      return;
+    }
+    restaurantName = d.restaurantName;
+    document.getElementById('restaurantName').textContent = d.restaurantName;
+    document.getElementById('claimName').value = d.restaurantName;
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('mainState').style.display = 'block';
+  }catch(e){
+    showError('Could not load this link. Please try again.');
+  }
+}
+
+function showError(msg){
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = 'block';
+  document.getElementById('errorMsg').textContent = msg;
+}
+
+async function doClaim(){
+  const name = document.getElementById('claimName').value.trim();
+  const email = document.getElementById('claimEmail').value.trim();
+  const password = document.getElementById('claimPassword').value;
+  const err = document.getElementById('claimErr');
+  const btn = document.getElementById('claimBtn');
+
+  err.style.display = 'none';
+
+  if(!name){err.textContent='Please enter your name';err.style.display='block';return;}
+  if(!email||!email.includes('@')){err.textContent='Please enter a valid email';err.style.display='block';return;}
+  if(password.length < 6){err.textContent='Password must be at least 6 characters';err.style.display='block';return;}
+
+  btn.textContent = 'Creating account...';
+  btn.disabled = true;
+
+  try{
+    const r = await fetch('/api/demo/claim/'+token, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name, email, password}),
+    });
+    const d = await r.json();
+    if(!r.ok){
+      err.textContent = d.error || 'Something went wrong';
+      err.style.display = 'block';
+      btn.textContent = 'Claim my menu — Start free trial';
+      btn.disabled = false;
+      return;
+    }
+
+    // Save token and org
+    localStorage.setItem('ms_token', d.token);
+    localStorage.setItem('ms_org', JSON.stringify(d.organization));
+
+    // Show success
+    document.getElementById('mainState').style.display = 'none';
+    document.getElementById('successState').style.display = 'block';
+
+    // Redirect to editor
+    setTimeout(()=> window.location.href = '/editor.html', 1500);
+  }catch(e){
+    err.textContent = 'Connection error. Please try again.';
+    err.style.display = 'block';
+    btn.textContent = 'Claim my menu — Start free trial';
+    btn.disabled = false;
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter') doClaim();
+});
+
+init();
+</script>
+</body>
+</html>
