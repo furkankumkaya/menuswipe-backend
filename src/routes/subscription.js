@@ -9,11 +9,11 @@ router.get("/", requireAuth, async (req, res, next) => {
   try {
     const info = getSubscriptionInfo(req.org);
     const maxLangs = getMaxLanguages(info.plan);
-    
+
     res.json({
       ...info,
       trialEndsAt: req.org.trialEndsAt,
-      subscriptionEndsAt: req.org.subscriptionEndsAt,
+      currentPeriodEnd: req.org.currentPeriodEnd,
       billingCycle: req.org.billingCycle,
       maxLanguages: maxLangs === Infinity ? -1 : maxLangs,
       currentLanguageCount: (req.org.enabledLanguages || []).length,
@@ -21,66 +21,46 @@ router.get("/", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Plan upgrade (placeholder, Stripe sonra)
+// Stripe checkout'a yönlendir
 router.post("/upgrade", requireAuth, async (req, res, next) => {
   try {
-    const { plan, billingCycle } = req.body;
-    if (!["STARTER", "PRO"].includes(plan)) {
+    const { plan, cycle } = req.body;
+    if (!["BASIC", "PRO"].includes(plan)) {
       return res.status(400).json({ error: "Invalid plan" });
     }
-    if (!["MONTHLY", "YEARLY"].includes(billingCycle)) {
+    if (!["MONTHLY", "YEARLY"].includes(cycle)) {
       return res.status(400).json({ error: "Invalid billing cycle" });
     }
-    
-    // Mock upgrade - gerçek Stripe entegrasyonu sonra
-    const days = billingCycle === "YEARLY" ? 365 : 30;
-    const subscriptionEndsAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-    
-    const updated = await prisma.organization.update({
-      where: { id: req.org.id },
-      data: {
-        plan,
-        billingCycle,
-        subscriptionStatus: "ACTIVE",
-        subscriptionEndsAt,
-      },
-    });
-    
-    res.json({
-      success: true,
-      message: "Subscription activated (mock - Stripe integration pending)",
-      ...getSubscriptionInfo(updated),
-    });
+    // Stripe checkout create-checkout endpoint'ine yönlendir
+    res.json({ redirect: "/api/stripe/create-checkout" });
   } catch (err) { next(err); }
 });
 
-// Pro/Beta hesabı atama (admin tool, gerçek hayatta korumalı olmalı)
-// Şu an kendin ve test kullanıcılarını PRO yapmak için kullanılır
+// Beta/PRO hesabı atama (admin tool)
 router.post("/grant-beta", requireAuth, async (req, res, next) => {
   try {
-    // Sadece kendi hesabını grantleyebilir, beta gizli yol
     const { secretKey } = req.body;
     if (secretKey !== process.env.BETA_GRANT_SECRET) {
       return res.status(403).json({ error: "Forbidden" });
     }
-    
-    const subscriptionEndsAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 yıl
-    
+
+    const currentPeriodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
     const updated = await prisma.organization.update({
       where: { id: req.org.id },
       data: {
         plan: "PRO",
         billingCycle: "YEARLY",
-        subscriptionStatus: "ACTIVE",
-        subscriptionEndsAt,
+        planStatus: "ACTIVE",
+        currentPeriodEnd,
       },
     });
-    
+
     res.json({ success: true, ...getSubscriptionInfo(updated) });
   } catch (err) { next(err); }
 });
 
-// Tek seferlik migration trigger - mevcut hesapları subscription alanlarıyla setup eder
+// Migration trigger - mevcut hesapları setup eder
 router.post("/admin/run-migration", async (req, res, next) => {
   try {
     const { secretKey } = req.body;
@@ -103,19 +83,18 @@ router.post("/admin/run-migration", async (req, res, next) => {
 
       if (!org.defaultLanguage) data.defaultLanguage = "en";
       if (!org.enabledLanguages || org.enabledLanguages.length === 0) data.enabledLanguages = [];
-      if (!org.onboardingCompleted) data.onboardingCompleted = true;
 
       if (isBeta) {
         data.plan = "PRO";
-        data.subscriptionStatus = "ACTIVE";
+        data.planStatus = "ACTIVE";
         data.billingCycle = "YEARLY";
-        data.subscriptionEndsAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        data.currentPeriodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
         results.push({ slug: org.slug, email: ownerEmail, action: "PRO (beta)" });
       } else if (!org.trialEndsAt) {
         const trialStart = org.createdAt || new Date();
-        const trialEnd = new Date(trialStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const trialEnd = new Date(trialStart.getTime() + 15 * 24 * 60 * 60 * 1000);
         data.plan = "TRIAL";
-        data.subscriptionStatus = "TRIAL";
+        data.planStatus = "TRIAL";
         data.trialEndsAt = trialEnd;
         results.push({ slug: org.slug, email: ownerEmail, action: "TRIAL setup" });
       } else {
