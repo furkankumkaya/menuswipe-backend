@@ -971,18 +971,15 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="profile-section">
         <div class="profile-row clickable" onclick="toggleSection('billingSection',this)">
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:600;color:#1e293b">Free plan · Beta access</div>
-            <div style="font-size:11px;color:#64748b">View payment history and plans</div>
+            <div style="font-size:13px;font-weight:600;color:#1e293b" id="planLabel">Loading...</div>
+            <div style="font-size:11px;color:#64748b" id="planSublabel">View plans and billing</div>
           </div>
           <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div class="collapsible-content" id="billingSection">
-          <div style="background:#fef2f2;border-radius:10px;padding:14px;margin-bottom:10px">
-            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px">Beta access — Free</div>
-            <div style="font-size:12px;color:#64748b;line-height:1.5">All features unlocked during beta period. Paid plans launching soon.</div>
-          </div>
-          <div style="font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600">Coming soon</div>
-          <div style="font-size:12px;color:#94a3b8;line-height:1.7">• Payment methods<br>• Invoice history<br>• Plan upgrades<br>• Receipts via email</div>
+          <div id="billingContent" style="margin-bottom:12px"></div>
+          <button onclick="openUpgradeModal()" id="upgradeBtn" style="width:100%;padding:12px;border-radius:10px;border:none;background:#8E1616;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:none">Upgrade plan</button>
+          <button onclick="openPortal()" id="portalBtn" style="width:100%;padding:12px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;display:none">Manage billing & invoices</button>
         </div>
       </div>
 
@@ -1690,12 +1687,12 @@ async function startApp(){
   document.getElementById('authScreen').style.display='none';
   
   // Subscription kontrolü
-  if(org.subscriptionStatus === 'EXPIRED'){
+  if(org.planStatus === 'EXPIRED' || org.subscriptionStatus === 'EXPIRED'){
     showSubscriptionExpiredScreen();
     return;
   }
   
-  // Onboarding kontrolü - tamamlanmamışsa wizard göster
+  // Onboarding kontrolü
   if(!org.onboardingCompleted){
     showOnboarding();
     return;
@@ -1714,23 +1711,247 @@ async function startApp(){
   buildCatPills();
   loadMenu();
   qrGenerate();
-  // Hash routing: #tables, #qr, #profile, #analytics
+  // Trial banner
+  showTrialBanner();
+  // Hash routing
   setTimeout(applyHash, 100);
 }
 
 function showSubscriptionExpiredScreen(){
   document.body.innerHTML = `
     <div style="min-height:100vh;background:#1D1616;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;font-family:system-ui,sans-serif">
-      <div style="max-width:400px;text-align:center">
-        <div style="width:64px;height:64px;border-radius:16px;background:#8E1616;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 25.5 L6 6.5 L16 19 L26 6.5 L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      <div style="max-width:420px;width:100%">
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="width:64px;height:64px;border-radius:16px;background:#8E1616;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 25.5L6 6.5L16 19L26 6.5L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+          <div style="font-size:22px;font-weight:800;margin-bottom:8px">Trial ended</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.6">Choose a plan to continue managing your menu and reactivate customer access.</div>
         </div>
-        <div style="font-size:22px;font-weight:800;margin-bottom:8px">Trial ended</div>
-        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:24px">Choose a plan to continue managing your menu and reactivate customer access.</div>
-        <button onclick="alert('Stripe integration coming soon. Contact support to upgrade.')" style="width:100%;padding:14px;border-radius:12px;border:none;background:#8E1616;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Choose a plan</button>
-        <button onclick="doLogout()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer">Sign out</button>
+
+        <!-- Plans -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div id="planBasic" onclick="selectExpiredPlan('BASIC')" style="background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:14px;padding:16px;cursor:pointer;transition:.15s">
+            <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:4px">Basic</div>
+            <div style="font-size:22px;font-weight:800;color:#fff">$19.90<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.5)">/mo</span></div>
+            <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:6px;line-height:1.5">1 branch · TR+EN · 3 photos</div>
+          </div>
+          <div id="planPro" onclick="selectExpiredPlan('PRO')" style="background:#8E1616;border:2px solid #8E1616;border-radius:14px;padding:16px;cursor:pointer;transition:.15s">
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px">Most popular</div>
+            <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:4px">Pro</div>
+            <div style="font-size:22px;font-weight:800;color:#fff">$29.90<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.5)">/mo</span></div>
+            <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:6px;line-height:1.5">5 branches · All languages · 5 photos</div>
+          </div>
+        </div>
+
+        <!-- Billing cycle -->
+        <div style="display:flex;gap:8px;margin-bottom:20px">
+          <button id="cycleMonthly" onclick="selectExpiredCycle('MONTHLY')" style="flex:1;padding:10px;border-radius:10px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Monthly</button>
+          <button id="cycleYearly" onclick="selectExpiredCycle('YEARLY')" style="flex:1;padding:10px;border-radius:10px;border:2px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer">
+            Yearly <span style="font-size:10px;background:#16a34a;color:#fff;padding:2px 6px;border-radius:6px;margin-left:2px">-15%</span>
+          </button>
+        </div>
+
+        <button id="expiredCheckoutBtn" onclick="startExpiredCheckout()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#fff;color:#1D1616;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Continue to payment</button>
+        <button onclick="doLogout()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer">Sign out</button>
       </div>
     </div>`;
+  window._expiredPlan='PRO';
+  window._expiredCycle='MONTHLY';
+}
+
+function selectExpiredPlan(plan){
+  window._expiredPlan=plan;
+  const basic=document.getElementById('planBasic');
+  const pro=document.getElementById('planPro');
+  if(plan==='PRO'){
+    pro.style.background='#8E1616';pro.style.borderColor='#8E1616';
+    basic.style.background='rgba(255,255,255,.08)';basic.style.borderColor='rgba(255,255,255,.15)';
+  } else {
+    basic.style.background='#8E1616';basic.style.borderColor='#8E1616';
+    pro.style.background='rgba(255,255,255,.08)';pro.style.borderColor='rgba(255,255,255,.15)';
+  }
+}
+
+function selectExpiredCycle(cycle){
+  window._expiredCycle=cycle;
+  const m=document.getElementById('cycleMonthly');
+  const y=document.getElementById('cycleYearly');
+  if(cycle==='YEARLY'){
+    y.style.borderColor='rgba(255,255,255,.3)';y.style.background='rgba(255,255,255,.1)';y.style.color='#fff';
+    m.style.borderColor='rgba(255,255,255,.15)';m.style.background='transparent';m.style.color='rgba(255,255,255,.6)';
+  } else {
+    m.style.borderColor='rgba(255,255,255,.3)';m.style.background='rgba(255,255,255,.1)';m.style.color='#fff';
+    y.style.borderColor='rgba(255,255,255,.15)';y.style.background='transparent';y.style.color='rgba(255,255,255,.6)';
+  }
+}
+
+async function startExpiredCheckout(){
+  const btn=document.getElementById('expiredCheckoutBtn');
+  btn.textContent='Redirecting...';btn.disabled=true;
+  try{
+    const r=await fetch('/api/stripe/create-checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({plan:window._expiredPlan||'PRO',cycle:window._expiredCycle||'MONTHLY'})
+    });
+    const d=await r.json();
+    if(d.url)window.location.href=d.url;
+    else{btn.textContent='Continue to payment';btn.disabled=false;alert(d.error||'Error');}
+  }catch(e){btn.textContent='Continue to payment';btn.disabled=false;alert('Error: '+e.message);}
+}
+
+function showTrialBanner(){
+  if(!org)return;
+  const status=org.planStatus||org.subscriptionStatus;
+  if(status!=='TRIAL')return;
+  const days=org.trialDaysLeft;
+  if(days===null||days===undefined||days>7)return;
+  const existing=document.getElementById('trialBanner');
+  if(existing)return;
+  const banner=document.createElement('div');
+  banner.id='trialBanner';
+  banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:100;background:#f59e0b;color:#1D1616;text-align:center;padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:12px';
+  banner.innerHTML=`<span>${days===0?'Trial expires today':`${days} day${days===1?'':'s'} left in your trial`}</span><button onclick="openUpgradeModal()" style="background:#1D1616;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Upgrade now</button>`;
+  document.body.prepend(banner);
+}
+
+function loadBillingUI(){
+  const status=org.planStatus||org.subscriptionStatus||'TRIAL';
+  const plan=org.plan||'TRIAL';
+  const label=document.getElementById('planLabel');
+  const sublabel=document.getElementById('planSublabel');
+  const content=document.getElementById('billingContent');
+  const upgradeBtn=document.getElementById('upgradeBtn');
+  const portalBtn=document.getElementById('portalBtn');
+  if(!label)return;
+
+  const planNames={TRIAL:'Free trial',BASIC:'Basic',PRO:'Pro'};
+  const statusMap={TRIAL:'Trial',ACTIVE:'Active',PAST_DUE:'Past due',CANCELLED:'Cancelled',EXPIRED:'Expired'};
+
+  label.textContent=(planNames[plan]||plan)+' · '+(statusMap[status]||status);
+
+  if(status==='TRIAL'){
+    const days=org.trialDaysLeft;
+    sublabel.textContent=days>0?`${days} day${days===1?'':'s'} remaining`:'Trial expired';
+    content.innerHTML=`<div style="background:#fef3c7;border-radius:10px;padding:14px;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:4px">Free trial</div>
+      <div style="font-size:12px;color:#92400e;line-height:1.5">${days>0?`${days} day${days===1?'':'s'} remaining. Upgrade to keep your menu active after the trial.`:'Your trial has ended. Upgrade to reactivate your menu.'}</div>
+    </div>`;
+    if(upgradeBtn)upgradeBtn.style.display='block';
+  } else if(status==='ACTIVE'){
+    sublabel.textContent=org.billingCycle==='YEARLY'?'Annual plan':'Monthly plan';
+    const renewDate=org.currentPeriodEnd?new Date(org.currentPeriodEnd).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
+    content.innerHTML=`<div style="background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:4px">${planNames[plan]||plan} — Active</div>
+      <div style="font-size:12px;color:#166534;line-height:1.5">Renews on ${renewDate}</div>
+    </div>`;
+    if(plan!=='PRO'&&upgradeBtn)upgradeBtn.style.display='block';
+    if(portalBtn)portalBtn.style.display='block';
+  } else if(status==='PAST_DUE'){
+    sublabel.textContent='Payment issue';
+    content.innerHTML=`<div style="background:#fef2f2;border-radius:10px;padding:14px;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:4px">Payment failed</div>
+      <div style="font-size:12px;color:#991b1b;line-height:1.5">Please update your payment method to keep your menu active.</div>
+    </div>`;
+    if(portalBtn)portalBtn.style.display='block';
+  }
+}
+
+function openUpgradeModal(){
+  const ov=document.createElement('div');
+  ov.id='upgradeOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
+  ov.innerHTML=`
+    <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:17px;font-weight:800;color:#1e293b">Choose your plan</div>
+        <button onclick="document.getElementById('upgradeOverlay').remove()" style="width:32px;height:32px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- Billing cycle toggle -->
+      <div style="display:flex;gap:6px;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:16px">
+        <button id="um_monthly" onclick="setUpgradeCycle('MONTHLY')" style="flex:1;padding:8px;border-radius:8px;border:none;background:#fff;font-size:13px;font-weight:600;color:#1e293b;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.1)">Monthly</button>
+        <button id="um_yearly" onclick="setUpgradeCycle('YEARLY')" style="flex:1;padding:8px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:600;color:#64748b;cursor:pointer">
+          Yearly <span style="font-size:10px;background:#16a34a;color:#fff;padding:1px 6px;border-radius:5px">-15%</span>
+        </button>
+      </div>
+
+      <!-- Plans -->
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <div id="um_basic" onclick="setUpgradePlan('BASIC')" style="border:2px solid #e2e8f0;border-radius:14px;padding:16px;cursor:pointer;transition:.15s">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div style="font-size:15px;font-weight:800;color:#1e293b">Basic</div>
+            <div style="text-align:right"><span id="um_basic_price" style="font-size:18px;font-weight:800;color:#1e293b">$19.90</span><span style="font-size:11px;color:#94a3b8">/mo</span></div>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.6">1 branch · Turkish + English · 3 photos per item · All other features</div>
+        </div>
+        <div id="um_pro" onclick="setUpgradePlan('PRO')" style="border:2px solid #8E1616;border-radius:14px;padding:16px;cursor:pointer;background:#fef2f2;transition:.15s">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#8E1616;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px">Recommended</div>
+              <div style="font-size:15px;font-weight:800;color:#1e293b">Pro</div>
+            </div>
+            <div style="text-align:right"><span id="um_pro_price" style="font-size:18px;font-weight:800;color:#1e293b">$29.90</span><span style="font-size:11px;color:#94a3b8">/mo</span></div>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.6">5 branches · All languages · 5 photos per item · Everything in Basic</div>
+        </div>
+      </div>
+
+      <button id="um_checkoutBtn" onclick="startUpgradeCheckout()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#8E1616;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Continue to payment</button>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  window._upgradePlan='PRO';
+  window._upgradeCycle='MONTHLY';
+}
+
+function setUpgradePlan(plan){
+  window._upgradePlan=plan;
+  const basic=document.getElementById('um_basic');
+  const pro=document.getElementById('um_pro');
+  if(plan==='PRO'){
+    pro.style.borderColor='#8E1616';pro.style.background='#fef2f2';
+    basic.style.borderColor='#e2e8f0';basic.style.background='#fff';
+  } else {
+    basic.style.borderColor='#8E1616';basic.style.background='#fef2f2';
+    pro.style.borderColor='#e2e8f0';pro.style.background='#fff';
+  }
+}
+
+function setUpgradeCycle(cycle){
+  window._upgradeCycle=cycle;
+  const prices={BASIC:{MONTHLY:'$19.90',YEARLY:'$16.90'},PRO:{MONTHLY:'$29.90',YEARLY:'$24.90'}};
+  document.getElementById('um_basic_price').textContent=prices.BASIC[cycle];
+  document.getElementById('um_pro_price').textContent=prices.PRO[cycle];
+  const m=document.getElementById('um_monthly');
+  const y=document.getElementById('um_yearly');
+  if(cycle==='YEARLY'){
+    y.style.background='#fff';y.style.color='#1e293b';y.style.boxShadow='0 1px 3px rgba(0,0,0,.1)';
+    m.style.background='transparent';m.style.color='#64748b';m.style.boxShadow='none';
+  } else {
+    m.style.background='#fff';m.style.color='#1e293b';m.style.boxShadow='0 1px 3px rgba(0,0,0,.1)';
+    y.style.background='transparent';y.style.color='#64748b';y.style.boxShadow='none';
+  }
+}
+
+async function startUpgradeCheckout(){
+  const btn=document.getElementById('um_checkoutBtn');
+  btn.textContent='Redirecting...';btn.disabled=true;
+  try{
+    const r=await api('POST','/api/stripe/create-checkout',{plan:window._upgradePlan||'PRO',cycle:window._upgradeCycle||'MONTHLY'});
+    if(r.url)window.location.href=r.url;
+    else{btn.textContent='Continue to payment';btn.disabled=false;}
+  }catch(e){btn.textContent='Continue to payment';btn.disabled=false;toast('Error: '+e.message);}
+}
+
+async function openPortal(){
+  try{
+    const r=await api('POST','/api/stripe/create-portal',{});
+    if(r.url)window.location.href=r.url;
+  }catch(e){toast('Error: '+e.message);}
 }
 
 /* NAV */
@@ -1788,6 +2009,8 @@ function loadProfile(){
   document.getElementById('orgCity').value=org.city||'';
   document.getElementById('orgAddress').value=org.address||'';
   document.getElementById('orgPostal').value=org.postalCode||'';
+  // Load billing info
+  loadBillingUI();
   document.getElementById('orgCurrency').value=org.currency||'USD';
   document.getElementById('orgLanguage').value=org.defaultLanguage||'en';
   document.getElementById('orgOrderListEnabled').checked = org.orderListEnabled !== false;
