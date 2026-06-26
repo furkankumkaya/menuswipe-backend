@@ -1,43 +1,158 @@
-// src/middleware/auth.js
+const router = require("express").Router();
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
+const { requireAuth } = require("../middleware/auth");
+
 const prisma = new PrismaClient();
 
-async function requireAuth(req, res, next) {
-  try {
-    const header = req.headers.authorization;
-    if (!header?.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
-    }
+function signToken(userId) {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || "30d",
+  });
+}
 
-    const token = header.slice(7);
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ş/g,"s")
+    .replace(/ı/g,"i").replace(/ö/g,"o").replace(/ç/g,"c")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .slice(0, 40);
+}
+
+async function uniqueSlug(base) {
+  let slug = slugify(base) || "restaurant";
+  let exists = await prisma.organization.findUnique({ where: { slug } });
+  let i = 2;
+  while (exists) {
+    slug = slugify(base) + "-" + i++;
+    exists = await prisma.organization.findUnique({ where: { slug } });
+  }
+  return slug;
+}
+
+router.post("/register", async (req, res, next) => {
+  try {
+    const { restaurantName, email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ error: "Email and password are required" });
+    if (password.length < 6)
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+
+    const exists = await prisma.user.findUnique({ where: { email } });
+    if (exists) return res.status(409).json({ error: "This email is already registered" });
+
+    const name = (restaurantName || "").trim() || "My Restaurant";
+    const slug = await uniqueSlug(name);
+    const passwordHash = await bcrypt.hash(password, 12);
+    
+    // Trial 30 gün
+    const trialEndsAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+
+    const org = await prisma.organization.create({
+      data: {
+        name,
+        slug,
+        currency: "USD",
+        defaultLanguage: "en",
+        enabledLanguages: [],
+        plan: "TRIAL",
+        planStatus: "TRIAL",
+        trialEndsAt,
+        onboardingCompleted: false,
+        users: {
+          create: { email, passwordHash, name, role: "OWNER" },
+        },
+        branches: {
+          create: { name, slug: "main", active: true },
+        },
+      },
+      include: { users: true, branches: true },
+    });
+
+    const token = signToken(org.users[0].id);
+    res.status(201).json({
+      token,
+      organization: orgPublic(org),
+    });
+  } catch (err) { next(err); }
+});
+
+router.post("/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { email },
       include: { organization: true },
     });
 
-    if (!user) return res.status(401).json({ error: "User not found" });
+    if (!user || !(await bcrypt.compare(password, user.passwordHash)))
+      return res.status(401).json({ error: "Invalid email or password" });
 
-    req.user = user;
-    req.org = user.organization;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
-  }
-}
+    const token = signToken(user.id);
+    res.json({ token, organization: orgPublic(user.organization) });
+  } catch (err) { next(err); }
+});
 
-// Plan limit checks
-function requirePlan(...plans) {
-  return (req, res, next) => {
-    if (!plans.includes(req.org.plan)) {
-      return res.status(403).json({
-        error: `This feature requires one of: ${plans.join(", ")} plan`,
-      });
+router.get("/me", requireAuth, (req, res) => {
+  res.json({
+    id: req.user.id,
+    email: req.user.email,
+    name: req.user.name,
+    organization: orgPublic(req.org),
+  });
+});
+
+// Profil güncelleme - tüm alanları kabul et
+router.patch("/organization", requireAuth, async (req, res, next) => {
+  try {
+    const allowed = [
+      "name", "logoUrl", "accentColor", "currency",
+      "phone", "website", "instagram", "facebook",
+      "country", "city", "address", "postalCode",
+      "googleMapsUrl", "googlePlaceId", "latitude", "longitude",
+      "workingHours",
+      "defaultLanguage", "enabledLanguages",
+      "onboardingCompleted",
+      "orderListEnabled",
+    ];
+    const data = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) data[key] = req.body[key];
     }
-    next();
+    const org = await prisma.organization.update({
+      where: { id: req.org.id },
+      data,
+    });
+    res.json(orgPublic(org));
+  } catch (err) { next(err); }
+});
+
+function orgPublic(o) {
+  const { getSubscriptionInfo } = require("../middleware/subscription");
+  const sub = getSubscriptionInfo(o);
+  return {
+    id: o.id, name: o.name, slug: o.slug,
+    logoUrl: o.logoUrl, accentColor: o.accentColor, currency: o.currency || "USD",
+    phone: o.phone, website: o.website, instagram: o.instagram, facebook: o.facebook,
+    country: o.country, city: o.city, address: o.address, postalCode: o.postalCode,
+    googleMapsUrl: o.googleMapsUrl, googlePlaceId: o.googlePlaceId,
+    latitude: o.latitude, longitude: o.longitude,
+    workingHours: o.workingHours,
+    plan: sub.plan,
+    planStatus: sub.status,
+    subscriptionStatus: sub.status, // legacy compat
+    trialDaysLeft: sub.daysLeft,
+    isActive: sub.isActive,
+    defaultLanguage: o.defaultLanguage || "en",
+    enabledLanguages: o.enabledLanguages || [],
+    onboardingCompleted: o.onboardingCompleted,
+    orderListEnabled: o.orderListEnabled !== false,
   };
 }
 
-module.exports = { requireAuth, requirePlan };
+module.exports = router;
