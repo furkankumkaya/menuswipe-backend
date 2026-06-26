@@ -9,7 +9,8 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:seed": "node prisma/seed.js",
-    "db:migrate-existing": "node prisma/migrate-existing.js"
+    "db:migrate-existing": "node prisma/migrate-existing.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
