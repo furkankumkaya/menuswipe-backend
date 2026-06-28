@@ -49,7 +49,7 @@ router.post("/register", async (req, res, next) => {
     const passwordHash = await bcrypt.hash(password, 12);
     
     // Trial 30 gün
-    const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const trialEndsAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
 
     const org = await prisma.organization.create({
       data: {
@@ -59,7 +59,7 @@ router.post("/register", async (req, res, next) => {
         defaultLanguage: "en",
         enabledLanguages: [],
         plan: "TRIAL",
-        subscriptionStatus: "TRIAL",
+        planStatus: "TRIAL",
         trialEndsAt,
         onboardingCompleted: false,
         users: {
@@ -144,7 +144,8 @@ function orgPublic(o) {
     latitude: o.latitude, longitude: o.longitude,
     workingHours: o.workingHours,
     plan: sub.plan,
-    subscriptionStatus: sub.status,
+    planStatus: sub.status,
+    subscriptionStatus: sub.status, // legacy compat
     trialDaysLeft: sub.daysLeft,
     isActive: sub.isActive,
     defaultLanguage: o.defaultLanguage || "en",

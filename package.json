@@ -9,12 +9,11 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:seed": "node prisma/seed.js",
-    "db:migrate-existing": "node prisma/migrate-existing.js",
-    "postinstall": "prisma generate"
+    "db:migrate-existing": "node prisma/migrate-existing.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
-    "@prisma/client": "^6.19.3",
+    "@prisma/client": "^5.10.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.0.0",
     "cors": "^2.8.5",
@@ -29,6 +28,6 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0",
-    "prisma": "^6.19.3"
+    "prisma": "^5.10.0"
   }
 }
