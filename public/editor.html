@@ -31,8 +31,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .auth-lbl{font-size:11px;color:#94a3b8;margin-bottom:5px;margin-top:14px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .auth-inp{width:100%;font-size:14px;color:#f1f5f9;background:#1D1616;border:1.5px solid #3d2828;border-radius:10px;padding:12px 14px;outline:none}
 .auth-inp:focus{border-color:var(--accent)}
-.auth-btn{width:100%;margin-top:20px;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer}
-.auth-err{font-size:12px;color:#f87171;margin-top:10px;text-align:center;min-height:18px}
+.auth-btn{width:100%;margin-top:20px;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.auth-btn:disabled{opacity:.55;cursor:not-allowed}
+.auth-err{display:none;align-items:center;gap:8px;background:#3b1515;border:1px solid #7f1d1d;border-radius:9px;padding:10px 13px;margin-top:12px;font-size:13px;color:#fca5a5;text-align:left}
+.auth-err.visible{display:flex}
+.auth-err svg{flex-shrink:0;width:16px;height:16px;stroke:#f87171}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.auth-inp.err{border-color:#ef4444;animation:shake .35s ease}
 
 /* APP */
 #appScreen{display:none;height:100vh;flex-direction:column;overflow:hidden;background:#f8fafc}
@@ -124,7 +129,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .irow-main{display:grid;grid-template-columns:88px 88px 60px minmax(140px,1fr) 80px 70px 76px 60px;align-items:center}
 .irow.hdr .irow-main{background:#f8fafc;border-radius:14px 14px 0 0}
 .irow.hdr span{font-size:10px;color:#64748b;font-weight:700;padding:10px 12px;display:block;text-transform:uppercase;letter-spacing:.4px}
-.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px;overflow:hidden}
+.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px}
 .tag-cell{padding:8px 6px;display:flex;align-items:center;min-height:54px}
 .tag-select{font-size:10px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:5px 6px;cursor:pointer;width:100%;font-weight:700}
 /* Marketing tags */
@@ -152,7 +157,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .bestseller-badge{font-size:9px;padding:2px 6px;border-radius:6px;background:#fef3c7;color:#92400e;font-weight:700;letter-spacing:.3px}
 .idesc-text{font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idesc-text.empty{font-style:italic}
-.ctag{font-size:10px;padding:3px 9px;border-radius:20px;background:#eef2ff;color:var(--accent);white-space:nowrap;font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block}
+.ctag{font-size:10px;padding:3px 9px;border-radius:20px;background:#eef2ff;color:var(--accent);white-space:nowrap;font-weight:600}
 .irow.editing .irow-main{background:#f8fafc}
 .edit-inp{font-size:12px;font-weight:600;color:#1e293b;background:transparent;border:none;outline:none;width:100%;padding:0}
 .cat-sel{font-size:11px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:4px 6px;cursor:pointer;width:100%}
@@ -281,13 +286,11 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
 /* QR */
 .qr-grid{display:grid;grid-template-columns:1fr;gap:14px}
-.qr-grid>div{min-width:0}
 @media(min-width:600px){.qr-grid{grid-template-columns:1fr 1fr}}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;overflow:hidden}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px}
 .card-t{font-size:11px;font-weight:700;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
-.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;max-width:100%}
-.qr-frame canvas{max-width:100%;height:auto}
-.link-row{display:flex;gap:8px;align-items:center;width:100%;min-width:0}
+.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center}
+.link-row{display:flex;gap:8px;align-items:center;width:100%}
 .link-box{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f8fafc;font-weight:600}
 .copy-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600}
 .dl-btn{width:100%;padding:11px;border-radius:10px;border:none;background:#1D1616;color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;display:block}
@@ -353,6 +356,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       </div>
     </div>
     <div id="registerForm" style="display:none">
+      <div class="auth-lbl">Restaurant name</div>
+      <input class="auth-inp" id="regRestaurantName" type="text" placeholder="e.g. Ortaya Restaurant"/>
       <div class="auth-lbl">Email</div>
       <input class="auth-inp" id="regEmail" type="email" placeholder="you@restaurant.com"/>
       <div class="auth-lbl">Password</div>
@@ -364,7 +369,10 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         Already have an account? <a onclick="switchTab('login')" style="color:#D84040;font-weight:700;cursor:pointer;text-decoration:none">Sign in</a>
       </div>
     </div>
-    <div class="auth-err" id="authErr"></div>
+    <div class="auth-err" id="authErr">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="authErrText"></span>
+    </div>
   </div>
 </div>
 
@@ -385,25 +393,28 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="ob-step-dot" id="obDot2"></div>
       <div class="ob-step-dot" id="obDot3"></div>
       <div class="ob-step-dot" id="obDot4"></div>
-      <div class="ob-step-dot" id="obDot5"></div>
     </div>
 
     <!-- STEP 1: Google Maps Link -->
     <div id="obStep1" class="ob-step on">
       <h2 style="font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px">Connect your restaurant</h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5;margin-bottom:24px">Paste your Google Maps link and we'll fill in your restaurant details automatically.</p>
+      <p style="font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5;margin-bottom:24px">We'll fill in your restaurant details automatically from Google.</p>
       
-      <div class="auth-lbl">Google Maps URL</div>
-      <div style="display:flex;gap:8px">
-        <input class="auth-inp" id="obGoogleUrl" placeholder="https://maps.google.com/..." style="flex:1"/>
-        <button class="auth-btn" id="obFetchBtn" onclick="obFetchFromGoogle()" style="width:90px;flex-shrink:0">
-          <span id="obFetchLabel">Fetch</span>
-        </button>
-      </div>
-      <div id="obFetchStatus" style="font-size:11px;margin-top:8px;color:rgba(255,255,255,.4)"></div>
+      <div class="auth-lbl">Restaurant name</div>
+      <input class="auth-inp" id="obRestaurantName" placeholder="e.g. Karaköy Güllüoğlu" oninput="obNameChanged()"/>
       
-      <div style="text-align:center;margin-top:24px">
-        <button onclick="obSkipGoogle()" style="background:none;border:none;color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;text-decoration:underline">Skip, I'll fill manually</button>
+      <div class="auth-lbl" style="margin-top:12px">Google Maps URL <span style="color:rgba(255,255,255,.35);font-weight:400">(optional)</span></div>
+      <input class="auth-inp" id="obGoogleUrl" placeholder="https://maps.google.com/... or maps.app.goo.gl/..."/>
+      <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px">Paste the link from Google Maps "Share" button</div>
+      
+      <button class="auth-btn" id="obFetchBtn" onclick="obFetchFromGoogle()" style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span id="obFetchLabel">Fetch details from Google</span>
+      </button>
+      <div id="obFetchStatus" style="font-size:12px;margin-top:8px;text-align:center;min-height:18px"></div>
+      
+      <div style="text-align:center;margin-top:16px">
+        <button onclick="obSkipGoogle()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer">Skip, I'll fill manually →</button>
       </div>
     </div>
 
@@ -479,66 +490,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         <button onclick="obPrevStep()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;text-decoration:underline">Back</button>
       </div>
     </div>
-
-    <!-- STEP 5: Trial & Plan -->
-    <div id="obStep5" class="ob-step">
-      <div style="text-align:center;margin-bottom:24px">
-        <div style="width:64px;height:64px;border-radius:20px;background:#16a34a;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 16l8 8 12-14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h2 style="font-size:22px;font-weight:800;color:#fff;margin-bottom:8px">You're all set!</h2>
-        <p style="font-size:14px;color:rgba(255,255,255,.55);line-height:1.6">Your 15-day free trial has started. All features are unlocked, no credit card needed.</p>
-      </div>
-
-      <!-- Trial badge -->
-      <div style="background:rgba(22,163,74,.15);border:1px solid rgba(22,163,74,.3);border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-        <div style="width:36px;height:36px;border-radius:10px;background:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#fff" stroke-width="1.5"/><path d="M9 5v4l2.5 2.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </div>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#4ade80">15 days free</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px">Full access · No credit card required</div>
-        </div>
-      </div>
-
-      <!-- Plan comparison -->
-      <div style="margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Choose your plan after trial</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <!-- Basic -->
-          <div style="background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:14px;padding:14px">
-            <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:6px">Basic</div>
-            <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px">$19.90<span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.4)">/mo</span></div>
-            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:10px">or $16.90/mo yearly</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.5);line-height:1.7">
-              ✓ 1 branch<br>
-              ✓ TR + EN languages<br>
-              ✓ 3 photos/item<br>
-              ✓ QR codes<br>
-              ✓ Order management
-            </div>
-          </div>
-          <!-- Pro -->
-          <div style="background:#8E1616;border:1.5px solid #8E1616;border-radius:14px;padding:14px;position:relative">
-            <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#fff;color:#8E1616;font-size:9px;font-weight:800;padding:2px 10px;border-radius:6px;white-space:nowrap;letter-spacing:.3px">MOST POPULAR</div>
-            <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:6px">Pro</div>
-            <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px">$29.90<span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.6)">/mo</span></div>
-            <div style="font-size:10px;color:rgba(255,255,255,.6);margin-bottom:10px">or $24.90/mo yearly</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.8);line-height:1.7">
-              ✓ 5 branches<br>
-              ✓ All languages<br>
-              ✓ 5 photos/item<br>
-              ✓ QR codes<br>
-              ✓ Everything in Basic
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CTA buttons -->
-      <button onclick="obFinishWithTrial()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#fff;color:#1D1616;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Start free trial</button>
-      <button onclick="obUpgradeNow()" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.7);font-size:13px;font-weight:600;cursor:pointer">Upgrade now and skip trial</button>
-    </div>
+  </div>
+</div>
 
 <style>
 .ob-step-dot{width:24px;height:6px;border-radius:3px;background:rgba(255,255,255,.15);transition:.2s}
@@ -664,9 +617,6 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <span id="ptitle">Menu items</span>
     </div>
     <div class="top-acts" id="topActs">
-      <a id="previewMenuBtn" href="#" target="_blank" class="btn-gh" title="Preview menu" style="padding:8px 10px">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
-      </a>
       <button class="btn-gh" onclick="openImport(false)" title="Import menu from PDF or photos">
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4-4 4 4M2 12h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Import
@@ -804,7 +754,6 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     <!-- TABLES PANEL -->
     <div class="panel" id="p-tables">
       <div style="padding:14px">
-        <!-- TABLES SECTION -->
         <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
           <strong>Tables let customers order to a specific table.</strong> Add your tables here. Customers will pick from this list when sending an order.
         </div>
@@ -815,46 +764,36 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         </div>
         
         <div id="tablesList"></div>
+      </div>
+    </div>
 
-        <!-- DIVIDER -->
-        <div style="border-top:1px solid #e2e8f0;margin:20px 0"></div>
-
-        <!-- QR & LINK SECTION -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#475569" stroke-width="2"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#475569" stroke-width="2"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#475569" stroke-width="2"/><path d="M12 12h3v3H12zM15 15h4M15 19v-4M19 12v3" stroke="#475569" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <div style="font-size:13px;font-weight:700;color:#1e293b">QR & link</div>
-        </div>
-
-        <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
-          <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
-          <select id="qrBranchSelect" onchange="qrGenerate()"></select>
-        </div>
-        <div class="qr-grid">
-          <div>
-            <div class="card" style="margin-bottom:12px">
-              <div class="card-t">Menu link</div>
-              <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
-              <div style="font-size:11px;color:#94a3b8">Each branch has its own unique URL.</div>
-            </div>
-            <div class="card" style="margin-bottom:12px">
-              <div class="card-t">Download</div>
-              <button class="dl-btn" onclick="qrDlPNG()">Download PNG (Print)</button>
-              <button class="dl-btn" onclick="qrDlSVG()">Download SVG (Vector)</button>
-              <div id="dlAllTablesWrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0">
-                <button class="dl-btn" style="background:#047857" onclick="qrDlAllTables()">Download for all tables</button>
-                <div style="font-size:10px;color:#94a3b8;margin-top:4px;text-align:center">Generates a printable QR card for each table</div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-t">Share</div>
-              <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
-            </div>
+    <!-- QR PANEL -->
+    <div class="panel" id="p-qr">
+      <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
+        <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
+        <select id="qrBranchSelect" onchange="qrGenerate()"></select>
+      </div>
+      <div class="qr-grid">
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-t">Menu link</div>
+            <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
+            <div style="font-size:11px;color:#94a3b8">Each branch has its own unique URL.</div>
           </div>
-          <div>
-            <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:12px">
-              <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
-              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Ready to scan</div>
-            </div>
+          <div class="card">
+            <div class="card-t">Download</div>
+            <button class="dl-btn" onclick="qrDlPNG()">⬇ Download PNG (Print)</button>
+            <button class="dl-btn" onclick="qrDlSVG()">⬇ Download SVG (Vector)</button>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Ready to scan</div>
+          </div>
+          <div class="card">
+            <div class="card-t">Share</div>
+            <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
           </div>
         </div>
       </div>
@@ -1030,39 +969,22 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="profile-section">
         <div class="profile-row clickable" onclick="toggleSection('billingSection',this)">
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:600;color:#1e293b" id="planLabel">Loading...</div>
-            <div style="font-size:11px;color:#64748b" id="planSublabel">View plans and billing</div>
+            <div style="font-size:13px;font-weight:600;color:#1e293b">Free plan · Beta access</div>
+            <div style="font-size:11px;color:#64748b">View payment history and plans</div>
           </div>
           <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div class="collapsible-content" id="billingSection">
-          <div id="billingContent" style="margin-bottom:12px"></div>
-          <button onclick="openUpgradeModal()" id="upgradeBtn" style="width:100%;padding:12px;border-radius:10px;border:none;background:#8E1616;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:none">Upgrade plan</button>
-          <button onclick="openPortal()" id="portalBtn" style="width:100%;padding:12px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;display:none">Manage billing & invoices</button>
+          <div style="background:#fef2f2;border-radius:10px;padding:14px;margin-bottom:10px">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px">Beta access — Free</div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5">All features unlocked during beta period. Paid plans launching soon.</div>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600">Coming soon</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.7">• Payment methods<br>• Invoice history<br>• Plan upgrades<br>• Receipts via email</div>
         </div>
       </div>
 
       <button onclick="doLogout()" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid #fca5a5;background:#fef2f2;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px">Sign out</button>
-
-      <!-- Demo / Gerilla Marketing -->
-      <div id="demoSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid #f1f5f9">
-        <div class="profile-section-title">Demo mode</div>
-        <div class="profile-section">
-          <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:12px">Generate a claim link to share a prepared menu with a restaurant. They create an account and the menu transfers automatically.</div>
-          <button onclick="generateClaimLink()" id="genClaimBtn" style="width:100%;padding:12px;border-radius:10px;border:none;background:#1e293b;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Generate claim link</button>
-          <div id="claimLinkResult" style="display:none;margin-top:12px">
-            <div style="font-size:11px;font-weight:600;color:#475569;margin-bottom:6px">Share this link (valid 48 hours):</div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#1e293b;word-break:break-all;margin-bottom:8px" id="claimLinkText"></div>
-            <div style="display:flex;gap:8px">
-              <button onclick="copyClaimLink()" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:12px;font-weight:600;cursor:pointer" id="copyClaimBtn">Copy link</button>
-              <a id="whatsappClaimBtn" href="#" target="_blank" style="flex:1;padding:9px;border-radius:8px;border:none;background:#16a34a;color:#fff;font-size:12px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#fff" stroke-width="1.2"/><path d="M4.5 5.5c.2-.5.7-1 1.5-1 1 0 1.5.7 1.5 1.3 0 .8-.8 1.2-1.2 1.7-.3.4-.3.8-.3 1M7 10v.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>
-                WhatsApp
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1082,6 +1004,11 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <span>Tables</span>
       <div class="nav-dot"></div>
     </button>
+    <button class="nav-btn" id="nav-qr" onclick="go('qr',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M12 12h3v3H12zM15 15h4M15 19v-4M19 12v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>QR & Link</span>
+      <div class="nav-dot"></div>
+    </button>
     <button class="nav-btn" id="nav-analytics" onclick="go('analytics',this)">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17l5-6 4 4 5-8 4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>Analytics</span>
@@ -1098,7 +1025,6 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 const API='';
 let token=localStorage.getItem('ms_token')||'';
@@ -1163,41 +1089,32 @@ const ALLERGENS = [
   {code:'MOLLUSCS',  label:'Molluscs',        emoji:'🐚'},
 ];
 
-const AUTH_ENDPOINTS = ['/api/auth/login', '/api/auth/register'];
-
 async function api(method,path,body){
-  const opts={method,headers:{'Content-Type':'application/json'}};
-  // Auth endpoint'leri token gerektirmez, diğerleri için token ekle
-  if(token && !AUTH_ENDPOINTS.includes(path)){
-    opts.headers['Authorization'] = `Bearer ${token}`;
-  }
+  const opts={method,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}};
   if(body)opts.body=JSON.stringify(body);
   const r=await fetch(API+path,opts);
-  if(r.status===401 && !AUTH_ENDPOINTS.includes(path)){
-    // Token geçersiz veya süresi dolmuş — temizle ve login ekranını göster
-    token='';
-    localStorage.removeItem('ms_token');
-    localStorage.removeItem('ms_org');
-    // Reload yapmak yerine direkt auth ekranını göster
-    document.getElementById('authScreen').style.display='';
-    document.getElementById('appScreen').classList.remove('visible');
-    document.getElementById('onboardingScreen').style.display='none';
-    throw new Error('Session expired');
+  if(r.status===401){
+    const errData=await r.json().catch(()=>({}));
+    // Oturum açıkken gelen 401 = session expired → yenile
+    // Login/register sırasında gelen 401 = hatalı şifre → hata mesajı göster
+    if(token){
+      localStorage.removeItem('ms_token');
+      localStorage.removeItem('ms_org');
+      location.reload();
+      throw new Error('Session expired');
+    }
+    throw new Error(errData.error||'Invalid email or password');
   }
   const data=await r.json();
   if(!r.ok)throw new Error(data.error||'Request failed');
   return data;
 }
 async function apiForm(method,path,fd){
-  const headers={'Authorization':`Bearer ${token}`};
-  const r=await fetch(API+path,{method,headers,body:fd});
+  const r=await fetch(API+path,{method,headers:{'Authorization':`Bearer ${token}`},body:fd});
   if(r.status===401){
-    token='';
     localStorage.removeItem('ms_token');
     localStorage.removeItem('ms_org');
-    document.getElementById('authScreen').style.display='';
-    document.getElementById('appScreen').classList.remove('visible');
-    document.getElementById('onboardingScreen').style.display='none';
+    location.reload();
     throw new Error('Session expired');
   }
   const data=await r.json();
@@ -1213,28 +1130,63 @@ function switchTab(tab){
   document.getElementById('registerForm').style.display=tab==='register'?'':'none';
   document.getElementById('tabLogin').classList.toggle('on',tab==='login');
   document.getElementById('tabRegister').classList.toggle('on',tab==='register');
+  clearAuthErr();
+}
+function showAuthError(msg,shakeIds){
+  const box=document.getElementById('authErr');
+  document.getElementById('authErrText').textContent=msg;
+  box.classList.add('visible');
+  (shakeIds||[]).forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.classList.remove('err');
+    void el.offsetWidth;
+    el.classList.add('err');
+    el.addEventListener('animationend',()=>el.classList.remove('err'),{once:true});
+  });
+}
+function clearAuthErr(){
+  document.getElementById('authErr').classList.remove('visible');
+  document.getElementById('authErrText').textContent='';
 }
 async function doLogin(){
-  document.getElementById('authErr').textContent='';
+  clearAuthErr();
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  if(!email||!password){showAuthError('Please enter your email and password.',['loginEmail','loginPassword']);return;}
+  const btn=document.querySelector('#loginForm .auth-btn');
+  btn.disabled=true;btn.textContent='Signing in…';
   try{
-    const data=await api('POST','/api/auth/login',{email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});
+    const data=await api('POST','/api/auth/login',{email,password});
     token=data.token;org=data.organization;
     localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
     startApp();
-  }catch(e){document.getElementById('authErr').textContent=e.message;}
+  }catch(e){
+    showAuthError(e.message,['loginEmail','loginPassword']);
+    btn.disabled=false;btn.textContent='Sign in';
+  }
 }
 async function doRegister(){
+  clearAuthErr();
+  const restaurantName=document.getElementById('regRestaurantName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
   const password=document.getElementById('regPassword').value;
   const passwordConfirm=document.getElementById('regPasswordConfirm').value;
-  if(password.length<6)return document.getElementById('authErr').textContent='Password must be at least 6 characters';
-  if(password!==passwordConfirm)return document.getElementById('authErr').textContent='Passwords do not match';
-  document.getElementById('authErr').textContent='';
+  if(!restaurantName){showAuthError('Please enter your restaurant name.',['regRestaurantName']);return;}
+  if(!email){showAuthError('Please enter your email.',['regEmail']);return;}
+  if(password.length<6){showAuthError('Password must be at least 6 characters.',['regPassword']);return;}
+  if(password!==passwordConfirm){showAuthError('Passwords do not match.',['regPassword','regPasswordConfirm']);return;}
+  const btn=document.querySelector('#registerForm .auth-btn');
+  btn.disabled=true;btn.textContent='Creating account…';
   try{
-    const data=await api('POST','/api/auth/register',{email:document.getElementById('regEmail').value.trim(),password});
+    const data=await api('POST','/api/auth/register',{restaurantName,email,password});
     token=data.token;org=data.organization;
     localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
     startApp();
-  }catch(e){document.getElementById('authErr').textContent=e.message;}
+  }catch(e){
+    showAuthError(e.message,['regEmail']);
+    btn.disabled=false;btn.textContent='Create account';
+  }
 }
 function doLogout(){localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');location.reload();}
 
@@ -1263,15 +1215,12 @@ function showOnboarding(){
 
 function obSetStep(n){
   obCurrentStep = n;
-  for(let i=1;i<=5;i++){
-    const step = document.getElementById('obStep'+i);
-    if(step) step.classList.toggle('on', i===n);
+  for(let i=1;i<=4;i++){
+    document.getElementById('obStep'+i).classList.toggle('on', i===n);
     const dot = document.getElementById('obDot'+i);
-    if(dot){
-      dot.classList.remove('on','done');
-      if(i<n) dot.classList.add('done');
-      else if(i===n) dot.classList.add('on');
-    }
+    dot.classList.remove('on','done');
+    if(i<n) dot.classList.add('done');
+    else if(i===n) dot.classList.add('on');
   }
   // Step 3'te dropdownları doldur
   if(n===3) obPopulateSettings();
@@ -1280,47 +1229,63 @@ function obSetStep(n){
 function obNextStep(){ obSetStep(obCurrentStep+1); }
 function obPrevStep(){ obSetStep(obCurrentStep-1); }
 
-/* STEP 1: Google Maps Fetch */
+/* STEP 1: adı değişince step 2'ye kopyala */
+function obNameChanged(){
+  const name = document.getElementById('obRestaurantName').value.trim();
+  const nameEl = document.getElementById('obName');
+  if(nameEl && name) nameEl.value = name;
+}
+
+/* STEP 1: Google Fetch */
 async function obFetchFromGoogle(){
   const url = document.getElementById('obGoogleUrl').value.trim();
-  if(!url){ document.getElementById('obFetchStatus').textContent='Please paste a Google Maps link'; return; }
-  if(!url.includes('google.com/maps') && !url.includes('maps.app.goo.gl') && !url.includes('goo.gl/maps')){
-    document.getElementById('obFetchStatus').textContent='This doesn\'t look like a Google Maps link';
+  const name = document.getElementById('obRestaurantName').value.trim();
+  
+  if(!url && !name){
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f87171">Please enter a restaurant name or Google Maps link</span>';
     return;
   }
   
   const btn = document.getElementById('obFetchBtn');
   const lbl = document.getElementById('obFetchLabel');
   btn.disabled = true;
-  lbl.textContent = '...';
-  document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f59e0b">Fetching restaurant details...</span>';
+  lbl.textContent = 'Fetching...';
+  document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f59e0b">Searching Google for your restaurant...</span>';
   
   try {
-    const data = await api('POST', '/api/google-insights/extract-info', { googleMapsUrl: url });
+    const data = await api('POST', '/api/google-insights/extract-info', {
+      googleMapsUrl: url || null,
+      restaurantName: name || null,
+    });
     obFetchedInfo = data.info;
     
-    // Auto-fill step 2
+    // Step 2'yi doldur
     if(obFetchedInfo.name) document.getElementById('obName').value = obFetchedInfo.name;
+    else if(name) document.getElementById('obName').value = name;
     if(obFetchedInfo.country) document.getElementById('obCountry').value = obFetchedInfo.country;
     if(obFetchedInfo.city) document.getElementById('obCity').value = obFetchedInfo.city;
     if(obFetchedInfo.address) document.getElementById('obAddress').value = obFetchedInfo.address;
     if(obFetchedInfo.phone) document.getElementById('obPhone').value = obFetchedInfo.phone;
     
-    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#16a34a">Found! Review your details on the next step.</span>';
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#4ade80">✓ Found! Check your details on the next step.</span>';
     document.getElementById('obStep2Sub').textContent = 'We found your restaurant. Check the details and edit if needed.';
     
-    // 1 saniye sonra otomatik ilerle
-    setTimeout(() => obNextStep(), 1000);
+    setTimeout(() => obNextStep(), 900);
   } catch(e) {
-    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#ef4444">Could not find restaurant. You can fill in manually.</span>';
+    // Hata olsa bile devam et, kullanıcı manuel doldurabilir
+    document.getElementById('obFetchStatus').innerHTML = '<span style="color:#f87171">Couldn\'t auto-fill. You can fill details manually.</span>';
+    if(name) document.getElementById('obName').value = name;
     document.getElementById('obStep2Sub').textContent = 'Fill in your restaurant details.';
+    setTimeout(() => obNextStep(), 1500);
   } finally {
     btn.disabled = false;
-    lbl.textContent = 'Fetch';
+    lbl.textContent = 'Fetch details from Google';
   }
 }
 
 function obSkipGoogle(){
+  const name = document.getElementById('obRestaurantName').value.trim();
+  if(name) document.getElementById('obName').value = name;
   obFetchedInfo = null;
   document.getElementById('obStep2Sub').textContent = 'Fill in your restaurant details.';
   obNextStep();
@@ -1427,34 +1392,14 @@ async function obSaveSettingsAndNext(){
   }catch(e){ toast('Failed to save: '+e.message); }
 }
 
-/* STEP 4: Go to plan screen */
+/* STEP 4: Finish */
 async function obFinish(){
-  // Go to Step 5 (plan selection) instead of finishing directly
-  obNextStep();
-}
-
-/* STEP 5: Start trial */
-async function obFinishWithTrial(){
   try{
     const updated = await api('PATCH','/api/auth/organization', { onboardingCompleted: true });
     org = {...org, ...updated};
     localStorage.setItem('ms_org', JSON.stringify(org));
     document.getElementById('onboardingScreen').style.display = 'none';
     startApp();
-  }catch(e){ toast('Failed: '+e.message); }
-}
-
-/* STEP 5: Upgrade now (skip trial) */
-async function obUpgradeNow(){
-  // First complete onboarding, then open upgrade modal
-  try{
-    const updated = await api('PATCH','/api/auth/organization', { onboardingCompleted: true });
-    org = {...org, ...updated};
-    localStorage.setItem('ms_org', JSON.stringify(org));
-    document.getElementById('onboardingScreen').style.display = 'none';
-    await startApp();
-    // Small delay so app renders first
-    setTimeout(()=>openUpgradeModal(), 300);
   }catch(e){ toast('Failed: '+e.message); }
 }
 
@@ -1789,21 +1734,18 @@ async function startApp(){
   document.getElementById('authScreen').style.display='none';
   
   // Subscription kontrolü
-  if(org.planStatus === 'EXPIRED' || org.subscriptionStatus === 'EXPIRED'){
+  if(org.subscriptionStatus === 'EXPIRED'){
     showSubscriptionExpiredScreen();
     return;
   }
   
-  // Onboarding kontrolü
+  // Onboarding kontrolü - tamamlanmamışsa wizard göster
   if(!org.onboardingCompleted){
     showOnboarding();
     return;
   }
   
   document.getElementById('appScreen').classList.add('visible');
-  // Set preview menu link
-  const prevBtn=document.getElementById('previewMenuBtn');
-  if(prevBtn&&org?.slug)prevBtn.href='/menu/'+org.slug;
   populateCurrencies();
   loadProfile();
   buildHoursGrid();
@@ -1813,307 +1755,40 @@ async function startApp(){
   buildCatPills();
   loadMenu();
   qrGenerate();
-  // Trial banner
-  showTrialBanner();
-  // Demo mode
-  initDemoMode();
-  // Hash routing
+  // Hash routing: #tables, #qr, #profile, #analytics
   setTimeout(applyHash, 100);
 }
 
 function showSubscriptionExpiredScreen(){
   document.body.innerHTML = `
     <div style="min-height:100vh;background:#1D1616;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;font-family:system-ui,sans-serif">
-      <div style="max-width:420px;width:100%">
-        <div style="text-align:center;margin-bottom:28px">
-          <div style="width:64px;height:64px;border-radius:16px;background:#8E1616;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 25.5L6 6.5L16 19L26 6.5L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-          </div>
-          <div style="font-size:22px;font-weight:800;margin-bottom:8px">Trial ended</div>
-          <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.6">Choose a plan to continue managing your menu and reactivate customer access.</div>
+      <div style="max-width:400px;text-align:center">
+        <div style="width:64px;height:64px;border-radius:16px;background:#8E1616;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 25.5 L6 6.5 L16 19 L26 6.5 L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
         </div>
-
-        <!-- Plans -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-          <div id="planBasic" onclick="selectExpiredPlan('BASIC')" style="background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:14px;padding:16px;cursor:pointer;transition:.15s">
-            <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:4px">Basic</div>
-            <div style="font-size:22px;font-weight:800;color:#fff">$19.90<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.5)">/mo</span></div>
-            <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:6px;line-height:1.5">1 branch · TR+EN · 3 photos</div>
-          </div>
-          <div id="planPro" onclick="selectExpiredPlan('PRO')" style="background:#8E1616;border:2px solid #8E1616;border-radius:14px;padding:16px;cursor:pointer;transition:.15s">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px">Most popular</div>
-            <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:4px">Pro</div>
-            <div style="font-size:22px;font-weight:800;color:#fff">$29.90<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.5)">/mo</span></div>
-            <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:6px;line-height:1.5">5 branches · All languages · 5 photos</div>
-          </div>
-        </div>
-
-        <!-- Billing cycle -->
-        <div style="display:flex;gap:8px;margin-bottom:20px">
-          <button id="cycleMonthly" onclick="selectExpiredCycle('MONTHLY')" style="flex:1;padding:10px;border-radius:10px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Monthly</button>
-          <button id="cycleYearly" onclick="selectExpiredCycle('YEARLY')" style="flex:1;padding:10px;border-radius:10px;border:2px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer">
-            Yearly <span style="font-size:10px;background:#16a34a;color:#fff;padding:2px 6px;border-radius:6px;margin-left:2px">-15%</span>
-          </button>
-        </div>
-
-        <button id="expiredCheckoutBtn" onclick="startExpiredCheckout()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#fff;color:#1D1616;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Continue to payment</button>
-        <button onclick="doLogout()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer">Sign out</button>
+        <div style="font-size:22px;font-weight:800;margin-bottom:8px">Trial ended</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:24px">Choose a plan to continue managing your menu and reactivate customer access.</div>
+        <button onclick="alert('Stripe integration coming soon. Contact support to upgrade.')" style="width:100%;padding:14px;border-radius:12px;border:none;background:#8E1616;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Choose a plan</button>
+        <button onclick="doLogout()" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer">Sign out</button>
       </div>
     </div>`;
-  window._expiredPlan='PRO';
-  window._expiredCycle='MONTHLY';
-}
-
-function selectExpiredPlan(plan){
-  window._expiredPlan=plan;
-  const basic=document.getElementById('planBasic');
-  const pro=document.getElementById('planPro');
-  if(plan==='PRO'){
-    pro.style.background='#8E1616';pro.style.borderColor='#8E1616';
-    basic.style.background='rgba(255,255,255,.08)';basic.style.borderColor='rgba(255,255,255,.15)';
-  } else {
-    basic.style.background='#8E1616';basic.style.borderColor='#8E1616';
-    pro.style.background='rgba(255,255,255,.08)';pro.style.borderColor='rgba(255,255,255,.15)';
-  }
-}
-
-function selectExpiredCycle(cycle){
-  window._expiredCycle=cycle;
-  const m=document.getElementById('cycleMonthly');
-  const y=document.getElementById('cycleYearly');
-  if(cycle==='YEARLY'){
-    y.style.borderColor='rgba(255,255,255,.3)';y.style.background='rgba(255,255,255,.1)';y.style.color='#fff';
-    m.style.borderColor='rgba(255,255,255,.15)';m.style.background='transparent';m.style.color='rgba(255,255,255,.6)';
-  } else {
-    m.style.borderColor='rgba(255,255,255,.3)';m.style.background='rgba(255,255,255,.1)';m.style.color='#fff';
-    y.style.borderColor='rgba(255,255,255,.15)';y.style.background='transparent';y.style.color='rgba(255,255,255,.6)';
-  }
-}
-
-async function startExpiredCheckout(){
-  const btn=document.getElementById('expiredCheckoutBtn');
-  btn.textContent='Redirecting...';btn.disabled=true;
-  try{
-    const r=await fetch('/api/stripe/create-checkout',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({plan:window._expiredPlan||'PRO',cycle:window._expiredCycle||'MONTHLY'})
-    });
-    const d=await r.json();
-    if(d.url)window.location.href=d.url;
-    else{btn.textContent='Continue to payment';btn.disabled=false;alert(d.error||'Error');}
-  }catch(e){btn.textContent='Continue to payment';btn.disabled=false;alert('Error: '+e.message);}
-}
-
-function showTrialBanner(){
-  if(!org)return;
-  const status=org.planStatus||org.subscriptionStatus;
-  if(status!=='TRIAL')return;
-  const days=org.trialDaysLeft;
-  if(days===null||days===undefined||days>7)return;
-  const existing=document.getElementById('trialBanner');
-  if(existing)return;
-  const banner=document.createElement('div');
-  banner.id='trialBanner';
-  banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:100;background:#f59e0b;color:#1D1616;text-align:center;padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:12px';
-  banner.innerHTML=`<span>${days===0?'Trial expires today':`${days} day${days===1?'':'s'} left in your trial`}</span><button onclick="openUpgradeModal()" style="background:#1D1616;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Upgrade now</button>`;
-  document.body.prepend(banner);
-}
-
-function loadBillingUI(){
-  const status=org.planStatus||org.subscriptionStatus||'TRIAL';
-  const plan=org.plan||'TRIAL';
-  const label=document.getElementById('planLabel');
-  const sublabel=document.getElementById('planSublabel');
-  const content=document.getElementById('billingContent');
-  const upgradeBtn=document.getElementById('upgradeBtn');
-  const portalBtn=document.getElementById('portalBtn');
-  if(!label)return;
-
-  const planNames={TRIAL:'Free trial',BASIC:'Basic',PRO:'Pro'};
-  const statusMap={TRIAL:'Trial',ACTIVE:'Active',PAST_DUE:'Past due',CANCELLED:'Cancelled',EXPIRED:'Expired'};
-
-  label.textContent=(planNames[plan]||plan)+' · '+(statusMap[status]||status);
-
-  if(status==='TRIAL'){
-    const days=org.trialDaysLeft;
-    sublabel.textContent=days>0?`${days} day${days===1?'':'s'} remaining`:'Trial expired';
-    content.innerHTML=`<div style="background:#fef3c7;border-radius:10px;padding:14px;margin-bottom:4px">
-      <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:4px">Free trial</div>
-      <div style="font-size:12px;color:#92400e;line-height:1.5">${days>0?`${days} day${days===1?'':'s'} remaining. Upgrade to keep your menu active after the trial.`:'Your trial has ended. Upgrade to reactivate your menu.'}</div>
-    </div>`;
-    if(upgradeBtn)upgradeBtn.style.display='block';
-  } else if(status==='ACTIVE'){
-    sublabel.textContent=org.billingCycle==='YEARLY'?'Annual plan':'Monthly plan';
-    const renewDate=org.currentPeriodEnd?new Date(org.currentPeriodEnd).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
-    content.innerHTML=`<div style="background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:4px">
-      <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:4px">${planNames[plan]||plan} — Active</div>
-      <div style="font-size:12px;color:#166534;line-height:1.5">Renews on ${renewDate}</div>
-    </div>`;
-    if(plan!=='PRO'&&upgradeBtn)upgradeBtn.style.display='block';
-    if(portalBtn)portalBtn.style.display='block';
-  } else if(status==='PAST_DUE'){
-    sublabel.textContent='Payment issue';
-    content.innerHTML=`<div style="background:#fef2f2;border-radius:10px;padding:14px;margin-bottom:4px">
-      <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:4px">Payment failed</div>
-      <div style="font-size:12px;color:#991b1b;line-height:1.5">Please update your payment method to keep your menu active.</div>
-    </div>`;
-    if(portalBtn)portalBtn.style.display='block';
-  }
-}
-
-function openUpgradeModal(){
-  const ov=document.createElement('div');
-  ov.id='upgradeOverlay';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
-  ov.innerHTML=`
-    <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div style="font-size:17px;font-weight:800;color:#1e293b">Choose your plan</div>
-        <button onclick="document.getElementById('upgradeOverlay').remove()" style="width:32px;height:32px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-
-      <!-- Billing cycle toggle -->
-      <div style="display:flex;gap:6px;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:16px">
-        <button id="um_monthly" onclick="setUpgradeCycle('MONTHLY')" style="flex:1;padding:8px;border-radius:8px;border:none;background:#fff;font-size:13px;font-weight:600;color:#1e293b;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.1)">Monthly</button>
-        <button id="um_yearly" onclick="setUpgradeCycle('YEARLY')" style="flex:1;padding:8px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:600;color:#64748b;cursor:pointer">
-          Yearly <span style="font-size:10px;background:#16a34a;color:#fff;padding:1px 6px;border-radius:5px">-15%</span>
-        </button>
-      </div>
-
-      <!-- Plans -->
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-        <div id="um_basic" onclick="setUpgradePlan('BASIC')" style="border:2px solid #e2e8f0;border-radius:14px;padding:16px;cursor:pointer;transition:.15s">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-            <div style="font-size:15px;font-weight:800;color:#1e293b">Basic</div>
-            <div style="text-align:right"><span id="um_basic_price" style="font-size:18px;font-weight:800;color:#1e293b">$19.90</span><span style="font-size:11px;color:#94a3b8">/mo</span></div>
-          </div>
-          <div style="font-size:12px;color:#64748b;line-height:1.6">1 branch · Turkish + English · 3 photos per item · All other features</div>
-        </div>
-        <div id="um_pro" onclick="setUpgradePlan('PRO')" style="border:2px solid #8E1616;border-radius:14px;padding:16px;cursor:pointer;background:#fef2f2;transition:.15s">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:#8E1616;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px">Recommended</div>
-              <div style="font-size:15px;font-weight:800;color:#1e293b">Pro</div>
-            </div>
-            <div style="text-align:right"><span id="um_pro_price" style="font-size:18px;font-weight:800;color:#1e293b">$29.90</span><span style="font-size:11px;color:#94a3b8">/mo</span></div>
-          </div>
-          <div style="font-size:12px;color:#64748b;line-height:1.6">5 branches · All languages · 5 photos per item · Everything in Basic</div>
-        </div>
-      </div>
-
-      <button id="um_checkoutBtn" onclick="startUpgradeCheckout()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#8E1616;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Continue to payment</button>
-    </div>`;
-  document.body.appendChild(ov);
-  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
-  window._upgradePlan='PRO';
-  window._upgradeCycle='MONTHLY';
-}
-
-function setUpgradePlan(plan){
-  window._upgradePlan=plan;
-  const basic=document.getElementById('um_basic');
-  const pro=document.getElementById('um_pro');
-  if(plan==='PRO'){
-    pro.style.borderColor='#8E1616';pro.style.background='#fef2f2';
-    basic.style.borderColor='#e2e8f0';basic.style.background='#fff';
-  } else {
-    basic.style.borderColor='#8E1616';basic.style.background='#fef2f2';
-    pro.style.borderColor='#e2e8f0';pro.style.background='#fff';
-  }
-}
-
-function setUpgradeCycle(cycle){
-  window._upgradeCycle=cycle;
-  const prices={BASIC:{MONTHLY:'$19.90',YEARLY:'$16.90'},PRO:{MONTHLY:'$29.90',YEARLY:'$24.90'}};
-  document.getElementById('um_basic_price').textContent=prices.BASIC[cycle];
-  document.getElementById('um_pro_price').textContent=prices.PRO[cycle];
-  const m=document.getElementById('um_monthly');
-  const y=document.getElementById('um_yearly');
-  if(cycle==='YEARLY'){
-    y.style.background='#fff';y.style.color='#1e293b';y.style.boxShadow='0 1px 3px rgba(0,0,0,.1)';
-    m.style.background='transparent';m.style.color='#64748b';m.style.boxShadow='none';
-  } else {
-    m.style.background='#fff';m.style.color='#1e293b';m.style.boxShadow='0 1px 3px rgba(0,0,0,.1)';
-    y.style.background='transparent';y.style.color='#64748b';y.style.boxShadow='none';
-  }
-}
-
-async function startUpgradeCheckout(){
-  const btn=document.getElementById('um_checkoutBtn');
-  btn.textContent='Redirecting...';btn.disabled=true;
-  try{
-    const r=await api('POST','/api/stripe/create-checkout',{plan:window._upgradePlan||'PRO',cycle:window._upgradeCycle||'MONTHLY'});
-    if(r.url)window.location.href=r.url;
-    else{btn.textContent='Continue to payment';btn.disabled=false;}
-  }catch(e){btn.textContent='Continue to payment';btn.disabled=false;toast('Error: '+e.message);}
-}
-
-async function openPortal(){
-  try{
-    const r=await api('POST','/api/stripe/create-portal',{});
-    if(r.url)window.location.href=r.url;
-  }catch(e){toast('Error: '+e.message);}
-}
-
-/* DEMO MODE */
-async function initDemoMode(){
-  try{
-    const d = await api('GET', '/api/demo/my-role');
-    if(!d.isSales) return;
-    const section = document.getElementById('demoSection');
-    if(section) section.style.display = 'block';
-  }catch(e){
-    // Not sales, hide section (already hidden)
-  }
-}
-
-async function generateClaimLink(){
-  const btn=document.getElementById('genClaimBtn');
-  btn.textContent='Generating...';btn.disabled=true;
-  try{
-    const d=await api('POST','/api/demo/generate-claim',{});
-    document.getElementById('claimLinkText').textContent=d.claimUrl;
-    document.getElementById('claimLinkResult').style.display='block';
-    document.getElementById('whatsappClaimBtn').href=
-      'https://wa.me/?text='+encodeURIComponent('Your menu is ready on MenuSwipe! Claim it here: '+d.claimUrl);
-    btn.textContent='Generate new link';btn.disabled=false;
-    toast('Claim link generated');
-  }catch(e){
-    btn.textContent='Generate claim link';btn.disabled=false;
-    // If 403, hide demo section
-    if(e.message&&e.message.includes('403'))return;
-    toast('Error: '+e.message);
-  }
-}
-
-function copyClaimLink(){
-  const url=document.getElementById('claimLinkText').textContent;
-  navigator.clipboard.writeText(url).then(()=>{
-    const btn=document.getElementById('copyClaimBtn');
-    btn.textContent='Copied!';
-    setTimeout(()=>btn.textContent='Copy link',1500);
-  });
 }
 
 /* NAV */
 function go(id,el){
-  // Redirect legacy 'qr' hash to 'tables'
-  if(id==='qr'){id='tables';el=document.getElementById('nav-tables');}
   document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('on'));
   if(el)el.classList.add('on');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   const targetPanel=document.getElementById('p-'+id);
   if(targetPanel)targetPanel.classList.add('on');
-  const titles={menu:'Menu items',tables:'Tables & QR',analytics:'Analytics',profile:'Profile'};
+  const titles={menu:'Menu items',tables:'Tables',qr:'QR & link',analytics:'Analytics',profile:'Profile'};
   document.getElementById('ptitle').textContent=titles[id]||id;
   document.getElementById('topActs').style.display=id==='menu'?'flex':'none';
   document.getElementById('backBtn').style.display='none';
-  if(id==='tables'){loadTables();buildQrBranchSelector();qrGenerate();}
+  if(id==='qr'){buildQrBranchSelector();qrGenerate();}
   if(id==='analytics')loadAnalytics();
   if(id==='profile'){loadBranches();loadGoogleInsights();}
+  if(id==='tables')loadTables();
   // hash güncelle
   if(history.replaceState)history.replaceState(null,'','#'+id);
   document.getElementById('appContent').scrollTop=0;
@@ -2122,9 +1797,8 @@ function goBack(){go('profile',document.getElementById('nav-profile'));}
 
 // Hash routing: /editor.html#tables, #qr, #profile, #analytics, #menu
 function applyHash(){
-  let h=(location.hash||'').replace('#','').toLowerCase();
-  if(h==='qr')h='tables'; // legacy redirect
-  const allowed=['menu','tables','analytics','profile'];
+  const h=(location.hash||'').replace('#','').toLowerCase();
+  const allowed=['menu','tables','qr','analytics','profile'];
   if(!h)return;
   if(allowed.includes(h)){
     const btn=document.getElementById('nav-'+h);
@@ -2153,8 +1827,6 @@ function loadProfile(){
   document.getElementById('orgCity').value=org.city||'';
   document.getElementById('orgAddress').value=org.address||'';
   document.getElementById('orgPostal').value=org.postalCode||'';
-  // Load billing info
-  loadBillingUI();
   document.getElementById('orgCurrency').value=org.currency||'USD';
   document.getElementById('orgLanguage').value=org.defaultLanguage||'en';
   document.getElementById('orgOrderListEnabled').checked = org.orderListEnabled !== false;
@@ -2209,6 +1881,7 @@ async function saveOrg(){
     console.error('[saveOrg] error:', e);
     toast('Save failed: '+e.message);
   }
+}
 }
 
 const DAYS=['mon','tue','wed','thu','fri','sat','sun'];
@@ -3274,162 +2947,6 @@ function qrCopy(){
   navigator.clipboard.writeText(url).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);});
 }
 
-async function qrDlAllTables(){
-  if(!tablesData.length){toast('No tables to generate');return;}
-  if(typeof QRCode==='undefined'){toast('QR library not loaded');return;}
-
-  // Size options: cm, px at 300 DPI
-  const SIZES=[
-    {cm:3, px:354, label:'3 x 3 cm', desc:'Table sticker', rec:true},
-    {cm:5, px:591, label:'5 x 5 cm', desc:'Small stand'},
-    {cm:7, px:827, label:'7 x 7 cm', desc:'Menu insert'},
-    {cm:10, px:1181, label:'10 x 10 cm', desc:'Wall / window'},
-  ];
-
-  // Build overlay
-  const ov=document.createElement('div');
-  ov.id='qrSizeOverlay';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
-  ov.innerHTML=`
-    <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.25)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <div>
-          <div style="font-size:16px;font-weight:800;color:#1e293b">Download table QR codes</div>
-          <div style="font-size:12px;color:#94a3b8;margin-top:2px">${tablesData.length} table${tablesData.length===1?'':'s'} will be exported as individual PNGs in a ZIP file</div>
-        </div>
-        <button onclick="document.getElementById('qrSizeOverlay').remove()" style="width:32px;height:32px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;flex-shrink:0">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Print size</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px" id="qrSizeGrid">
-        ${SIZES.map((s,i)=>`
-          <button class="qr-size-opt${s.rec?' on':''}" data-idx="${i}" onclick="pickQrSize(${i})" style="position:relative;padding:14px 12px;border-radius:12px;border:2px solid ${s.rec?'#8E1616':'#e2e8f0'};background:${s.rec?'#fef2f2':'#fff'};cursor:pointer;text-align:left;transition:.15s">
-            ${s.rec?'<div style="position:absolute;top:-8px;right:10px;background:#8E1616;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:6px;letter-spacing:.3px">RECOMMENDED</div>':''}
-            <div style="font-size:15px;font-weight:800;color:#1e293b">${s.label}</div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px">${s.desc}</div>
-            <div style="font-size:10px;color:#94a3b8;margin-top:3px">${s.px} x ${s.px}px (300 DPI)</div>
-          </button>
-        `).join('')}
-      </div>
-      <button id="qrDlBtn" onclick="doQrDlAllTables()" style="width:100%;padding:14px;background:#047857;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 10V2M8 10L5 7M8 10l3-3M3 12v1.5h10V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Download ZIP
-      </button>
-    </div>`;
-  document.body.appendChild(ov);
-  ov.addEventListener('click',(e)=>{if(e.target===ov)ov.remove();});
-
-  // Store selected index
-  window._qrSelectedSize=SIZES.findIndex(s=>s.rec)||0;
-  window._qrSizes=SIZES;
-}
-
-function pickQrSize(idx){
-  window._qrSelectedSize=idx;
-  document.querySelectorAll('#qrSizeGrid button').forEach((b,i)=>{
-    const isOn=i===idx;
-    b.style.borderColor=isOn?'#8E1616':'#e2e8f0';
-    b.style.background=isOn?'#fef2f2':'#fff';
-  });
-}
-
-async function doQrDlAllTables(){
-  const sizes=window._qrSizes;
-  const sel=sizes[window._qrSelectedSize];
-  const btn=document.getElementById('qrDlBtn');
-  btn.disabled=true;
-  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="animation:spin 1s linear infinite"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="30 10"/></svg> Generating...';
-
-  try{
-    const zip=new JSZip();
-    const url=getQrUrl();
-    const restName=org?.name||'MenuSwipe';
-    const S=sel.px;
-
-    for(let i=0;i<tablesData.length;i++){
-      const t=tablesData[i];
-      const c=document.createElement('canvas');
-      c.width=S;c.height=S;
-      const ctx=c.getContext('2d');
-
-      // White background
-      ctx.fillStyle='#ffffff';
-      roundRect(ctx,0,0,S,S,S*0.03);ctx.fill();
-
-      // Proportional sizing
-      const pad=S*0.08;
-      const iconScale=S/800;
-
-      // Table icon
-      const iconW=100*iconScale, iconH=6*iconScale, legH=30*iconScale, legW=8*iconScale;
-      const iconX=(S-iconW)/2, iconY=pad;
-      ctx.fillStyle='#1D1616';
-      roundRect(ctx,iconX,iconY,iconW,iconH,3*iconScale);ctx.fill();
-      ctx.fillRect(iconX+10*iconScale,iconY+iconH,legW,legH);
-      ctx.fillRect(iconX+iconW-18*iconScale,iconY+iconH,legW,legH);
-
-      // Table label
-      const labelSize=Math.round(56*iconScale);
-      ctx.fillStyle='#1D1616';
-      ctx.font=`bold ${labelSize}px system-ui,-apple-system,sans-serif`;
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      const label=t.label.length>12?t.label.slice(0,11)+'..':t.label;
-      const labelY=pad+iconH+legH+labelSize*0.7;
-      ctx.fillText(label,S/2,labelY);
-
-      // QR code
-      const qrTop=labelY+labelSize*0.5+pad*0.3;
-      const qrBot=S-pad-22*iconScale;
-      const qrSpace=qrBot-qrTop;
-      const qrSize=Math.min(S-pad*2, qrSpace);
-      const qrCanvas=document.createElement('canvas');
-      await new Promise(resolve=>{
-        QRCode.toCanvas(qrCanvas,url,{width:qrSize,margin:2,color:{dark:'#1D1616',light:'#ffffff'},errorCorrectionLevel:'H'},resolve);
-      });
-      ctx.drawImage(qrCanvas,(S-qrSize)/2,qrTop,qrSize,qrSize);
-
-      // Restaurant name
-      const footSize=Math.round(22*iconScale);
-      ctx.fillStyle='#94a3b8';
-      ctx.font=`600 ${footSize}px system-ui,-apple-system,sans-serif`;
-      ctx.textAlign='center';ctx.textBaseline='bottom';
-      const rn=restName.length>30?restName.slice(0,29)+'..':restName;
-      ctx.fillText(rn,S/2,S-pad*0.4);
-
-      // Add to ZIP
-      const blob=await new Promise(r=>c.toBlob(r,'image/png'));
-      const safeName=(t.label||'table').replace(/[^a-zA-Z0-9_-]/g,'_');
-      zip.file(`table-${safeName}.png`,blob);
-
-      // Update progress
-      btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="animation:spin 1s linear infinite"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="30 10"/></svg> ${i+1} / ${tablesData.length}`;
-    }
-
-    const content=await zip.generateAsync({type:'blob'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(content);
-    a.download='tables-qr-'+sel.cm+'cm-'+(org?.slug||'menu')+'.zip';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
-    toast('Downloaded '+tablesData.length+' QR codes');
-    document.getElementById('qrSizeOverlay')?.remove();
-  }catch(e){
-    console.error('QR ZIP error:',e);
-    toast('Failed: '+e.message);
-    btn.disabled=false;
-    btn.innerHTML='Download ZIP';
-  }
-}
-
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-}
-
 /* TABLES */
 let tablesData = [];
 
@@ -3444,16 +2961,13 @@ async function loadTables(){
 
 function renderTablesList(){
   const list = document.getElementById('tablesList');
-  const dlWrap = document.getElementById('dlAllTablesWrap');
   if(tablesData.length === 0){
     list.innerHTML = `<div style="text-align:center;padding:40px 20px;background:#f8fafc;border-radius:12px;color:#94a3b8">
       <div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:6px">No tables yet</div>
       <div style="font-size:12px;max-width:260px;margin:0 auto;line-height:1.5">Add your first table above. Customers won't be required to pick a table if you skip this step.</div>
     </div>`;
-    if(dlWrap) dlWrap.style.display='none';
     return;
   }
-  if(dlWrap) dlWrap.style.display='block';
   list.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">
     ${tablesData.map(t => `
       <div style="position:relative;aspect-ratio:1;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:.15s" onmouseover="this.style.borderColor='#cbd5e1';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
@@ -3566,7 +3080,11 @@ async function refreshGoogleInsights(){
   try {
     const data = await api('POST','/api/google-insights/refresh');
     renderGoogleInsightsCard({ insights: data.insights, hasGoogleUrl: true });
-    toast('Insights updated');
+    if(data.notFound){
+      toast('⚠ ' + (data.message || 'Restaurant not found on Google. Try updating the restaurant name in Profile.'));
+    } else {
+      toast('✓ ' + (data.message || 'Insights updated'));
+    }
   } catch(e) {
     toast('Failed: '+e.message);
   } finally {
@@ -3866,19 +3384,20 @@ async function loadAnalyticsOld(){
 /* INIT */
 (async () => {
   if (!token) {
+    // Token yok, login ekranı göster
     document.getElementById('authScreen').style.display = '';
     return;
   }
   try {
+    // Token'ı backend'e doğrulat
     const data = await api('GET', '/api/auth/me');
     org = data.organization;
     localStorage.setItem('ms_org', JSON.stringify(org));
     startApp();
   } catch (e) {
-    // api() 401 durumunda zaten authScreen'i gösteriyor, token'ı temizliyor.
-    // Başka hata türleri için de auth ekranına düş.
+    // 401 gelirse api() zaten reload yapıyor
+    // Başka hata olursa login'e düş
     if (e.message !== 'Session expired') {
-      token = '';
       localStorage.removeItem('ms_token');
       localStorage.removeItem('ms_org');
       document.getElementById('authScreen').style.display = '';
