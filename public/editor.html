@@ -2125,7 +2125,7 @@ function applyHash(){
   let h=(location.hash||'').replace('#','').toLowerCase();
   if(h==='qr')h='tables'; // legacy redirect
   const allowed=['menu','tables','analytics','profile'];
-  if(!h)return;
+  if(!h)h='menu'; // default to menu panel
   if(allowed.includes(h)){
     const btn=document.getElementById('nav-'+h);
     if(btn)go(h, btn);
