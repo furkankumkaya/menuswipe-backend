@@ -661,9 +661,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <span id="ptitle">Menu items</span>
+      <span id="ptitle">Profile</span>
     </div>
-    <div class="top-acts" id="topActs">
+    <div class="top-acts" id="topActs" style="display:none">
       <a id="previewMenuBtn" href="#" target="_blank" class="btn-gh" title="Preview menu" style="padding:8px 10px">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
       </a>
@@ -760,7 +760,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     </div>
 
     <!-- MENU PANEL -->
-    <div class="panel on" id="p-menu">
+    <div class="panel" id="p-menu">
       <div class="sstrip">
         <div class="sc"><div class="scl">Items</div><div class="scv" id="statItems">0</div></div>
         <div class="sc"><div class="scl">Photos</div><div class="scv" id="statPhotos">0</div></div>
@@ -896,7 +896,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     </div>
 
     <!-- PROFILE PANEL -->
-    <div class="panel" id="p-profile">
+    <div class="panel on" id="p-profile">
       <div class="profile-section-title">Restaurant</div>
       <div class="profile-section">
         <div class="profile-row">
@@ -1072,7 +1072,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <span>Orders</span>
       <div class="nav-dot"></div>
     </button>
-    <button class="nav-btn on" id="nav-menu" onclick="go('menu',this)">
+    <button class="nav-btn" id="nav-menu" onclick="go('menu',this)">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 5.5h16M3 11h10M3 16.5h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <span>Menu</span>
       <div class="nav-dot"></div>
@@ -1087,7 +1087,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <span>Analytics</span>
       <div class="nav-dot"></div>
     </button>
-    <button class="nav-btn" id="nav-profile" onclick="go('profile',this)">
+    <button class="nav-btn on" id="nav-profile" onclick="go('profile',this)">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="currentColor" stroke-width="2"/><path d="M4 19c0-4.4 3.1-7 7-7s7 2.6 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <span>Profile</span>
       <div class="nav-dot"></div>
@@ -1230,7 +1230,7 @@ async function doLogin(){
     const data=await api('POST','/api/auth/login',{email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});
     token=data.token;org=data.organization;
     localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
-    startApp();
+    await startApp();
   }catch(e){document.getElementById('authErr').textContent=e.message;}
 }
 async function doRegister(){
@@ -1243,7 +1243,7 @@ async function doRegister(){
     const data=await api('POST','/api/auth/register',{email:document.getElementById('regEmail').value.trim(),password});
     token=data.token;org=data.organization;
     localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
-    startApp();
+    await startApp();
   }catch(e){document.getElementById('authErr').textContent=e.message;}
 }
 function doLogout(){localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');location.reload();}
@@ -1450,7 +1450,7 @@ async function obFinishWithTrial(){
     org = {...org, ...updated};
     localStorage.setItem('ms_org', JSON.stringify(org));
     document.getElementById('onboardingScreen').style.display = 'none';
-    startApp();
+    await startApp();
   }catch(e){ toast('Failed: '+e.message); }
 }
 
@@ -1795,40 +1795,64 @@ async function applyImport(){
   }
 }
 
-async function startApp(){
+function showEditorStartupError(err){
+  console.error('startApp failed', err);
   document.getElementById('authScreen').style.display='none';
-  
-  // Subscription kontrolü
-  if(org.planStatus === 'EXPIRED' || org.subscriptionStatus === 'EXPIRED'){
-    showSubscriptionExpiredScreen();
-    return;
+  document.getElementById('onboardingScreen').style.display='none';
+  const app=document.getElementById('appScreen');
+  app.classList.add('visible');
+  document.getElementById('topActs').style.display='none';
+  document.getElementById('ptitle').textContent='Profile';
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  const profile=document.getElementById('p-profile');
+  if(profile){
+    profile.classList.add('on');
+    profile.innerHTML=`<div style="padding:18px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;color:#991b1b;font-size:13px;line-height:1.5">
+      <div style="font-weight:800;margin-bottom:6px">Admin panel could not load</div>
+      <div>${escapeHtml(err?.message||'Unknown error')}</div>
+      <button onclick="location.reload()" style="margin-top:12px;padding:10px 12px;border-radius:8px;border:none;background:#991b1b;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Reload</button>
+    </div>`;
   }
-  
-  // Onboarding kontrolü
-  if(!org.onboardingCompleted){
-    showOnboarding();
-    return;
+}
+
+async function startApp(){
+  try{
+    document.getElementById('authScreen').style.display='none';
+    
+    // Subscription kontrolü
+    if(org.planStatus === 'EXPIRED' || org.subscriptionStatus === 'EXPIRED'){
+      showSubscriptionExpiredScreen();
+      return;
+    }
+    
+    // Onboarding kontrolü
+    if(!org.onboardingCompleted){
+      showOnboarding();
+      return;
+    }
+    
+    document.getElementById('appScreen').classList.add('visible');
+    // Set preview menu link
+    const prevBtn=document.getElementById('previewMenuBtn');
+    if(prevBtn&&org?.slug)prevBtn.href='/menu/'+org.slug;
+    populateCurrencies();
+    loadProfile();
+    buildHoursGrid();
+    await loadCats();
+    await loadBranches();
+    populateAddSel();
+    buildCatPills();
+    loadMenu();
+    qrGenerate();
+    // Trial banner
+    showTrialBanner();
+    // Demo mode
+    initDemoMode();
+    // Hash routing
+    applyHash();
+  }catch(err){
+    showEditorStartupError(err);
   }
-  
-  document.getElementById('appScreen').classList.add('visible');
-  // Set preview menu link
-  const prevBtn=document.getElementById('previewMenuBtn');
-  if(prevBtn&&org?.slug)prevBtn.href='/menu/'+org.slug;
-  populateCurrencies();
-  loadProfile();
-  buildHoursGrid();
-  await loadCats();
-  await loadBranches();
-  populateAddSel();
-  buildCatPills();
-  loadMenu();
-  qrGenerate();
-  // Trial banner
-  showTrialBanner();
-  // Demo mode
-  initDemoMode();
-  // Hash routing
-  setTimeout(applyHash, 100);
 }
 
 function showSubscriptionExpiredScreen(){
@@ -2130,12 +2154,14 @@ function go(id,el){
 }
 function goBack(){go('profile',document.getElementById('nav-profile'));}
 
+const DEFAULT_EDITOR_PANEL = 'profile';
+
 // Hash routing: /editor.html#tables, #qr, #profile, #analytics, #menu
 function applyHash(){
   let h=(location.hash||'').replace('#','').toLowerCase();
   if(h==='qr')h='tables'; // legacy redirect
   const allowed=['menu','tables','analytics','profile'];
-  if(!h)h='menu'; // default to menu panel
+  if(!h || h==='menu')h=DEFAULT_EDITOR_PANEL; // default to settings/profile panel
   if(allowed.includes(h)){
     const btn=document.getElementById('nav-'+h);
     if(btn)go(h, btn);
@@ -3883,7 +3909,7 @@ async function loadAnalyticsOld(){
     const data = await api('GET', '/api/auth/me');
     org = data.organization;
     localStorage.setItem('ms_org', JSON.stringify(org));
-    startApp();
+    await startApp();
   } catch (e) {
     // api() 401 durumunda zaten authScreen'i gösteriyor, token'ı temizliyor.
     // Başka hata türleri için de auth ekranına düş.

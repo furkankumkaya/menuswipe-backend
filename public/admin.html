@@ -203,7 +203,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
       <span id="headerOrgName">Orders</span>
       <small id="headerStatusText">Live</small>
     </div>
-    <a href="/editor.html" class="header-btn" title="Open admin panel">
+    <a href="/editor.html#profile" class="header-btn" title="Open admin panel">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L12 5L5 12L2 12L2 9L9 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
       Admin
     </a>
@@ -338,7 +338,7 @@ async function doLogin(){
     const data=await api('POST','/api/auth/login',{email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});
     token=data.token;org=data.organization;
     localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
-    if(!org.onboardingCompleted){location.href='/editor.html';return;}
+    if(!org.onboardingCompleted){location.href='/editor.html#profile';return;}
     startApp();
   }catch(e){document.getElementById('authErr').textContent=e.message;}
 }
@@ -356,7 +356,7 @@ async function doRegister(){
     });
     token=data.token;org=data.organization;
     localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
-    location.href='/editor.html';
+    location.href='/editor.html#profile';
   }catch(e){document.getElementById('authErrReg').textContent=e.message;}
 }
 
@@ -614,7 +614,7 @@ function toast(msg,dur=2200){
     const data=await api('GET','/api/auth/me');
     org=data.organization;
     localStorage.setItem('ms_org',JSON.stringify(org));
-    if(!org.onboardingCompleted){location.href='/editor.html';return;}
+    if(!org.onboardingCompleted){location.href='/editor.html#profile';return;}
     startApp();
   }catch(e){
     // api() 401 durumunda authScreen'i zaten gösteriyor.
