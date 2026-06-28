@@ -52,13 +52,12 @@ Copy `Publishable key` and `Secret key` into `.env`.
 ### 3. Create Products & Prices
 Dashboard → Products → Add product
 
-Create **3 products**:
+Create **2 products**:
 
 | Product | Monthly Price (TRY) | Annual Price (TRY) |
 |---------|--------------------|--------------------|
-| Starter | ₺499 | ₺4,790 (~20% off) |
+| Basic   | ₺499 | ₺4,790 (~20% off) |
 | Pro     | ₺899 | ₺8,630 (~20% off) |
-| Chain   | ₺2,499 | ₺23,990 (~20% off) |
 
 For each price: set **Recurring**, currency **TRY**, billing period **Monthly** or **Yearly**.
 Copy each `price_id` (starts with `price_`) into `.env`.
@@ -197,23 +196,22 @@ Add `?ref=qr` to the URL when linking from QR codes — it auto-increments the Q
 
 ## Plan Limits
 
-| Feature | Starter | Pro | Chain |
-|---------|---------|-----|-------|
-| Menu items | 20 | Unlimited | Unlimited |
-| Photos per item | 2 | 3 | 3 |
-| Branches | 1 | 1 | 5 |
-| Branch price override | No | No | Yes |
-| Central analytics | No | Yes | Yes |
-| White-label | No | No | Yes |
+| Feature | Basic | Pro |
+|---------|-------|-----|
+| Menu items | Unlimited | Unlimited |
+| Photos per item | 3 | 5 |
+| Branches | 1 | 5 |
+| Languages | Turkish + English | Unlimited |
 
 ---
 
 ## Deployment Checklist
 
 - [ ] Set `NODE_ENV=production`
-- [ ] Use a managed PostgreSQL (Railway, Supabase, or RDS)
+- [ ] Use a managed PostgreSQL (Supabase/RDS/etc.); include `?sslmode=require` when required by the provider
 - [ ] Switch `UPLOAD_DIR` to S3-compatible storage for photo uploads
 - [ ] Set `APP_URL` to your production domain
+- [ ] Keep `JWT_SECRET` stable across deploys; if rotating, set `JWT_PREVIOUS_SECRETS` temporarily
 - [ ] Register Stripe webhook with production endpoint
 - [ ] Switch Stripe keys from `sk_test_` to `sk_live_`
 - [ ] Run `npx prisma migrate deploy` (not `db push`) in production

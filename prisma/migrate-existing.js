@@ -41,16 +41,16 @@ async function main() {
     if (isBeta) {
       // Beta kullanıcıları PRO yıllık olarak ayarla
       data.plan = "PRO";
-      data.subscriptionStatus = "ACTIVE";
+      data.planStatus = "ACTIVE";
       data.billingCycle = "YEARLY";
-      data.subscriptionEndsAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+      data.currentPeriodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
       console.log(`  -> ${org.slug} (${ownerEmail}): PRO (beta)`);
     } else if (!org.trialEndsAt) {
-      // Normal kullanıcılar: trial setup (creation date'inden itibaren 30 gün)
+      // Normal kullanıcılar: trial setup (creation date'inden itibaren 15 gün)
       const trialStart = org.createdAt || new Date();
-      const trialEnd = new Date(trialStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const trialEnd = new Date(trialStart.getTime() + 15 * 24 * 60 * 60 * 1000);
       data.plan = "TRIAL";
-      data.subscriptionStatus = "TRIAL";
+      data.planStatus = "TRIAL";
       data.trialEndsAt = trialEnd;
       const daysLeft = Math.ceil((trialEnd - new Date()) / (1000 * 60 * 60 * 24));
       console.log(`  -> ${org.slug} (${ownerEmail}): TRIAL, ${daysLeft} days left`);

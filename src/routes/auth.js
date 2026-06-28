@@ -1,15 +1,14 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const { requireAuth } = require("../middleware/auth");
+const { signAuthToken } = require("../utils/jwt");
+const { TRIAL_DAYS } = require("../middleware/subscription");
 
 const prisma = new PrismaClient();
 
 function signToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "30d",
-  });
+  return signAuthToken(userId);
 }
 
 function slugify(str) {
@@ -48,8 +47,7 @@ router.post("/register", async (req, res, next) => {
     const slug = await uniqueSlug(name);
     const passwordHash = await bcrypt.hash(password, 12);
     
-    // Trial 30 gün
-    const trialEndsAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
 
     const org = await prisma.organization.create({
       data: {

@@ -1,7 +1,7 @@
 // src/routes/admin.js
 const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
-const jwt = require("jsonwebtoken");
+const { verifyAuthToken } = require("../utils/jwt");
 
 const prisma = new PrismaClient();
 
@@ -12,7 +12,7 @@ async function requireAdmin(req, res, next) {
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;
     if (!token) return res.status(401).json({ error: "No token" });
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = verifyAuthToken(token);
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       include: { organization: true },

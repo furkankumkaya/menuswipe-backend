@@ -5,6 +5,15 @@ const { getSubscriptionInfo, getMaxLanguages } = require("../middleware/subscrip
 
 const prisma = new PrismaClient();
 
+function subscriptionPublicFields(org) {
+  return {
+    trialEndsAt: org.trialEndsAt,
+    currentPeriodEnd: org.currentPeriodEnd,
+    subscriptionEndsAt: org.currentPeriodEnd,
+    billingCycle: org.billingCycle,
+  };
+}
+
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     const info = getSubscriptionInfo(req.org);
@@ -12,9 +21,7 @@ router.get("/", requireAuth, async (req, res, next) => {
     
     res.json({
       ...info,
-      trialEndsAt: req.org.trialEndsAt,
-      subscriptionEndsAt: req.org.subscriptionEndsAt,
-      billingCycle: req.org.billingCycle,
+      ...subscriptionPublicFields(req.org),
       maxLanguages: maxLangs === Infinity ? -1 : maxLangs,
       currentLanguageCount: (req.org.enabledLanguages || []).length,
     });
@@ -25,7 +32,7 @@ router.get("/", requireAuth, async (req, res, next) => {
 router.post("/upgrade", requireAuth, async (req, res, next) => {
   try {
     const { plan, billingCycle } = req.body;
-    if (!["STARTER", "PRO"].includes(plan)) {
+    if (!["BASIC", "PRO"].includes(plan)) {
       return res.status(400).json({ error: "Invalid plan" });
     }
     if (!["MONTHLY", "YEARLY"].includes(billingCycle)) {
@@ -34,15 +41,15 @@ router.post("/upgrade", requireAuth, async (req, res, next) => {
     
     // Mock upgrade - gerçek Stripe entegrasyonu sonra
     const days = billingCycle === "YEARLY" ? 365 : 30;
-    const subscriptionEndsAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    const currentPeriodEnd = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
     
     const updated = await prisma.organization.update({
       where: { id: req.org.id },
       data: {
         plan,
         billingCycle,
-        subscriptionStatus: "ACTIVE",
-        subscriptionEndsAt,
+        planStatus: "ACTIVE",
+        currentPeriodEnd,
       },
     });
     
@@ -64,15 +71,15 @@ router.post("/grant-beta", requireAuth, async (req, res, next) => {
       return res.status(403).json({ error: "Forbidden" });
     }
     
-    const subscriptionEndsAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 yıl
+    const currentPeriodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 yıl
     
     const updated = await prisma.organization.update({
       where: { id: req.org.id },
       data: {
         plan: "PRO",
         billingCycle: "YEARLY",
-        subscriptionStatus: "ACTIVE",
-        subscriptionEndsAt,
+        planStatus: "ACTIVE",
+        currentPeriodEnd,
       },
     });
     
@@ -107,15 +114,15 @@ router.post("/admin/run-migration", async (req, res, next) => {
 
       if (isBeta) {
         data.plan = "PRO";
-        data.subscriptionStatus = "ACTIVE";
+        data.planStatus = "ACTIVE";
         data.billingCycle = "YEARLY";
-        data.subscriptionEndsAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        data.currentPeriodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
         results.push({ slug: org.slug, email: ownerEmail, action: "PRO (beta)" });
       } else if (!org.trialEndsAt) {
         const trialStart = org.createdAt || new Date();
-        const trialEnd = new Date(trialStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const trialEnd = new Date(trialStart.getTime() + 15 * 24 * 60 * 60 * 1000);
         data.plan = "TRIAL";
-        data.subscriptionStatus = "TRIAL";
+        data.planStatus = "TRIAL";
         data.trialEndsAt = trialEnd;
         results.push({ slug: org.slug, email: ownerEmail, action: "TRIAL setup" });
       } else {

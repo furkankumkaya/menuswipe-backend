@@ -16,7 +16,7 @@ async function main() {
       name: "Ortaya Restaurant",
       slug: "ortaya",
       accentColor: "#1a1a1a",
-      plan: "CHAIN",
+      plan: "PRO",
       planStatus: "ACTIVE",
       users: {
         create: {

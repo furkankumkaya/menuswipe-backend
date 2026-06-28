@@ -1,6 +1,6 @@
 // src/middleware/auth.js
-const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
+const { verifyAuthToken } = require("../utils/jwt");
 const prisma = new PrismaClient();
 
 async function requireAuth(req, res, next) {
@@ -11,7 +11,7 @@ async function requireAuth(req, res, next) {
     }
 
     const token = header.slice(7);
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = verifyAuthToken(token);
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },

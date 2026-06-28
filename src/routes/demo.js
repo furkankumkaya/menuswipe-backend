@@ -3,15 +3,13 @@ const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
 const { requireAuth } = require("../middleware/auth");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { signAuthToken } = require("../utils/jwt");
 const crypto = require("crypto");
 
 const prisma = new PrismaClient();
 
 function signToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "30d",
-  });
+  return signAuthToken(userId);
 }
 
 // Sales veya Admin rolü gerektirir
