@@ -15,10 +15,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--accent:#8E1616;--accent2:#7a1313;--accent-soft:#fef2f2;--nav-h:64px;--gold:#f59e0b}
-body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f8fafc;color:#1e293b}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#1D1616;color:#1e293b}
 
 /* AUTH */
-#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#1D1616}
+#authScreen{min-height:100vh;display:none;align-items:center;justify-content:center;padding:24px;background:#1D1616;position:relative;z-index:5}
 .auth-box{background:#2a1d1d;border-radius:20px;padding:32px;width:100%;max-width:360px;border:1px solid #3d2828}
 .auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .auth-logo-icon{width:44px;height:44px;border-radius:10px;background:#8E1616;display:flex;align-items:center;justify-content:center}
@@ -1165,6 +1165,42 @@ const ALLERGENS = [
 
 const AUTH_ENDPOINTS = ['/api/auth/login', '/api/auth/register'];
 
+function forceEditorAuthScreen(message){
+  token='';
+  localStorage.removeItem('ms_token');
+  localStorage.removeItem('ms_org');
+  const auth=document.getElementById('authScreen');
+  const app=document.getElementById('appScreen');
+  const onboarding=document.getElementById('onboardingScreen');
+  if(app)app.classList.remove('visible');
+  if(onboarding)onboarding.style.display='none';
+  if(auth)auth.style.display='flex';
+  const err=document.getElementById('authErr');
+  if(err && message)err.textContent=message;
+}
+
+window.addEventListener('error', (event) => {
+  console.error('Editor runtime error', event.error || event.message);
+  forceEditorAuthScreen('Panel failed to load. Please sign in again.');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Editor promise error', event.reason);
+  forceEditorAuthScreen('Panel failed to load. Please sign in again.');
+});
+
+setTimeout(() => {
+  const auth=document.getElementById('authScreen');
+  const app=document.getElementById('appScreen');
+  const onboarding=document.getElementById('onboardingScreen');
+  const appVisible=app?.classList.contains('visible') && getComputedStyle(app).display!=='none';
+  const authVisible=auth && getComputedStyle(auth).display!=='none';
+  const onboardingVisible=onboarding && getComputedStyle(onboarding).display!=='none';
+  if(!appVisible && !authVisible && !onboardingVisible){
+    forceEditorAuthScreen('Session reset. Please sign in again.');
+  }
+}, 3500);
+
 async function readApiJson(response, fallbackMessage){
   const text = await response.text();
   if(!text) return {};
@@ -1189,7 +1225,7 @@ async function api(method,path,body){
     localStorage.removeItem('ms_token');
     localStorage.removeItem('ms_org');
     // Reload yapmak yerine direkt auth ekranını göster
-    document.getElementById('authScreen').style.display='';
+    document.getElementById('authScreen').style.display='flex';
     document.getElementById('appScreen').classList.remove('visible');
     document.getElementById('onboardingScreen').style.display='none';
     throw new Error('Session expired');
@@ -1205,7 +1241,7 @@ async function apiForm(method,path,fd){
     token='';
     localStorage.removeItem('ms_token');
     localStorage.removeItem('ms_org');
-    document.getElementById('authScreen').style.display='';
+    document.getElementById('authScreen').style.display='flex';
     document.getElementById('appScreen').classList.remove('visible');
     document.getElementById('onboardingScreen').style.display='none';
     throw new Error('Session expired');
@@ -3902,7 +3938,7 @@ async function loadAnalyticsOld(){
 /* INIT */
 (async () => {
   if (!token) {
-    document.getElementById('authScreen').style.display = '';
+    document.getElementById('authScreen').style.display = 'flex';
     return;
   }
   try {
@@ -3917,7 +3953,7 @@ async function loadAnalyticsOld(){
       token = '';
       localStorage.removeItem('ms_token');
       localStorage.removeItem('ms_org');
-      document.getElementById('authScreen').style.display = '';
+      document.getElementById('authScreen').style.display = 'flex';
     }
   }
 })();
