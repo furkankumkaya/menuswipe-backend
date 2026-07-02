@@ -3,15 +3,13 @@ const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
 const { requireAuth } = require("../middleware/auth");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { signAuthToken } = require("../utils/jwt");
 const crypto = require("crypto");
 
 const prisma = new PrismaClient();
 
 function signToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "30d",
-  });
+  return signAuthToken(userId);
 }
 
 // Sales veya Admin rolü gerektirir
@@ -199,6 +197,7 @@ router.post("/claim/:token", async (req, res, next) => {
           planStatus: "TRIAL",
           trialEndsAt,
           onboardingCompleted: true,
+          referredBySalesUserId: claim.salesUserId || sourceOrg.referredBySalesUserId || null,
         },
       });
 
@@ -258,6 +257,14 @@ router.post("/claim/:token", async (req, res, next) => {
         where: { token: req.params.token },
         data: { claimedAt: new Date(), claimedByOrgId: newOrg.id },
       });
+
+      // Update SalesDemo status if this was a sales-generated claim
+      if (claim.salesUserId) {
+        await tx.salesDemo.updateMany({
+          where: { salesUserId: claim.salesUserId, organizationId: claim.sourceOrgId },
+          data: { status: "CLAIMED" },
+        });
+      }
 
       return { newOrg, newUser };
     });

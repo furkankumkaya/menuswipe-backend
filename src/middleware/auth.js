@@ -1,6 +1,6 @@
 // src/middleware/auth.js
-const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
+const { verifyAuthToken } = require("../utils/jwt");
 const prisma = new PrismaClient();
 
 async function requireAuth(req, res, next) {
@@ -11,7 +11,7 @@ async function requireAuth(req, res, next) {
     }
 
     const token = header.slice(7);
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = verifyAuthToken(token);
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
@@ -21,6 +21,17 @@ async function requireAuth(req, res, next) {
     if (!user) return res.status(401).json({ error: "User not found" });
 
     req.user = user;
+
+    // Sales demo mode: orgOverride ile farkli org'a erisim
+    if (payload.orgOverride && user.role === "SALES") {
+      const overrideOrg = await prisma.organization.findUnique({ where: { id: payload.orgOverride } });
+      if (overrideOrg) {
+        req.org = overrideOrg;
+        req.salesMode = true;
+        return next();
+      }
+    }
+
     req.org = user.organization;
     next();
   } catch (err) {

@@ -1,7 +1,7 @@
 // src/routes/admin.js
 const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
-const jwt = require("jsonwebtoken");
+const { verifyAuthToken } = require("../utils/jwt");
 
 const prisma = new PrismaClient();
 
@@ -12,7 +12,7 @@ async function requireAdmin(req, res, next) {
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;
     if (!token) return res.status(401).json({ error: "No token" });
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = verifyAuthToken(token);
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       include: { organization: true },
@@ -231,13 +231,76 @@ router.get("/sales-team", requireAdmin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ─── POST /api/admin/create-sales ───────────────────
+// Admin dashboard'dan yeni sales hesabi olustur
+router.post("/create-sales", requireAdmin, async (req, res, next) => {
+  try {
+    const { email, name, password } = req.body;
+    if (!email || !name || !password) {
+      return res.status(400).json({ error: "Email, name and password are required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    // Email zaten kayitli mi?
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      // Varsa sadece SALES rolune cevir
+      await prisma.user.update({ where: { email }, data: { role: "SALES" } });
+      return res.json({ ok: true, message: `${email} is now a SALES user (existing account)` });
+    }
+
+    // Yeni hesap olustur
+    const bcrypt = require("bcryptjs");
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    function slugify(str) {
+      return str.toLowerCase()
+        .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 40);
+    }
+
+    let slug = slugify(name + "-sales") || "sales";
+    const existingSlug = await prisma.organization.findUnique({ where: { slug } });
+    if (existingSlug) slug = slug + "-" + Date.now().toString().slice(-4);
+
+    const org = await prisma.organization.create({
+      data: {
+        name: name + " (Sales)",
+        slug,
+        currency: "USD",
+        defaultLanguage: "en",
+        enabledLanguages: [],
+        plan: "PRO",
+        planStatus: "ACTIVE",
+        currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        onboardingCompleted: true,
+        users: {
+          create: { email, passwordHash, name, role: "SALES" },
+        },
+        branches: {
+          create: { name: "Demo", slug: "demo", active: true },
+        },
+      },
+      include: { users: true },
+    });
+
+    res.json({
+      ok: true,
+      message: `Sales account created for ${email}`,
+      user: { id: org.users[0].id, email, name, role: "SALES" },
+    });
+  } catch (err) { next(err); }
+});
+
 // ─── POST /api/admin/grant-sales ────────────────────
+// Mevcut hesabi SALES rolune cevir
 router.post("/grant-sales", requireAdmin, async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email required" });
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found. Use 'Create sales account' instead." });
     await prisma.user.update({ where: { email }, data: { role: "SALES" } });
     res.json({ ok: true });
   } catch (err) { next(err); }
@@ -248,6 +311,78 @@ router.post("/revoke-sales", requireAdmin, async (req, res, next) => {
   try {
     const { email } = req.body;
     await prisma.user.update({ where: { email }, data: { role: "OWNER" } });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ─── GET /api/admin/sales-applications ──────────────
+router.get("/sales-applications", requireAdmin, async (req, res, next) => {
+  try {
+    const apps = await prisma.salesApplication.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(apps);
+  } catch (err) { next(err); }
+});
+
+// ─── POST /api/admin/approve-sales/:id ──────────────
+router.post("/approve-sales/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const app = await prisma.salesApplication.findUnique({ where: { id: req.params.id } });
+    if (!app) return res.status(404).json({ error: "Application not found" });
+    if (app.status !== "PENDING") return res.status(400).json({ error: "Already processed" });
+
+    // Hesap olustur
+    function slugify(str) {
+      return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 40);
+    }
+
+    let slug = slugify(app.name + "-sales") || "sales";
+    const existingSlug = await prisma.organization.findUnique({ where: { slug } });
+    if (existingSlug) slug = slug + "-" + Date.now().toString().slice(-4);
+
+    const org = await prisma.organization.create({
+      data: {
+        name: app.name + " (Sales)",
+        slug,
+        currency: "USD",
+        defaultLanguage: "en",
+        enabledLanguages: [],
+        plan: "PRO",
+        planStatus: "ACTIVE",
+        currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        onboardingCompleted: true,
+        users: {
+          create: {
+            email: app.email,
+            passwordHash: app.passwordHash,
+            name: app.name,
+            role: "SALES",
+          },
+        },
+        branches: {
+          create: { name: "Demo", slug: "demo", active: true },
+        },
+      },
+    });
+
+    await prisma.salesApplication.update({
+      where: { id: req.params.id },
+      data: { status: "APPROVED", approvedAt: new Date() },
+    });
+
+    res.json({ ok: true, message: `${app.email} approved and account created` });
+  } catch (err) { next(err); }
+});
+
+// ─── POST /api/admin/reject-sales/:id ───────────────
+router.post("/reject-sales/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    await prisma.salesApplication.update({
+      where: { id: req.params.id },
+      data: { status: "REJECTED", rejectedAt: new Date(), rejectionReason: reason || null },
+    });
     res.json({ ok: true });
   } catch (err) { next(err); }
 });

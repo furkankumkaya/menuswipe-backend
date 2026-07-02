@@ -24,6 +24,7 @@ const ordersRoutes = require("./routes/orders");
 const googleInsightsRoutes = require("./routes/google-insights");
 const translationsRoutes = require("./routes/translations");
 const demoRoutes = require("./routes/demo");
+const salesRoutes = require("./routes/sales");
 const adminRoutes = require("./routes/admin");
 
 const app = express();
@@ -31,7 +32,16 @@ const app = express();
 app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "5mb" }));
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(path.join(__dirname, "../public"), {
+  setHeaders: (res, filePath) => {
+    const file = path.basename(filePath);
+    if (filePath.endsWith(".html") || file === "pwa.js" || file === "sw.js") {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    }
+  },
+}));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/menu", menuRoutes);
@@ -48,6 +58,7 @@ app.use("/api/google-insights", googleInsightsRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/demo", demoRoutes);
+app.use("/api/sales", salesRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.get("/health", (_, res) => res.json({ ok: true }));
@@ -55,6 +66,8 @@ app.get("/health", (_, res) => res.json({ ok: true }));
 app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "../public/admin.html")));
 app.get("/menu/:slug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
 app.get("/menu/:slug/:branchSlug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
+app.get("/sales", (req, res) => res.sendFile(path.join(__dirname, "../public/sales.html")));
+app.get("/sales-panel", (req, res) => res.sendFile(path.join(__dirname, "../public/sales-panel.html")));
 app.get("/claim/:token", (req, res) => res.sendFile(path.join(__dirname, "../public/claim.html")));
 app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "../public/dashboard.html")));
 

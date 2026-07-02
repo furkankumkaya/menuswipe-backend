@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MenuSwipe Sales</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:#0f1117;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#1a1d27;border:1px solid #2a2d3d;border-radius:24px;padding:36px 30px;width:100%;max-width:400px}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:8px;justify-content:center}
+.logo-icon{width:44px;height:44px;border-radius:12px;background:#8E1616;display:flex;align-items:center;justify-content:center}
+.logo-text{font-size:22px;font-weight:800;color:#e2e8f0;letter-spacing:-.5px}
+.logo-text span{color:#D84040}
+.badge{text-align:center;font-size:11px;font-weight:700;color:#D84040;letter-spacing:1px;text-transform:uppercase;margin-bottom:28px}
+.tabs{display:flex;gap:4px;background:#222636;border-radius:10px;padding:4px;margin-bottom:24px}
+.tab{flex:1;padding:10px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;background:transparent;color:#64748b}
+.tab.on{background:#8E1616;color:#fff}
+.panel{display:none}
+.panel.on{display:block}
+label{display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:6px;margin-top:16px}
+label:first-child{margin-top:0}
+input{width:100%;padding:12px 14px;background:#222636;border:1.5px solid #2a2d3d;border-radius:10px;color:#e2e8f0;font-size:14px;outline:none;transition:.15s}
+input:focus{border-color:#8E1616}
+input::placeholder{color:#475569}
+.err{font-size:12px;color:#f87171;margin-top:8px;display:none}
+.success{font-size:12px;color:#4ade80;margin-top:8px;display:none;line-height:1.5}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;margin-top:20px;transition:.15s}
+.btn-primary{background:#8E1616;color:#fff}
+.btn-primary:hover{background:#D84040}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.note{font-size:11px;color:#475569;text-align:center;margin-top:14px;line-height:1.6}
+.info-box{background:#222636;border:1px solid #2a2d3d;border-radius:12px;padding:16px;margin-top:20px}
+.info-box h3{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:8px}
+.info-box p{font-size:12px;color:#64748b;line-height:1.6}
+.info-box ul{font-size:12px;color:#94a3b8;line-height:2;padding-left:16px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="26" height="26" viewBox="0 0 32 32" fill="none"><path d="M6 25.5L6 6.5L16 19L26 6.5L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    </div>
+    <div class="logo-text">Menu<span>Swipe</span></div>
+  </div>
+  <div class="badge">Sales Partner Portal</div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('login')">Sign in</button>
+    <button class="tab" onclick="switchTab('register')">Apply</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="panel on" id="panel-login">
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"/>
+    <label>Password</label>
+    <input type="password" id="loginPass" placeholder="Your password" autocomplete="current-password"/>
+    <div class="err" id="loginErr"></div>
+    <button class="btn btn-primary" onclick="doLogin()" id="loginBtn">Sign in</button>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="panel" id="panel-register">
+    <label>Full name</label>
+    <input type="text" id="regName" placeholder="John Doe" autocomplete="name"/>
+    <label>Email</label>
+    <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email"/>
+    <label>Phone (optional)</label>
+    <input type="tel" id="regPhone" placeholder="+44 7911 123456" autocomplete="tel"/>
+    <label>Password</label>
+    <input type="password" id="regPass" placeholder="At least 6 characters" autocomplete="new-password"/>
+    <div class="err" id="regErr"></div>
+    <div class="success" id="regSuccess"></div>
+    <button class="btn btn-primary" onclick="doRegister()" id="regBtn">Submit application</button>
+    <p class="note">Your application will be reviewed by our team. You'll be able to sign in once approved.</p>
+
+    <div class="info-box">
+      <h3>What do sales partners do?</h3>
+      <ul>
+        <li>Visit restaurants and set up their digital menu</li>
+        <li>Share a claim link with the restaurant owner</li>
+        <li>Earn 30% commission on every subscription</li>
+        <li>Track your earnings in real-time</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelector(`.tab:nth-child(${tab === 'login' ? 1 : 2})`).classList.add('on');
+  document.getElementById('panel-' + tab).classList.add('on');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  err.style.display = 'none';
+
+  if (!email || !password) { err.textContent = 'Fill in all fields'; err.style.display = 'block'; return; }
+
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/sales/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error; err.style.display = 'block'; btn.textContent = 'Sign in'; btn.disabled = false; return; }
+
+    localStorage.setItem('ms_sales_token', d.token);
+    localStorage.setItem('ms_sales_user', JSON.stringify(d.user));
+    window.location.href = '/sales-panel';
+  } catch (e) {
+    err.textContent = 'Connection error'; err.style.display = 'block';
+    btn.textContent = 'Sign in'; btn.disabled = false;
+  }
+}
+
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const password = document.getElementById('regPass').value;
+  const err = document.getElementById('regErr');
+  const success = document.getElementById('regSuccess');
+  const btn = document.getElementById('regBtn');
+  err.style.display = 'none'; success.style.display = 'none';
+
+  if (!name || !email || !password) { err.textContent = 'Fill in all required fields'; err.style.display = 'block'; return; }
+  if (password.length < 6) { err.textContent = 'Password must be at least 6 characters'; err.style.display = 'block'; return; }
+
+  btn.textContent = 'Submitting...'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/sales/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password }),
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error; err.style.display = 'block'; btn.textContent = 'Submit application'; btn.disabled = false; return; }
+
+    success.textContent = 'Application submitted! You will be notified when your account is approved. You can then sign in from the login tab.';
+    success.style.display = 'block';
+    btn.textContent = 'Application sent'; btn.disabled = true;
+  } catch (e) {
+    err.textContent = 'Connection error'; err.style.display = 'block';
+    btn.textContent = 'Submit application'; btn.disabled = false;
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') { const active = document.querySelector('.panel.on'); if (active.id === 'panel-login') doLogin(); else doRegister(); } });
+
+// Auto-redirect if already logged in
+const t = localStorage.getItem('ms_sales_token');
+if (t) window.location.href = '/sales-panel';
+</script>
+</body>
+</html>

@@ -251,6 +251,24 @@ router.post("/webhook", async (req, res) => {
             where: { id: orgId },
             data: { planStatus: "ACTIVE" },
           });
+
+          // Sales commission: 30% of payment to referring sales person
+          const org = await prisma.organization.findUnique({ where: { id: orgId } });
+          if (org?.referredBySalesUserId) {
+            const commissionRate = 0.30;
+            const commissionAmount = Math.round(invoice.amount_paid * commissionRate);
+            await prisma.commission.create({
+              data: {
+                salesUserId: org.referredBySalesUserId,
+                organizationId: orgId,
+                transactionId: invoice.id,
+                amount: commissionAmount,
+                currency: invoice.currency,
+                rate: commissionRate,
+                status: "PENDING",
+              },
+            });
+          }
         }
         break;
       }

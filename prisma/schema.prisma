@@ -52,6 +52,9 @@ model Organization {
   // Onboarding
   onboardingCompleted Boolean   @default(false)
   
+  // Sales referral
+  referredBySalesUserId String?
+
   // Features
   orderListEnabled    Boolean   @default(true)
   
@@ -313,6 +316,7 @@ model ClaimToken {
   token           String       @unique
   sourceOrgId     String
   sourceOrg       Organization @relation("SourceOrg", fields: [sourceOrgId], references: [id], onDelete: Cascade)
+  salesUserId     String?
   expiresAt       DateTime
   claimedAt       DateTime?
   claimedByOrgId  String?
@@ -320,4 +324,50 @@ model ClaimToken {
   createdAt       DateTime     @default(now())
 
   @@index([token])
+}
+
+model SalesApplication {
+  id              String       @id @default(uuid())
+  email           String       @unique
+  name            String
+  passwordHash    String
+  phone           String?
+  status          String       @default("PENDING")  // PENDING, APPROVED, REJECTED
+  rejectionReason String?
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  createdAt       DateTime     @default(now())
+}
+
+model SalesDemo {
+  id              String       @id @default(uuid())
+  salesUserId     String
+  organizationId  String
+  orgName         String
+  status          String       @default("CREATED")  // CREATED, CLAIMED, TRIAL, SUBSCRIBED, CHURNED
+  claimToken      String?
+  claimUrl        String?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([salesUserId])
+  @@index([organizationId])
+}
+
+model Commission {
+  id              String       @id @default(uuid())
+  salesUserId     String
+  organizationId  String
+  transactionId   String?
+  amount          Int          // cents
+  currency        String       @default("usd")
+  rate            Float        @default(0.30)  // 30%
+  status          String       @default("PENDING")  // PENDING, PAID, WITHDRAWN
+  paidAt          DateTime?
+
+  createdAt       DateTime     @default(now())
+
+  @@index([salesUserId])
+  @@index([organizationId])
 }

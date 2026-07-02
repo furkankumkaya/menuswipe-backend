@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sales Dashboard - MenuSwipe</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222636;--border:#2a2d3d;--accent:#8E1616;--accent-light:#D84040;--text:#e2e8f0;--muted:#64748b;--dim:#94a3b8;--green:#16a34a;--yellow:#d97706;--red:#dc2626}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.topbar-title span{color:#D84040}
+.topbar-badge{font-size:10px;font-weight:700;color:var(--accent-light);background:rgba(142,22,22,.2);padding:3px 8px;border-radius:6px;letter-spacing:.5px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-user{font-size:12px;color:var(--dim)}
+.btn-sm{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:12px;font-weight:600;cursor:pointer}
+.btn-sm:hover{background:var(--surface2);color:var(--text)}
+.main{max-width:1000px;margin:0 auto;padding:24px 20px}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
+.stat-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:800}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Cards */
+.section{margin-bottom:28px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:800}
+.btn-create{padding:10px 20px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px}
+.btn-create:hover{background:var(--accent-light)}
+
+.demo-grid{display:grid;gap:12px}
+.demo-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;align-items:center;gap:16px;transition:.15s}
+.demo-card:hover{border-color:#3a3d4d}
+.demo-icon{width:48px;height:48px;border-radius:12px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.demo-info{flex:1;min-width:0}
+.demo-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.demo-meta{font-size:12px;color:var(--muted)}
+.demo-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.badge{display:inline-flex;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.badge-created{background:rgba(100,116,139,.15);color:#94a3b8}
+.badge-claimed{background:rgba(59,130,246,.15);color:#60a5fa}
+.badge-trial{background:rgba(217,119,6,.15);color:#fbbf24}
+.badge-subscribed{background:rgba(22,163,74,.15);color:#4ade80}
+.badge-churned{background:rgba(220,38,38,.15);color:#f87171}
+
+.btn-claim{padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-edit{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-edit:hover{background:var(--surface2);color:var(--text)}
+
+/* Balance */
+.balance-card{background:linear-gradient(135deg,#1a1d27,#2a1a1a);border:1px solid var(--accent);border-radius:16px;padding:24px;margin-bottom:14px}
+.balance-label{font-size:11px;font-weight:700;color:var(--accent-light);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.balance-amount{font-size:36px;font-weight:800;color:#fff;margin-bottom:4px}
+.balance-sub{font-size:12px;color:var(--muted)}
+
+/* Empty */
+.empty{text-align:center;padding:48px 24px;color:var(--muted);font-size:13px;line-height:1.6}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:440px}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-label{font-size:12px;font-weight:600;color:var(--dim);margin-bottom:6px;margin-top:14px}
+.modal-input{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none}
+.modal-input:focus{border-color:var(--accent)}
+.modal-btn{width:100%;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px}
+.modal-btn-primary{background:var(--accent);color:#fff}
+.modal-err{font-size:12px;color:var(--red);margin-top:8px;display:none}
+
+/* Claim link display */
+.claim-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:12px}
+.claim-url{font-size:12px;color:var(--accent-light);word-break:break-all;font-weight:600;margin-bottom:10px}
+.claim-actions{display:flex;gap:8px}
+.claim-actions button,.claim-actions a{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px}
+.btn-copy{border:1px solid var(--border);background:transparent;color:var(--dim)}
+.btn-wa{border:none;background:#16a34a;color:#fff}
+
+/* Commission list */
+.comm-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.comm-item:last-child{border-bottom:none}
+.comm-name{font-size:13px;font-weight:600}
+.comm-plan{font-size:11px;color:var(--muted)}
+.comm-amount{font-size:14px;font-weight:700;color:var(--green)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo"><svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M6 25.5L6 6.5L16 19L26 6.5L26 25.5" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+    <div class="topbar-title">Menu<span>Swipe</span></div>
+    <div class="topbar-badge">Sales</div>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="userName"></span>
+    <button class="btn-sm" onclick="doLogout()">Sign out</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stat-row" id="statsRow">
+    <div class="stat"><div class="stat-label">Demos created</div><div class="stat-val" id="s-demos">-</div></div>
+    <div class="stat"><div class="stat-label">Claimed</div><div class="stat-val" style="color:var(--green)" id="s-claimed">-</div><div class="stat-sub" id="s-conv"></div></div>
+    <div class="stat"><div class="stat-label">Subscribed</div><div class="stat-val" style="color:var(--accent-light)" id="s-subs">-</div></div>
+    <div class="stat"><div class="stat-label">Your earnings</div><div class="stat-val" style="color:var(--green)" id="s-earnings">-</div><div class="stat-sub" id="s-pending"></div></div>
+  </div>
+
+  <!-- BALANCE -->
+  <div class="balance-card">
+    <div class="balance-label">Your balance</div>
+    <div class="balance-amount" id="balanceAmount">$0.00</div>
+    <div class="balance-sub">30% commission on every subscription from your referrals</div>
+  </div>
+
+  <!-- DEMOS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Your demos</div>
+      <button class="btn-create" onclick="openCreateDemo()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        Create demo
+      </button>
+    </div>
+    <div class="demo-grid" id="demoGrid">
+      <div class="empty"><div class="empty-icon">🍽</div>No demos yet. Visit a restaurant, create their menu, and share a claim link.</div>
+    </div>
+  </div>
+
+  <!-- COMMISSIONS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Commission history</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px" id="commList">
+      <div class="empty" style="padding:24px 0">No commissions yet. Earnings appear here when your referrals subscribe.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CREATE DEMO MODAL -->
+<div class="modal-bg" id="createModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-title">
+      Create a demo
+      <button class="modal-close" onclick="document.getElementById('createModal').style.display='none'">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:8px">Enter the restaurant's name and Google Maps link. You'll be taken to the menu editor to set everything up.</div>
+
+    <div class="modal-label">Restaurant name</div>
+    <input class="modal-input" id="demoName" placeholder="e.g. Lololy Cafe"/>
+
+    <div class="modal-label">Google Maps link (optional)</div>
+    <input class="modal-input" id="demoMaps" placeholder="https://maps.app.goo.gl/..."/>
+
+    <div class="modal-err" id="demoErr"></div>
+
+    <button class="modal-btn modal-btn-primary" onclick="doCreateDemo()" id="demoCrtBtn">Create and start editing</button>
+  </div>
+</div>
+
+<script>
+let token = localStorage.getItem('ms_sales_token') || '';
+let salesUser = null;
+try { salesUser = JSON.parse(localStorage.getItem('ms_sales_user') || 'null'); } catch(e){}
+
+if (!token) { window.location.href = '/sales'; }
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  if (r.status === 401) { doLogout(); throw new Error('Session expired'); }
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+
+function doLogout() {
+  localStorage.removeItem('ms_sales_token');
+  localStorage.removeItem('ms_sales_user');
+  window.location.href = '/sales';
+}
+
+async function loadDashboard() {
+  try {
+    const d = await api('GET', '/api/sales/dashboard');
+
+    // User name
+    if (salesUser) document.getElementById('userName').textContent = salesUser.name || salesUser.email;
+
+    // Stats
+    document.getElementById('s-demos').textContent = d.stats.totalDemos;
+    document.getElementById('s-claimed').textContent = d.stats.claimedDemos;
+    document.getElementById('s-conv').textContent = d.stats.conversionRate + '% conversion';
+    document.getElementById('s-subs').textContent = d.stats.subscribedDemos;
+    document.getElementById('s-earnings').textContent = '$' + d.balance.total.toFixed(2);
+    document.getElementById('s-pending').textContent = '$' + d.balance.pending.toFixed(2) + ' pending';
+    document.getElementById('balanceAmount').textContent = '$' + d.balance.total.toFixed(2);
+
+    // Demos
+    const grid = document.getElementById('demoGrid');
+    if (d.demos.length === 0) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">🍽</div>No demos yet. Visit a restaurant, create their menu, and share a claim link.</div>';
+      return;
+    }
+
+    grid.innerHTML = d.demos.map(demo => {
+      const statusClass = { CREATED: 'badge-created', CLAIMED: 'badge-claimed', TRIAL: 'badge-trial', SUBSCRIBED: 'badge-subscribed', CHURNED: 'badge-churned' }[demo.status] || 'badge-created';
+      const statusLabel = { CREATED: 'Pending', CLAIMED: 'Claimed', TRIAL: 'Trial', SUBSCRIBED: 'Subscribed', CHURNED: 'Churned' }[demo.status] || demo.status;
+      const date = new Date(demo.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      const items = demo.org ? demo.org.menuItems + ' items' : '';
+      const location = demo.org ? [demo.org.city, demo.org.country].filter(Boolean).join(', ') : '';
+      const plan = demo.org && demo.org.plan !== 'TRIAL' ? demo.org.plan : '';
+
+      let trialInfo = '';
+      if (demo.status === 'TRIAL' && demo.org && demo.org.trialEndsAt) {
+        const days = Math.max(0, Math.ceil((new Date(demo.org.trialEndsAt) - new Date()) / (1000*60*60*24)));
+        trialInfo = days + 'd left';
+      }
+
+      return `
+        <div class="demo-card">
+          <div class="demo-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 7h16M3 7v10a2 2 0 002 2h12a2 2 0 002-2V7M7 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="#64748b" stroke-width="1.5"/></svg>
+          </div>
+          <div class="demo-info">
+            <div class="demo-name">${demo.orgName || demo.org?.name || 'Unknown'}</div>
+            <div class="demo-meta">${[location, items, date].filter(Boolean).join(' · ')}</div>
+          </div>
+          <div class="demo-right">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="badge ${statusClass}">${statusLabel}</span>
+              ${plan ? '<span class="badge badge-subscribed">' + plan + '</span>' : ''}
+              ${trialInfo ? '<span style="font-size:10px;color:var(--yellow);font-weight:600">' + trialInfo + '</span>' : ''}
+            </div>
+            <div style="display:flex;gap:6px">
+              ${demo.status === 'CREATED' ? `
+                <button class="btn-edit" onclick="editDemo('${demo.organizationId}')">Edit menu</button>
+                <button class="btn-claim" onclick="generateClaim('${demo.organizationId}','${(demo.orgName||'').replace(/'/g,"\\'")}')">Send claim link</button>
+              ` : ''}
+              ${demo.claimUrl && demo.status === 'CREATED' ? `
+                <button class="btn-edit" onclick="showClaimLink('${demo.claimUrl}','${(demo.orgName||'').replace(/'/g,"\\'")}')">View link</button>
+              ` : ''}
+              ${demo.status !== 'CREATED' ? `
+                <button class="btn-edit" onclick="editDemo('${demo.organizationId}')">View</button>
+              ` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch (e) {
+    console.error('Dashboard error:', e);
+  }
+}
+
+async function loadCommissions() {
+  try {
+    const data = await api('GET', '/api/sales/commissions');
+    const list = document.getElementById('commList');
+    if (data.length === 0) return;
+
+    list.innerHTML = data.map(c => {
+      const date = new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      return `<div class="comm-item">
+        <div>
+          <div class="comm-name">${c.orgName}</div>
+          <div class="comm-plan">${c.plan || ''} · ${date}</div>
+        </div>
+        <div class="comm-amount">+$${(c.amount / 100).toFixed(2)}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {}
+}
+
+function openCreateDemo() {
+  document.getElementById('demoName').value = '';
+  document.getElementById('demoMaps').value = '';
+  document.getElementById('demoErr').style.display = 'none';
+  document.getElementById('demoCrtBtn').textContent = 'Create and start editing';
+  document.getElementById('demoCrtBtn').disabled = false;
+  document.getElementById('createModal').style.display = 'flex';
+}
+
+async function doCreateDemo() {
+  const name = document.getElementById('demoName').value.trim();
+  const maps = document.getElementById('demoMaps').value.trim();
+  const err = document.getElementById('demoErr');
+  const btn = document.getElementById('demoCrtBtn');
+  err.style.display = 'none';
+
+  if (!name) { err.textContent = 'Enter restaurant name'; err.style.display = 'block'; return; }
+
+  btn.textContent = 'Creating...'; btn.disabled = true;
+
+  try {
+    const d = await api('POST', '/api/sales/create-demo', { restaurantName: name, googleMapsUrl: maps || null });
+
+    // Redirect to editor with demo token
+    localStorage.setItem('ms_token', d.editorToken);
+    localStorage.setItem('ms_org', JSON.stringify(d.organization));
+    localStorage.setItem('ms_sales_return', 'true');
+    window.location.href = '/editor.html';
+  } catch (e) {
+    err.textContent = e.message; err.style.display = 'block';
+    btn.textContent = 'Create and start editing'; btn.disabled = false;
+  }
+}
+
+async function editDemo(orgId) {
+  try {
+    const d = await api('GET', '/api/sales/demo-token/' + orgId);
+    localStorage.setItem('ms_token', d.token);
+    localStorage.setItem('ms_sales_return', 'true');
+    window.location.href = '/editor.html';
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function generateClaim(orgId, name) {
+  try {
+    const d = await api('POST', '/api/sales/generate-claim/' + orgId);
+    showClaimLink(d.claimUrl, name);
+    loadDashboard(); // Refresh
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+function showClaimLink(url, name) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">
+        Claim link for ${name}
+        <button class="modal-close" onclick="this.closest('.modal-bg').remove()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="claim-box">
+        <div class="claim-url">${url}</div>
+        <div class="claim-actions">
+          <button class="btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!');setTimeout(()=>this.textContent='Copy link',1500)">Copy link</button>
+          <a class="btn-wa" href="https://wa.me/?text=${encodeURIComponent('Your digital menu is ready on MenuSwipe! Claim it here: ' + url)}" target="_blank">WhatsApp</a>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">Share this link with the restaurant owner. They create an account, the menu transfers to them, and a 15-day trial starts automatically.</div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+// Init
+loadDashboard();
+loadCommissions();
+</script>
+</body>
+</html>
