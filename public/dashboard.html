@@ -271,9 +271,23 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="page" id="page-sales">
       <div class="page-title">Sales team</div>
       <div class="page-sub">Demo accounts and claim statistics</div>
+
+      <!-- APPLICATIONS -->
+      <div class="table-wrap" style="margin-bottom:20px">
+        <div class="table-header">
+          <div class="table-title">Applications</div>
+          <button class="btn-sm" onclick="loadSalesApps()">Refresh</button>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Applied</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="appsTable"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- ACTIVE SALES USERS -->
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">Sales users</div>
+          <div class="table-title">Active sales users</div>
           <button class="btn-primary" onclick="openGrantSales()">+ Add sales user</button>
         </div>
         <table>
@@ -331,6 +345,16 @@ let currentSearch = '';
 let searchTimeout = null;
 let currentRestId = null;
 
+async function readApiJson(response){
+  const text = await response.text();
+  if(!text) return {};
+  try{
+    return JSON.parse(text);
+  }catch(e){
+    throw new Error(`Request failed (${response.status})`);
+  }
+}
+
 // ── AUTH ──────────────────────────────────────────────
 async function doLogin(){
   const email = document.getElementById('loginEmail').value.trim();
@@ -344,7 +368,7 @@ async function doLogin(){
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({email, password}),
     });
-    const d = await r.json();
+    const d = await readApiJson(r);
     if(!r.ok){ err.textContent = d.error||'Login failed'; err.style.display='block'; return; }
 
     authToken = d.token;
@@ -370,7 +394,7 @@ async function api(method, path, body){
   const r = await fetch(API+path, opts);
   if(r.status===401){ doLogout(); throw new Error('Unauthorized'); }
   if(r.status===403){ throw new Error('Admin access required'); }
-  const d = await r.json();
+  const d = await readApiJson(r);
   if(!r.ok) throw new Error(d.error||'Request failed');
   return d;
 }
@@ -406,7 +430,7 @@ function showPage(id, el){
   if(el) el.classList.add('on');
 
   if(id==='revenue') loadRevenue();
-  if(id==='sales') loadSales();
+  if(id==='sales'){ loadSalesApps(); loadSales(); }
   if(id==='logs') loadLogs();
 }
 
@@ -613,6 +637,58 @@ async function loadRevenue(){
   }catch(e){
     tbody.innerHTML = `<tr><td colspan="5" class="empty" style="color:var(--red)">${e.message}</td></tr>`;
   }
+}
+
+// ── SALES APPLICATIONS ────────────────────────────────
+async function loadSalesApps(){
+  const tbody = document.getElementById('appsTable');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty">Loading...</td></tr>';
+  try{
+    const d = await api('GET', '/api/admin/sales-applications');
+    if(d.length===0){
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">No applications yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.map(app => {
+      const date = new Date(app.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      const statusClass = {PENDING:'badge-trial',APPROVED:'badge-active',REJECTED:'badge-expired'}[app.status]||'badge-trial';
+      const actions = app.status === 'PENDING' ? `
+        <div style="display:flex;gap:6px">
+          <button class="btn-sm btn-sm-green" onclick="approveSales('${app.id}','${app.name.replace(/'/g,"\\'")}')">Approve</button>
+          <button class="btn-sm btn-sm-red" onclick="rejectSales('${app.id}','${app.name.replace(/'/g,"\\'")}')">Reject</button>
+        </div>
+      ` : `<span style="font-size:11px;color:var(--text-muted)">${app.status === 'APPROVED' ? 'Approved ' + new Date(app.approvedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : 'Rejected'}</span>`;
+
+      return `<tr>
+        <td style="font-weight:600">${app.name}</td>
+        <td style="color:var(--text-muted);font-size:12px">${app.email}</td>
+        <td style="color:var(--text-muted);font-size:12px">${app.phone||'--'}</td>
+        <td style="color:var(--text-muted);font-size:12px">${date}</td>
+        <td><span class="badge ${statusClass}">${app.status}</span></td>
+        <td>${actions}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    tbody.innerHTML = `<tr><td colspan="6" class="empty" style="color:var(--red)">${e.message}</td></tr>`;
+  }
+}
+
+async function approveSales(id, name){
+  if(!confirm('Approve ' + name + ' as a sales partner? This will create their account.')) return;
+  try{
+    await api('POST', '/api/admin/approve-sales/' + id);
+    loadSalesApps();
+    loadSales();
+  }catch(e){ alert('Error: ' + e.message); }
+}
+
+async function rejectSales(id, name){
+  const reason = prompt('Reject ' + name + '? Enter a reason (optional):');
+  if(reason === null) return;
+  try{
+    await api('POST', '/api/admin/reject-sales/' + id, { reason });
+    loadSalesApps();
+  }catch(e){ alert('Error: ' + e.message); }
 }
 
 // ── SALES TEAM ────────────────────────────────────────
