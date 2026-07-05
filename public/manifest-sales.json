@@ -1,0 +1,14 @@
+{
+  "name": "MenuSwipe Sales",
+  "short_name": "MS Sales",
+  "description": "Sales partner dashboard for MenuSwipe",
+  "start_url": "/sales-panel",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#8E1616",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="manifest" href="/manifest-sales.json"/>
+<meta name="theme-color" content="#8E1616"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
 <title>Sales Dashboard - MenuSwipe</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -157,17 +162,14 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:8px">Enter the restaurant's name and Google Maps link. You'll be taken to the menu editor to set everything up.</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">You'll be taken to the menu editor to set up the restaurant. Add their Google Maps link, menu items, tables, everything. When you're done, come back here to send the claim link.</div>
 
-    <div class="modal-label">Restaurant name</div>
+    <div class="modal-label">Restaurant name (optional, can set later)</div>
     <input class="modal-input" id="demoName" placeholder="e.g. Lololy Cafe"/>
-
-    <div class="modal-label">Google Maps link (optional)</div>
-    <input class="modal-input" id="demoMaps" placeholder="https://maps.app.goo.gl/..."/>
 
     <div class="modal-err" id="demoErr"></div>
 
-    <button class="modal-btn modal-btn-primary" onclick="doCreateDemo()" id="demoCrtBtn">Create and start editing</button>
+    <button class="modal-btn modal-btn-primary" onclick="doCreateDemo()" id="demoCrtBtn">Start setup</button>
   </div>
 </div>
 
@@ -297,26 +299,22 @@ function openCreateDemo() {
 
 async function doCreateDemo() {
   const name = document.getElementById('demoName').value.trim();
-  const maps = document.getElementById('demoMaps').value.trim();
   const err = document.getElementById('demoErr');
   const btn = document.getElementById('demoCrtBtn');
   err.style.display = 'none';
 
-  if (!name) { err.textContent = 'Enter restaurant name'; err.style.display = 'block'; return; }
-
   btn.textContent = 'Creating...'; btn.disabled = true;
 
   try {
-    const d = await api('POST', '/api/sales/create-demo', { restaurantName: name, googleMapsUrl: maps || null });
+    const d = await api('POST', '/api/sales/create-demo', { restaurantName: name || null });
 
-    // Redirect to editor with demo token
     localStorage.setItem('ms_token', d.editorToken);
     localStorage.setItem('ms_org', JSON.stringify(d.organization));
     localStorage.setItem('ms_sales_return', 'true');
     window.location.href = '/editor.html';
   } catch (e) {
     err.textContent = e.message; err.style.display = 'block';
-    btn.textContent = 'Create and start editing'; btn.disabled = false;
+    btn.textContent = 'Start setup'; btn.disabled = false;
   }
 }
 

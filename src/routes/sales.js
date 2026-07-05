@@ -200,8 +200,8 @@ router.get("/dashboard", requireSales, async (req, res, next) => {
 // Yeni demo restoran olustur, token dondur
 router.post("/create-demo", requireSales, async (req, res, next) => {
   try {
-    const { restaurantName, googleMapsUrl } = req.body;
-    if (!restaurantName) return res.status(400).json({ error: "Restaurant name required" });
+    // Endpoint sadece org olusturup token donecek, isim gerekli degil
+    const { restaurantName } = req.body;
 
     function slugify(str) {
       return str.toLowerCase()
@@ -210,14 +210,15 @@ router.post("/create-demo", requireSales, async (req, res, next) => {
         .replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").slice(0,40);
     }
 
-    let slug = slugify(restaurantName) || "demo-restaurant";
+    const name = restaurantName || "New Demo";
+    let slug = slugify(name) || "demo-restaurant";
     const existing = await prisma.organization.findUnique({ where: { slug } });
     if (existing) slug = slug + "-" + Date.now().toString().slice(-4);
 
     // Demo org olustur (PRO, onboarding tamamlanmamis)
     const org = await prisma.organization.create({
       data: {
-        name: restaurantName,
+        name,
         slug,
         currency: "USD",
         defaultLanguage: "en",
@@ -227,9 +228,8 @@ router.post("/create-demo", requireSales, async (req, res, next) => {
         currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         onboardingCompleted: false,
         referredBySalesUserId: req.user.id,
-        googleMapsUrl: googleMapsUrl || null,
         branches: {
-          create: { name: restaurantName, slug: "main", active: true },
+          create: { name, slug: "main", active: true },
         },
       },
     });
@@ -239,7 +239,7 @@ router.post("/create-demo", requireSales, async (req, res, next) => {
       data: {
         salesUserId: req.user.id,
         organizationId: org.id,
-        orgName: restaurantName,
+        orgName: name,
         status: "CREATED",
       },
     });
