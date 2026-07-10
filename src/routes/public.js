@@ -386,6 +386,24 @@ router.post("/:orgSlug/order", async (req, res, next) => {
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "empty_order" });
     }
+
+    // Musteri notunu restoranin diline cevir
+    const custLang = (customerLanguage || "en").slice(0, 5);
+    const restLang = org.defaultLanguage || "en";
+    let translatedNote = null;
+    let translatedItemNotes = {};
+
+    if (custLang !== restLang && (note || items.some(i => i.note))) {
+      const { translateNote } = require("../services/ai");
+      if (note) {
+        translatedNote = await translateNote(note, custLang, restLang);
+      }
+      for (const i of items) {
+        if (i.note && i.note.trim()) {
+          translatedItemNotes[i.itemId] = await translateNote(i.note, custLang, restLang);
+        }
+      }
+    }
     
     // Items'ı doğrula - sadece menüde olan item'lar kabul edilir
     const itemIds = items.map(i => i.itemId).filter(Boolean);
@@ -415,6 +433,7 @@ router.post("/:orgSlug/order", async (req, res, next) => {
           photoUrl: i.photoUrl || null,
           category: mi.category,
           note: (i.note || "").toString().trim().slice(0, 200) || null,
+          noteTranslated: translatedItemNotes[mi.id] || null,
         };
       });
     
@@ -455,8 +474,9 @@ router.post("/:orgSlug/order", async (req, res, next) => {
         subtotal,
         currency: org.currency || "USD",
         note: (note || "").toString().slice(0, 500) || null,
+        noteTranslated: translatedNote || null,
         customerName: (customerName || "").toString().trim().slice(0, 80) || null,
-        customerLanguage: (customerLanguage || org.defaultLanguage || "en").slice(0, 5),
+        customerLanguage: custLang,
         status: "pending",
       },
     });

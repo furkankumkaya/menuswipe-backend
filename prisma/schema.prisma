@@ -274,6 +274,7 @@ model Order {
   
   // Müşteri notu (AI Concierge'den gelebilir veya manuel)
   note            String?
+  noteTranslated  String?   // Restoranin diline cevrilmis not
   
   // Müşteri dili (admin'e geldiğinde hangi dilde göstereceğimiz)
   customerLanguage String?     @default("en")

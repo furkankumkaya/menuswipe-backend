@@ -172,6 +172,9 @@ router.post("/job/:id/apply", requireAuth, async (req, res, next) => {
             description: (it.description || "").slice(0, 500) || null,
             price: parseFloat(it.price) || 0,
             category: categoryCode,
+            isProperName: !!it.isProperName,
+            tagDietary: it.tagDietary || null,
+            allergens: Array.isArray(it.allergens) ? it.allergens : [],
             sortOrder: sortOrder++,
             itemBranches: {
               create: branchIds.map(bid => ({ branchId: bid })),
