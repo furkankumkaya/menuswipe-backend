@@ -2004,14 +2004,49 @@ function closeTablePicker(){
   document.getElementById('tablePickerOverlay').style.display = 'none';
 }
 
-async function selectTableAndSend(tableId){
-  await submitOrder({ tableId });
+let _pendingOrderOpts = {};
+
+function selectTableAndSend(tableId){
+  const table = _availableTables.find(t => t.id === tableId);
+  _pendingOrderOpts = { tableId, tableLabel: table ? table.label : '' };
+  showOrderConfirmStep();
 }
 
-async function sendOrderNow(){
+function sendOrderNow(){
   const manualInput = document.getElementById('manualTableInput');
   const tableLabel = manualInput ? manualInput.value.trim() : '';
-  await submitOrder({ tableLabel });
+  _pendingOrderOpts = { tableLabel };
+  showOrderConfirmStep();
+}
+
+function showOrderConfirmStep(){
+  const grid = document.getElementById('tableGrid');
+  const actions = document.getElementById('tablePickerActions');
+  const title = document.getElementById('tablePickerTitle');
+  const sub = document.getElementById('tablePickerSub');
+
+  const tbl = _pendingOrderOpts.tableLabel || '';
+  title.textContent = tOrder('sendOrder');
+  sub.textContent = tbl ? `${tOrder('table')}: ${tbl}` : '';
+
+  grid.innerHTML = `
+    <div style="grid-column:1/-1">
+      <label style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;display:block;margin-bottom:6px">${escapeHtml(tOrder('noteForChef'))}</label>
+      <textarea id="orderNoteInput" placeholder="${escapeHtml(tOrder('notePlaceholder'))}" maxlength="500" rows="3" style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:14px;outline:none;resize:none;font-family:inherit"></textarea>
+    </div>`;
+  actions.innerHTML = `
+    <button onclick="goBackToTablePicker()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#fff;font-size:13px;font-weight:600;cursor:pointer">${escapeHtml(tOrder('back'))}</button>
+    <button onclick="confirmAndSendOrder()" style="flex:1.5;padding:13px;border-radius:14px;border:none;background:#fff;color:#1D1616;font-size:13px;font-weight:700;cursor:pointer">${escapeHtml(tOrder('sendOrder'))}</button>`;
+}
+
+function goBackToTablePicker(){
+  openTablePicker();
+}
+
+async function confirmAndSendOrder(){
+  const noteInput = document.getElementById('orderNoteInput');
+  const note = noteInput ? noteInput.value.trim() : '';
+  await submitOrder({ ..._pendingOrderOpts, note });
 }
 
 async function submitOrder(opts){
@@ -2034,6 +2069,7 @@ async function submitOrder(opts){
     tableId: opts.tableId || null,
     tableLabel: opts.tableLabel || null,
     items,
+    note: opts.note || null,
     customerLanguage: currentLang || defaultLanguage,
   };
   
@@ -2227,8 +2263,9 @@ async function pollOrderStatus(orderId){
 
 /* Order screen translations */
 const ORDER_LABELS_BY_LANG = {
-  en: {sending:'Sending order...',orderSent:'Order sent!',orderSentSub:'The kitchen has received your order. We will start preparing it shortly.',failed:'Could not send order',order:'Order',table:'Table',pending:'Waiting for confirmation',preparing:'Being prepared',ready:'Ready to serve',completed:'Completed',cancelled:'Cancelled',sendOrder:'Send order',tableNumber:'Table number',orLeaveBlank:'Or leave blank if no table',cancel:'Cancel'},
-  tr: {sending:'Sipariş gönderiliyor...',orderSent:'Sipariş alındı!',orderSentSub:'Mutfak siparişinizi aldı. Birazdan hazırlamaya başlıyorlar.',failed:'Sipariş gönderilemedi',order:'Sipariş',table:'Masa',pending:'Onay bekleniyor',preparing:'Hazırlanıyor',ready:'Hazır',completed:'Tamamlandı',cancelled:'İptal edildi',sendOrder:'Sipariş ver',tableNumber:'Masa numarası',orLeaveBlank:'Veya masa yoksa boş bırakın',cancel:'İptal'},
+  en: {sending:'Sending order...',orderSent:'Order sent!',orderSentSub:'The kitchen has received your order. We will start preparing it shortly.',failed:'Could not send order',order:'Order',table:'Table',pending:'Waiting for confirmation',preparing:'Being prepared',ready:'Ready to serve',completed:'Completed',cancelled:'Cancelled',sendOrder:'Send order',tableNumber:'Table number',orLeaveBlank:'Or leave blank if no table',cancel:'Cancel',noteForChef:'Note for the kitchen',notePlaceholder:'Allergies, special requests...', back:'Back'},
+  tr: {sending:'Sipariş gönderiliyor...',orderSent:'Sipariş alındı!',orderSentSub:'Mutfak siparişinizi aldı. Birazdan hazırlamaya başlıyorlar.',failed:'Sipariş gönderilemedi',order:'Sipariş',table:'Masa',pending:'Onay bekleniyor',preparing:'Hazırlanıyor',ready:'Hazır',completed:'Tamamlandı',cancelled:'İptal edildi',sendOrder:'Sipariş ver',tableNumber:'Masa numarası',orLeaveBlank:'Veya masa yoksa boş bırakın',cancel:'İptal',noteForChef:'Mutfağa not',notePlaceholder:'Alerji, özel istek...', back:'Geri'},
+  vi: {sending:'Đang gửi đơn...',orderSent:'Đã gửi đơn!',orderSentSub:'Nhà bếp đã nhận đơn hàng. Chúng tôi sẽ bắt đầu chuẩn bị ngay.',failed:'Không gửi được đơn',order:'Đơn hàng',table:'Bàn',pending:'Chờ xác nhận',preparing:'Đang chuẩn bị',ready:'Sẵn sàng phục vụ',completed:'Hoàn thành',cancelled:'Đã hủy',sendOrder:'Gửi đơn',tableNumber:'Số bàn',orLeaveBlank:'Hoặc bỏ trống nếu không có bàn',cancel:'Hủy',noteForChef:'Ghi chú cho bếp',notePlaceholder:'Dị ứng, yêu cầu đặc biệt...', back:'Quay lại'},
 };
 function tOrder(key){
   const lang = currentLang || defaultLanguage || 'en';
