@@ -66,6 +66,7 @@ app.listen(PORT, () => {
   seedBetaAccounts().catch(e => console.error("[seed] failed:", e.message));
 });
 
+// Beta hesaplarını otomatik oluştur/güncelle
 async function seedBetaAccounts() {
   const bcrypt = require("bcryptjs");
   const { PrismaClient } = require("@prisma/client");
@@ -81,7 +82,17 @@ async function seedBetaAccounts() {
 
       if (existing) {
         await prisma.user.update({ where: { email }, data: { passwordHash } });
-        console.log(`[seed] password reset: ${email}`);
+        // Beta hesaplarini kalici PRO yap
+        await prisma.organization.update({
+          where: { id: existing.organizationId },
+          data: {
+            plan: "PRO",
+            subscriptionStatus: "ACTIVE",
+            billingCycle: "YEARLY",
+            subscriptionEndsAt: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
+          },
+        });
+        console.log(`[seed] password reset + PRO granted: ${email}`);
       } else {
         const name = email.split("@")[0];
         let slug = name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 40);
@@ -91,8 +102,9 @@ async function seedBetaAccounts() {
         await prisma.organization.create({
           data: {
             name, slug, currency: "USD", defaultLanguage: "en", enabledLanguages: [],
-            plan: "TRIAL", subscriptionStatus: "TRIAL",
-            trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            plan: "PRO", subscriptionStatus: "ACTIVE",
+            billingCycle: "YEARLY",
+            subscriptionEndsAt: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
             onboardingCompleted: false,
             users: { create: { email, passwordHash, name, role: "OWNER" } },
             branches: { create: { name, slug: "main", active: true } },
