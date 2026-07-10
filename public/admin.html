@@ -436,13 +436,14 @@ function renderOrderCard(o){
   const itemsHtml=items.map(it=>{
     const showOrig=it.name&&it.originalName&&it.name!==it.originalName;
     const allergens=it.allergens||[];
-    const note = it.note && it.note.trim();
+    const note = it.noteTranslated || (it.note && it.note.trim());
+    const origNote = it.noteTranslated && it.note ? it.note.trim() : null;
     return `<div class="order-item-row">
       <div class="order-item-qty">×${it.qty}</div>
       <div class="order-item-info">
         <div class="order-item-name">${escapeHtml(it.originalName||it.name)}</div>
         ${showOrig?`<div class="order-item-orig">${escapeHtml(it.name)}</div>`:''}
-        ${note?`<div style="margin-top:4px;padding:5px 8px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px;font-size:11.5px;color:#78350f;font-weight:500"><strong>Note:</strong> ${escapeHtml(note)}</div>`:''}
+        ${note?`<div style="margin-top:4px;padding:5px 8px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px;font-size:11.5px;color:#78350f;font-weight:500"><strong>Note:</strong> ${escapeHtml(note)}${origNote?` <span style="color:#94a3b8;font-weight:400;font-size:10px">(${escapeHtml(origNote)})</span>`:''}</div>`:''}
         ${allergens.length?`<div class="order-item-allergen">⚠ ${allergens.join(', ')}</div>`:''}
       </div>
     </div>`;
@@ -468,7 +469,7 @@ function renderOrderCard(o){
       <span class="order-status-pill ${statusClass}">${statusLabel}</span>
       <div class="order-time">${timeAgo}</div>
     </div>
-    ${o.note?`<div class="order-customer-note">📝 ${escapeHtml(o.note)}</div>`:''}
+    ${o.noteTranslated||o.note?`<div class="order-customer-note">${escapeHtml(o.noteTranslated||o.note)}${o.noteTranslated&&o.note&&o.noteTranslated!==o.note?` <span style="color:#94a3b8;font-size:11px">(${escapeHtml(o.note)})</span>`:''}</div>`:''}
     <div class="order-items-list">${itemsHtml}</div>
     <div class="order-card-foot">
       <div class="order-total">${symbol}${o.subtotal.toFixed(2)}</div>
