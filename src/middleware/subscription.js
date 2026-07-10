@@ -16,14 +16,17 @@ function getSubscriptionInfo(org) {
   const plan = org.plan || "TRIAL";
   
   // PRO veya STARTER aktif aboneliği var mı?
-  if ((plan === "PRO" || plan === "STARTER") && org.subscriptionStatus === "ACTIVE") {
-    if (!org.subscriptionEndsAt || org.subscriptionEndsAt > now) {
+  const pStatus = org.planStatus || org.subscriptionStatus;
+  const pEnd = org.currentPeriodEnd || org.subscriptionEndsAt;
+
+  if ((plan === "PRO" || plan === "STARTER") && pStatus === "ACTIVE") {
+    if (!pEnd || pEnd > now) {
       return { status: "ACTIVE", plan, isActive: true, daysLeft: null };
     }
   }
-  
+
   // Trial mi?
-  if (plan === "TRIAL" || org.subscriptionStatus === "TRIAL") {
+  if (plan === "TRIAL" || pStatus === "TRIAL") {
     if (org.trialEndsAt && org.trialEndsAt > now) {
       const daysLeft = Math.ceil((org.trialEndsAt - now) / (1000 * 60 * 60 * 24));
       return { status: "TRIAL", plan: "TRIAL", isActive: true, daysLeft };
