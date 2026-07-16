@@ -27,8 +27,8 @@ function hashIp(ip) {
   return crypto.createHash("sha256").update(ip + (process.env.JWT_SECRET || "salt")).digest("hex").slice(0, 32);
 }
 
-// ÖNEMLI: Bu specific endpoint menu catch-all'dan ÖNCE olmalı
-// Yoksa /:orgSlug/:branchSlug? pattern'i "tables"'i branchSlug olarak yorumlar
+// ÖNEMLİ: Bu specific endpoint menu catch-all'dan ÖNCE olmalı
+// Yoksa /:orgSlug/:branchSlug? pattern'i "tables"’ı branchSlug olarak yorumlar
 router.get("/:orgSlug/tables", async (req, res) => {
   try {
     const org = await prisma.organization.findUnique({
@@ -48,10 +48,24 @@ router.get("/:orgSlug/tables", async (req, res) => {
   }
 });
 
+// QR signature dogrulama
+function verifyQrSignature(qrSecret, orgSlug, tableId, signature) {
+  if (!qrSecret || !signature) return false;
+  const payload = orgSlug + ":" + (tableId || "all");
+  const expected = crypto
+    .createHmac("sha256", qrSecret)
+    .update(payload)
+    .digest("hex")
+    .slice(0, 16);
+  return expected === signature;
+}
+
 router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
   try {
     const { orgSlug, branchSlug } = req.params;
-    const fromQr = req.query.qr === "1";
+    const qrSignature = req.query.s || null;
+    const qrTableId = req.query.t || null;
+    const fromQr = !!(qrSignature || req.query.qr === "1");
 
     const org = await prisma.organization.findUnique({
       where: { slug: orgSlug },
@@ -61,6 +75,12 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
       },
     });
     if (!org) return res.status(404).json({ error: "Restaurant not found" });
+
+    // QR signature kontrolü
+    let qrValid = false;
+    if (qrSignature && org.qrSecret) {
+      qrValid = verifyQrSignature(org.qrSecret, orgSlug, qrTableId, qrSignature);
+    }
 
     // Subscription kontrolü - süresi dolmuş restoran menüsü erişilemez
     const subInfo = getSubscriptionInfo(org);
@@ -202,6 +222,8 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         orderListEnabled: org.orderListEnabled !== false,
         googleInsightsAvailable: !!(org.googleInsights && Array.isArray(org.googleInsights.popularDishes) && org.googleInsights.popularDishes.length > 0),
       },
+      qrValid,
+      qrTableId: qrValid ? qrTableId : null,
       branch: {
         id: selectedBranch.id, name: selectedBranch.name, slug: selectedBranch.slug,
         phone: selectedBranch.phone,
@@ -362,6 +384,21 @@ function buildGoogleContext(itemInsights, menuItems) {
   return `\n\nThe following dishes are highly praised in Google Reviews for this restaurant:\n${lines.join("\n")}\n\nWhen multiple menu items match the customer's preferences equally, prefer these popular ones. In your reason field, you may mention "praised by customers" or similar phrasing when recommending these.`;
 }
 
+// QR oturumu doğrulama endpoint'i
+router.post("/:orgSlug/verify-qr", async (req, res) => {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { slug: req.params.orgSlug },
+    });
+    if (!org) return res.status(404).json({ error: "not_found" });
+    const { s, t } = req.body;
+    const valid = verifyQrSignature(org.qrSecret, req.params.orgSlug, t || null, s);
+    res.json({ valid });
+  } catch (err) {
+    res.json({ valid: false });
+  }
+});
+
 // Müşteri: sipariş oluştur
 router.post("/:orgSlug/order", async (req, res, next) => {
   try {
@@ -372,37 +409,31 @@ router.post("/:orgSlug/order", async (req, res, next) => {
       console.log("[order] org not found:", req.params.orgSlug);
       return res.status(404).json({ error: "not_found" });
     }
-    
+
     // Subscription kontrolü
     const sub = getSubscriptionInfo(org);
     if (sub.status === "expired_grace" && Date.now() > new Date(sub.menuLockedUntil || 0).getTime()) {
       return res.status(402).json({ error: "menu_unavailable" });
     }
-    
+
+    // QR oturum kontrolü
+    const qrToken = req.body.qrToken;
+    if (org.qrSecret && !qrToken) {
+      return res.status(403).json({ error: "qr_required", message: "QR code scan required to place orders" });
+    }
+    if (org.qrSecret && qrToken) {
+      const valid = verifyQrSignature(org.qrSecret, req.params.orgSlug, req.body.qrTableId || null, qrToken);
+      if (!valid) {
+        return res.status(403).json({ error: "qr_invalid", message: "Invalid or expired QR session" });
+      }
+    }
+
     const { tableId, tableLabel, items, note, customerName, customerLanguage } = req.body;
     
     console.log("[order] received:", { orgId: org.id, tableId, tableLabel, itemCount: items?.length });
     
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "empty_order" });
-    }
-
-    // Musteri notunu restoranin diline cevir
-    const custLang = (customerLanguage || "en").slice(0, 5);
-    const restLang = org.defaultLanguage || "en";
-    let translatedNote = null;
-    let translatedItemNotes = {};
-
-    if (custLang !== restLang && (note || items.some(i => i.note))) {
-      const { translateNote } = require("../services/ai");
-      if (note) {
-        translatedNote = await translateNote(note, custLang, restLang);
-      }
-      for (const i of items) {
-        if (i.note && i.note.trim()) {
-          translatedItemNotes[i.itemId] = await translateNote(i.note, custLang, restLang);
-        }
-      }
     }
     
     // Items'ı doğrula - sadece menüde olan item'lar kabul edilir
@@ -433,7 +464,6 @@ router.post("/:orgSlug/order", async (req, res, next) => {
           photoUrl: i.photoUrl || null,
           category: mi.category,
           note: (i.note || "").toString().trim().slice(0, 200) || null,
-          noteTranslated: translatedItemNotes[mi.id] || null,
         };
       });
     
@@ -474,9 +504,8 @@ router.post("/:orgSlug/order", async (req, res, next) => {
         subtotal,
         currency: org.currency || "USD",
         note: (note || "").toString().slice(0, 500) || null,
-        noteTranslated: translatedNote || null,
         customerName: (customerName || "").toString().trim().slice(0, 80) || null,
-        customerLanguage: custLang,
+        customerLanguage: (customerLanguage || org.defaultLanguage || "en").slice(0, 5),
         status: "pending",
       },
     });

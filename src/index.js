@@ -64,6 +64,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`MenuSwipe running on port ${PORT}`);
   seedBetaAccounts().catch(e => console.error("[seed] failed:", e.message));
+  backfillQrSecrets().catch(e => console.error("[backfill] qrSecret failed:", e.message));
 });
 
 // Beta hesaplarını otomatik oluştur/güncelle
@@ -99,6 +100,7 @@ async function seedBetaAccounts() {
         const exists = await prisma.organization.findUnique({ where: { slug } });
         if (exists) slug = slug + "-" + Date.now();
 
+        const crypto = require("crypto");
         await prisma.organization.create({
           data: {
             name, slug, currency: "USD", defaultLanguage: "en", enabledLanguages: [],
@@ -106,6 +108,7 @@ async function seedBetaAccounts() {
             billingCycle: "YEARLY",
             currentPeriodEnd: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
             onboardingCompleted: false,
+            qrSecret: crypto.randomBytes(16).toString("hex"),
             users: { create: { email, passwordHash, name, role: "OWNER" } },
             branches: { create: { name, slug: "main", active: true } },
           },
@@ -115,6 +118,26 @@ async function seedBetaAccounts() {
     } catch (e) {
       console.error(`[seed] error for ${email}:`, e.message);
     }
+  }
+  await prisma.$disconnect();
+}
+
+// Existing orgs missing qrSecret: backfill
+async function backfillQrSecrets() {
+  const crypto = require("crypto");
+  const { PrismaClient } = require("@prisma/client");
+  const prisma = new PrismaClient();
+  try {
+    const orgs = await prisma.organization.findMany({ where: { qrSecret: null } });
+    for (const org of orgs) {
+      await prisma.organization.update({
+        where: { id: org.id },
+        data: { qrSecret: crypto.randomBytes(16).toString("hex") },
+      });
+      console.log(`[backfill] qrSecret set for org: ${org.name} (${org.slug})`);
+    }
+  } catch (e) {
+    console.error("[backfill] error:", e.message);
   }
   await prisma.$disconnect();
 }
