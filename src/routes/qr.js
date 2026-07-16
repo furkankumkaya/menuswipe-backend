@@ -1,6 +1,7 @@
 // src/routes/qr.js
 const router = require("express").Router();
 const QRCode = require("qrcode");
+const crypto = require("crypto");
 const { PrismaClient } = require("@prisma/client");
 const { requireAuth } = require("../middleware/auth");
 const fs = require("fs");
@@ -10,7 +11,51 @@ const { v4: uuid } = require("uuid");
 const prisma = new PrismaClient();
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
-// ─── GET /api/qr/:branchId ───────────────────────────
+function generateSignature(qrSecret, orgSlug, tableId) {
+  const payload = orgSlug + ":" + (tableId || "all");
+  return crypto.createHmac("sha256", qrSecret).update(payload).digest("hex").slice(0, 16);
+}
+
+// IMPORTANT: specific routes BEFORE /:branchId wildcard
+
+// Toplu QR imza (tüm masalar icin)
+router.get("/signatures-bulk", requireAuth, async (req, res) => {
+  try {
+    const org = await prisma.organization.findUnique({ where: { id: req.org.id } });
+    if (!org || !org.qrSecret) return res.status(400).json({ error: "no_qr_secret" });
+
+    const tables = await prisma.restaurantTable.findMany({
+      where: { organizationId: org.id, active: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+
+    const allSig = generateSignature(org.qrSecret, org.slug, null);
+    const perTable = tables.map(t => ({
+      tableId: t.id,
+      label: t.label,
+      signature: generateSignature(org.qrSecret, org.slug, t.id),
+    }));
+
+    res.json({ allTablesSignature: allSig, perTable });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// QR imza oluştur (editor'den çağrılır)
+router.get("/signature/:orgSlug", requireAuth, async (req, res) => {
+  try {
+    const org = await prisma.organization.findUnique({ where: { id: req.org.id } });
+    if (!org || !org.qrSecret) return res.status(400).json({ error: "no_qr_secret" });
+    const tableId = req.query.tableId || null;
+    const sig = generateSignature(org.qrSecret, org.slug, tableId);
+    res.json({ signature: sig, tableId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── GET /api/qr/:branchId ───────────────────────
 // Generate QR code for a branch and return as base64 PNG
 router.get("/:branchId", requireAuth, async (req, res, next) => {
   try {
@@ -40,7 +85,7 @@ router.get("/:branchId", requireAuth, async (req, res, next) => {
   }
 });
 
-// ─── POST /api/qr/:branchId/save ────────────────────
+// ─── POST /api/qr/:branchId/save ────────────────
 // Generate + save QR PNG to disk, store path on branch
 router.post("/:branchId/save", requireAuth, async (req, res, next) => {
   try {
@@ -73,7 +118,7 @@ router.post("/:branchId/save", requireAuth, async (req, res, next) => {
   }
 });
 
-// ─── GET /api/qr/:branchId/svg ──────────────────────
+// ─── GET /api/qr/:branchId/svg ──────────────────
 // Return QR as SVG string
 router.get("/:branchId/svg", requireAuth, async (req, res, next) => {
   try {

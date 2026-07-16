@@ -4,7 +4,13 @@ const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const { requireAuth } = require("../middleware/auth");
 
+const crypto = require("crypto");
+
 const prisma = new PrismaClient();
+
+function generateQrSecret() {
+  return crypto.randomBytes(16).toString("hex"); // 32 char hex
+}
 
 function signToken(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -55,6 +61,7 @@ router.post("/register", async (req, res, next) => {
       data: {
         name,
         slug,
+        qrSecret: generateQrSecret(),
         currency: "USD",
         defaultLanguage: "en",
         enabledLanguages: [],
@@ -124,6 +131,14 @@ router.patch("/organization", requireAuth, async (req, res, next) => {
     for (const key of allowed) {
       if (req.body[key] !== undefined) data[key] = req.body[key];
     }
+    // If name changed, regenerate slug from new name
+    if (data.name && data.name !== req.org.name) {
+      data.slug = await uniqueSlug(data.name);
+    }
+    // Generate qrSecret if missing
+    if (!req.org.qrSecret) {
+      data.qrSecret = generateQrSecret();
+    }
     const org = await prisma.organization.update({
       where: { id: req.org.id },
       data,
@@ -151,8 +166,20 @@ function orgPublic(o) {
     enabledLanguages: o.enabledLanguages || [],
     onboardingCompleted: o.onboardingCompleted,
     orderListEnabled: o.orderListEnabled !== false,
+    qrSecret: o.qrSecret || null,
   };
 }
+
+// QR secret yenile (eski QR'ları geçersiz kılar)
+router.post("/regenerate-qr-secret", requireAuth, async (req, res, next) => {
+  try {
+    const org = await prisma.organization.update({
+      where: { id: req.org.id },
+      data: { qrSecret: generateQrSecret() },
+    });
+    res.json({ qrSecret: org.qrSecret });
+  } catch (err) { next(err); }
+});
 
 // Admin: şifre sıfırla veya hesap oluştur (BETA_GRANT_SECRET ile korunur)
 // POST /api/auth/admin-reset { email, newPassword, secret }
@@ -175,12 +202,13 @@ router.post("/admin-reset", async (req, res, next) => {
     }
 
     // Hesap yoksa oluştur
-    const name = email.split("@")[0];
+    const name = (req.body.restaurantName || "").trim() || email.split("@")[0];
     const slug = await uniqueSlug(name);
     const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     const org = await prisma.organization.create({
       data: {
-        name, slug, currency: "USD", defaultLanguage: "en", enabledLanguages: [],
+        name, slug, qrSecret: generateQrSecret(),
+        currency: "USD", defaultLanguage: "en", enabledLanguages: [],
         plan: "TRIAL", subscriptionStatus: "TRIAL", trialEndsAt, onboardingCompleted: false,
         users: { create: { email, passwordHash, name, role: "OWNER" } },
         branches: { create: { name, slug: "main", active: true } },
