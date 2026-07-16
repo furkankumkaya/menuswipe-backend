@@ -36,14 +36,13 @@ model Organization {
   workingHours    Json?
   
   // Subscription
-  plan                String    @default("TRIAL")  // TRIAL, BASIC, PRO
-  planStatus          String    @default("TRIAL")  // TRIAL, ACTIVE, EXPIRED, PAST_DUE, CANCELLED
+  plan                String    @default("TRIAL")  // TRIAL, STARTER, PRO
+  subscriptionStatus  String    @default("TRIAL")  // TRIAL, ACTIVE, EXPIRED, GRACE
   billingCycle        String?                       // MONTHLY, YEARLY
   trialEndsAt         DateTime?
-  currentPeriodEnd    DateTime?
+  subscriptionEndsAt  DateTime?
   stripeCustomerId    String?
   stripeSubscriptionId String?
-  stripePriceId       String?
   
   // Languages
   defaultLanguage     String    @default("en")
@@ -52,11 +51,11 @@ model Organization {
   // Onboarding
   onboardingCompleted Boolean   @default(false)
   
-  // Sales referral
-  referredBySalesUserId String?
-
   // Features
   orderListEnabled    Boolean   @default(true)
+
+  // QR Security
+  qrSecret            String?
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -68,8 +67,6 @@ model Organization {
   categories      Category[]
   tables          RestaurantTable[]
   orders          Order[]
-  transactions    Transaction[]
-  claimTokens     ClaimToken[]   @relation("SourceOrg")
 }
 
 model User {
@@ -105,13 +102,15 @@ model Branch {
   longitude       Float?
   
   workingHours    Json?
-  
+
+  qrCodeUrl       String?
+
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-  
+
   itemBranches    MenuItemBranch[]
   views           MenuView[]
-  
+
   @@unique([organizationId, slug])
 }
 
@@ -274,7 +273,6 @@ model Order {
   
   // Müşteri notu (AI Concierge'den gelebilir veya manuel)
   note            String?
-  noteTranslated  String?   // Restoranin diline cevrilmis not
   
   // Müşteri dili (admin'e geldiğinde hangi dilde göstereceğimiz)
   customerLanguage String?     @default("en")
@@ -292,83 +290,4 @@ model Order {
   
   @@index([organizationId, createdAt])
   @@index([organizationId, status])
-}
-
-model Transaction {
-  id              String       @id @default(uuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  stripeInvoiceId String?      @unique
-  amount          Int          // kuruş cinsinden (cents)
-  currency        String       @default("usd")
-  status          String       // PAID, FAILED
-  description     String?
-  periodStart     DateTime?
-  periodEnd       DateTime?
-
-  createdAt       DateTime     @default(now())
-
-  @@index([organizationId])
-}
-
-model ClaimToken {
-  id              String       @id @default(uuid())
-  token           String       @unique
-  sourceOrgId     String
-  sourceOrg       Organization @relation("SourceOrg", fields: [sourceOrgId], references: [id], onDelete: Cascade)
-  salesUserId     String?
-  expiresAt       DateTime
-  claimedAt       DateTime?
-  claimedByOrgId  String?
-
-  createdAt       DateTime     @default(now())
-
-  @@index([token])
-}
-
-model SalesApplication {
-  id              String       @id @default(uuid())
-  email           String       @unique
-  name            String
-  passwordHash    String
-  phone           String?
-  status          String       @default("PENDING")  // PENDING, APPROVED, REJECTED
-  rejectionReason String?
-  approvedAt      DateTime?
-  rejectedAt      DateTime?
-  createdAt       DateTime     @default(now())
-}
-
-model SalesDemo {
-  id              String       @id @default(uuid())
-  salesUserId     String
-  organizationId  String
-  orgName         String
-  status          String       @default("CREATED")  // CREATED, CLAIMED, TRIAL, SUBSCRIBED, CHURNED
-  claimToken      String?
-  claimUrl        String?
-
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  @@index([salesUserId])
-  @@index([organizationId])
-}
-
-model Commission {
-  id              String       @id @default(uuid())
-  salesUserId     String
-  organizationId  String
-  transactionId   String?
-  amount          Int          // cents
-  currency        String       @default("usd")
-  rate            Float        @default(0.30)  // 30%
-  status          String       @default("PENDING")  // PENDING, PAID, WITHDRAWN
-  paidAt          DateTime?
-
-  createdAt       DateTime     @default(now())
-
-  @@index([salesUserId])
-  @@index([organizationId])
 }
