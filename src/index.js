@@ -88,9 +88,9 @@ async function seedBetaAccounts() {
           where: { id: existing.organizationId },
           data: {
             plan: "PRO",
-            planStatus: "ACTIVE",
+            subscriptionStatus: "ACTIVE",
             billingCycle: "YEARLY",
-            currentPeriodEnd: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
+            subscriptionEndsAt: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
           },
         });
         console.log(`[seed] password reset + PRO granted: ${email}`);
@@ -104,9 +104,9 @@ async function seedBetaAccounts() {
         await prisma.organization.create({
           data: {
             name, slug, currency: "USD", defaultLanguage: "en", enabledLanguages: [],
-            plan: "PRO", planStatus: "ACTIVE",
+            plan: "PRO", subscriptionStatus: "ACTIVE",
             billingCycle: "YEARLY",
-            currentPeriodEnd: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
+            subscriptionEndsAt: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
             onboardingCompleted: false,
             qrSecret: crypto.randomBytes(16).toString("hex"),
             users: { create: { email, passwordHash, name, role: "OWNER" } },
