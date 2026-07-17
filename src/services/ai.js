@@ -54,8 +54,6 @@ For each menu item, extract:
 - price: the price as a number (no currency symbol). If a dish has multiple sizes/prices, use the smallest. If no price is shown, use 0.
 - category: the category/section name as it appears in the menu (e.g., "Pizzas", "Salads", "Drinks"). Group items that appear under the same heading.
 - isProperName: true if this is a brand-specific or proprietary dish name that should NOT be translated (e.g., "Big Mac", "Chef's Special Burger", regional dishes like "Pad Thai", "Köfte", "Lahmacun" that are commonly used internationally). False for generic dishes ("Caesar Salad", "Chicken Wings").
-- tagDietary: ONE of these values if applicable, or null: "SPICY", "VEGAN", "GLUTEN_FREE", "HALAL", "DAIRY_FREE", "PROTEIN_PLUS". Use your culinary knowledge to determine this. For example, a salad with no meat/dairy is VEGAN. A dish described as spicy is SPICY.
-- allergens: an array of applicable allergen codes from this list: "GLUTEN", "CRUSTACEANS", "EGGS", "FISH", "PEANUTS", "SOYBEANS", "MILK", "NUTS", "CELERY", "MUSTARD", "SESAME", "SULPHITES", "LUPIN", "MOLLUSCS". Use your culinary knowledge to identify likely allergens. For example, a pasta dish contains GLUTEN, a shrimp dish contains CRUSTACEANS, a dish with cheese contains MILK. If uncertain, include likely allergens.
 
 Also extract a list of all categories found in the menu, in the order they appear.
 
@@ -71,9 +69,7 @@ Respond with ONLY valid JSON in this exact format, no other text:
       "description": "Short description here",
       "price": 12.50,
       "category": "Category Name 1",
-      "isProperName": false,
-      "tagDietary": null,
-      "allergens": ["GLUTEN", "MILK"]
+      "isProperName": false
     }
   ]
 }
@@ -84,8 +80,6 @@ Important rules:
 - If there are duplicate items across pages, include only once
 - Keep the original language of names and descriptions
 - Be generous with isProperName for dishes that are clearly named (proprietary or regional)
-- For allergens, use culinary knowledge even if not explicitly stated on the menu
-- tagDietary should reflect the most relevant single tag. If a dish is both vegan and gluten-free, prefer VEGAN
 - Do not include allergen icons, prices in different currencies, or non-item content
 - If the menu is unreadable or not a menu, return {"categories": [], "items": []}`;
 
@@ -172,19 +166,14 @@ Important rules:
   }
 
   // Items'ı temizle - eksik alanlar için default değer
-  const validDietary = ['SPICY','VEGAN','GLUTEN_FREE','HALAL','DAIRY_FREE','PROTEIN_PLUS'];
-  const validAllergens = ['GLUTEN','CRUSTACEANS','EGGS','FISH','PEANUTS','SOYBEANS','MILK','NUTS','CELERY','MUSTARD','SESAME','SULPHITES','LUPIN','MOLLUSCS'];
-
   const cleanedItems = parsed.items.map(it => ({
     name: (it.name || "").trim(),
     description: (it.description || "").slice(0, 200),
     price: typeof it.price === "number" ? it.price : parseFloat(it.price) || 0,
     category: it.category || "Other",
     isProperName: !!it.isProperName,
-    tagDietary: validDietary.includes(it.tagDietary) ? it.tagDietary : null,
-    allergens: Array.isArray(it.allergens) ? it.allergens.filter(a => validAllergens.includes(a)) : [],
-    needsReview: !it.price || it.price === 0,
-  })).filter(it => it.name.length > 0);
+    needsReview: !it.price || it.price === 0, // fiyatı olmayan item'lar review gerektirir
+  })).filter(it => it.name.length > 0); // isimsiz item'ları at
 
   const itemsNeedingReview = cleanedItems.filter(it => it.needsReview).length;
   if (itemsNeedingReview > 0) {
@@ -366,40 +355,11 @@ Respond with ONLY the translated label, nothing else. No quotes, no explanations
   return null;
 }
 
-/**
- * Musteri notunu restoranin diline cevirir
- */
-async function translateNote(note, fromLang, toLang) {
-  if (!note || !note.trim() || fromLang === toLang) return note;
-  
-  const fromName = getLanguageName(fromLang);
-  const toName = getLanguageName(toLang);
-
-  try {
-    const response = await client.messages.create({
-      model: MODEL_TRANSLATE,
-      max_tokens: 300,
-      messages: [{
-        role: "user",
-        content: `Translate this restaurant order note from ${fromName} to ${toName}. Keep it brief and natural. Respond with ONLY the translation, nothing else.\n\nNote: "${note.trim()}"`,
-      }],
-    });
-    const textBlock = response.content.find(b => b.type === "text");
-    if (textBlock) {
-      return textBlock.text.trim().replace(/^["']|["']$/g, "").slice(0, 500);
-    }
-  } catch (e) {
-    console.warn("Note translation failed:", e.message);
-  }
-  return note;
-}
-
 function getLanguageName(code) {
   const map = {
     en: "English", tr: "Turkish", ar: "Arabic", es: "Spanish", fr: "French",
     de: "German", it: "Italian", pt: "Portuguese", ru: "Russian", zh: "Chinese",
     ja: "Japanese", ko: "Korean", hi: "Hindi", th: "Thai", vi: "Vietnamese",
-    lo: "Lao", km: "Khmer", my: "Burmese",
     id: "Indonesian", nl: "Dutch", pl: "Polish", uk: "Ukrainian", el: "Greek",
     he: "Hebrew", fa: "Persian", ur: "Urdu", bn: "Bengali", ms: "Malay",
     sv: "Swedish", no: "Norwegian", da: "Danish", fi: "Finnish", cs: "Czech",
@@ -505,7 +465,6 @@ module.exports = {
   generateDescription,
   translateItem,
   translateCategory,
-  translateNote,
   getLanguageName,
   recommendItems,
 };

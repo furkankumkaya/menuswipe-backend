@@ -1,3 +1,4 @@
+// src/middleware/auth.js
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -27,6 +28,7 @@ async function requireAuth(req, res, next) {
   }
 }
 
+// Plan limit checks
 function requirePlan(...plans) {
   return (req, res, next) => {
     if (!plans.includes(req.org.plan)) {

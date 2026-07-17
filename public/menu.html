@@ -1133,7 +1133,40 @@ const pathParts = window.location.pathname.split('/').filter(Boolean);
 const slug = pathParts[1] || '';
 const branchSlug = pathParts[2] || null;
 const BASE = window.location.origin;
-const fromQr = new URLSearchParams(window.location.search).get('qr') === '1';
+const urlParams = new URLSearchParams(window.location.search);
+const qrSignature = urlParams.get('s') || null;
+const qrTableId = urlParams.get('t') || null;
+const fromQr = !!(qrSignature || urlParams.get('qr') === '1');
+
+// QR session management
+const QR_SESSION_KEY = 'ms_qr_' + slug;
+const QR_SESSION_HOURS = 8;
+
+function getQrSession() {
+  try {
+    const raw = localStorage.getItem(QR_SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (Date.now() > session.expiresAt) {
+      localStorage.removeItem(QR_SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch(e) { return null; }
+}
+
+function setQrSession(signature, tableId) {
+  const session = {
+    s: signature,
+    t: tableId || null,
+    expiresAt: Date.now() + QR_SESSION_HOURS * 60 * 60 * 1000,
+  };
+  localStorage.setItem(QR_SESSION_KEY, JSON.stringify(session));
+  return session;
+}
+
+let hasValidQrSession = false;
+let qrSessionTableId = null;
 
 const CURRENCIES_SYM={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',AED:'د.إ',SAR:'﷼',CAD:'$',AUD:'$',CHF:'Fr',INR:'₹',BRL:'R$',MXN:'$',KRW:'₩',SGD:'$',HKD:'$',NOK:'kr',SEK:'kr',DKK:'kr',PLN:'zł',RUB:'₽',ZAR:'R',THB:'฿',IDR:'Rp',MYR:'RM',PHP:'₱',VND:'₫',EGP:'£',ILS:'₪',NZD:'$',ARS:'$',CLP:'$',COP:'$',CZK:'Kč',HUF:'Ft',RON:'lei',PKR:'₨',BDT:'৳',NGN:'₦',KES:'KSh',GHS:'GH₵',MAD:'د.م.',QAR:'ر.ق'};
 
@@ -2037,8 +2070,55 @@ function aiAddFromRec(itemId, recData){
 let _availableTables = [];
 let _tablesLoaded = false;
 
+const QR_REQUIRED_LABELS = {
+  en: { title: 'QR Code Required', msg: 'Please scan the QR code on your table to place an order.', btn: 'OK' },
+  tr: { title: 'QR Kod Gerekli', msg: 'Siparis vermek icin masanizdaki QR kodu tarayin.', btn: 'Tamam' },
+  vi: { title: 'Can quet ma QR', msg: 'Vui long quet ma QR tren ban de dat mon.', btn: 'OK' },
+  de: { title: 'QR-Code erforderlich', msg: 'Bitte scannen Sie den QR-Code an Ihrem Tisch.', btn: 'OK' },
+  fr: { title: 'QR Code requis', msg: 'Veuillez scanner le QR code sur votre table.', btn: 'OK' },
+  es: { title: 'Se requiere codigo QR', msg: 'Escanee el codigo QR de su mesa para hacer un pedido.', btn: 'OK' },
+};
+function tQr(key){
+  const lang = currentLang || defaultLanguage || 'en';
+  return (QR_REQUIRED_LABELS[lang] || QR_REQUIRED_LABELS.en)[key] || QR_REQUIRED_LABELS.en[key];
+}
+
+function showQrRequiredMessage(){
+  const overlay = document.getElementById('tablePickerOverlay');
+  const grid = document.getElementById('tableGrid');
+  const actions = document.getElementById('tablePickerActions');
+  const title = document.getElementById('tablePickerTitle');
+  title.textContent = tQr('title');
+  grid.innerHTML = `
+    <div style="grid-column:1/-1;text-align:center;padding:20px 0">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+        <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h1v1h-1zM18 14h1v1h-1z"/>
+      </svg>
+      <p style="color:rgba(255,255,255,.7);font-size:14px;margin-top:12px;line-height:1.5">${tQr('msg')}</p>
+    </div>`;
+  actions.innerHTML = `
+    <button onclick="closeTablePicker()" style="flex:1;padding:13px;border-radius:14px;border:none;background:#fff;color:#1D1616;font-size:13px;font-weight:700;cursor:pointer">${tQr('btn')}</button>`;
+  overlay.style.display = 'flex';
+}
+
 async function openTablePicker(){
   if(Object.keys(orderList).length === 0) return;
+
+  // QR session check: block ordering without valid QR
+  if(!hasValidQrSession){
+    showQrRequiredMessage();
+    return;
+  }
+
+  // Per-table QR: auto-assign table, skip picker
+  if(qrSessionTableId){
+    closeOrderSheet();
+    _pendingOrderOpts = { tableId: qrSessionTableId };
+    showOrderConfirmStep();
+    return;
+  }
+
   closeOrderSheet();
   
   // Tabloları yükle (önbelleğe al)
@@ -2149,12 +2229,16 @@ async function submitOrder(opts){
   // Loading göster
   showOrderStatus({ loading: true });
   
+  // QR session token for order verification
+  const qrSession = getQrSession();
   const payload = {
     tableId: opts.tableId || null,
     tableLabel: opts.tableLabel || null,
     items,
     note: opts.note || null,
     customerLanguage: currentLang || defaultLanguage,
+    qrToken: qrSession ? qrSession.s : null,
+    qrTableId: qrSession ? qrSession.t : null,
   };
   
   console.log('[order] sending to', `${BASE}/api/public/${slug}/order`, payload);
@@ -2361,9 +2445,11 @@ async function fetchMenu(){
     let url = `${BASE}/api/public/${slug}${branchSlug?'/'+branchSlug:''}`;
     const params = new URLSearchParams();
     if(currentLang) params.set('lang', currentLang);
-    if(fromQr) params.set('qr', '1');
+    if(qrSignature) params.set('s', qrSignature);
+    if(qrTableId) params.set('t', qrTableId);
+    if(fromQr && !qrSignature) params.set('qr', '1');
     if(params.toString()) url += '?'+params.toString();
-    
+
     const r = await fetch(url);
     const data = await r.json();
     if(!r.ok){
@@ -2374,7 +2460,20 @@ async function fetchMenu(){
       }
       throw new Error(data.error);
     }
-    
+
+    // QR session handling
+    if(data.qrValid && qrSignature){
+      setQrSession(qrSignature, data.qrTableId || qrTableId);
+      hasValidQrSession = true;
+      qrSessionTableId = data.qrTableId || qrTableId;
+    } else {
+      const existingSession = getQrSession();
+      if(existingSession){
+        hasValidQrSession = true;
+        qrSessionTableId = existingSession.t;
+      }
+    }
+
     orgData = data.organization;
     branchData = data.branch;
     allBranches = data.branches || [];

@@ -212,9 +212,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="3" r="1.2" fill="currentColor"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/><circle cx="7" cy="11" r="1.2" fill="currentColor"/></svg>
       </button>
       <div class="header-menu-pop" id="headerMenuPop">
-        <a href="/editor.html#tables" class="header-menu-item">
+        <a href="/editor.html#qr" class="header-menu-item">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="1.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="8.5" width="4" height="4" rx="0.5" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="8.5" width="1.5" height="1.5" fill="currentColor"/><rect x="11" y="8.5" width="1.5" height="1.5" fill="currentColor"/><rect x="8.5" y="11" width="1.5" height="1.5" fill="currentColor"/><rect x="11" y="11" width="1.5" height="1.5" fill="currentColor"/></svg>
-          Tables &amp; QR
+          QR &amp; link
         </a>
         <a href="/editor.html#analytics" class="header-menu-item">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 11L6 6L9 9L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -298,24 +298,13 @@ function switchTab(tab){
   document.getElementById('tabRegister').classList.toggle('on',tab==='register');
 }
 
-const AUTH_ENDPOINTS_ADMIN = ['/api/auth/login', '/api/auth/register'];
-
 async function api(method,path,body){
-  const opts={method,headers:{'Content-Type':'application/json'}};
-  if(token && !AUTH_ENDPOINTS_ADMIN.includes(path)){
-    opts.headers['Authorization'] = `Bearer ${token}`;
-  }
+  const opts={method,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}};
   if(body)opts.body=JSON.stringify(body);
   const r=await fetch(API+path,opts);
-  if(r.status===401 && !AUTH_ENDPOINTS_ADMIN.includes(path)){
-    token='';
-    localStorage.removeItem('ms_token');
-    localStorage.removeItem('ms_org');
-    // Reload yerine direkt auth ekranını göster
-    document.getElementById('app').classList.remove('on');
-    document.getElementById('authScreen').style.display='';
-    if(pollTimer){clearTimeout(pollTimer);pollTimer=null;}
-    throw new Error('Session expired');
+  if(r.status===401){
+    localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');
+    location.reload();throw new Error('Session expired');
   }
   const data=await r.json();
   if(!r.ok)throw new Error(data.error||data.message||'Request failed');
@@ -436,14 +425,13 @@ function renderOrderCard(o){
   const itemsHtml=items.map(it=>{
     const showOrig=it.name&&it.originalName&&it.name!==it.originalName;
     const allergens=it.allergens||[];
-    const note = it.noteTranslated || (it.note && it.note.trim());
-    const origNote = it.noteTranslated && it.note ? it.note.trim() : null;
+    const note = it.note && it.note.trim();
     return `<div class="order-item-row">
       <div class="order-item-qty">×${it.qty}</div>
       <div class="order-item-info">
         <div class="order-item-name">${escapeHtml(it.originalName||it.name)}</div>
         ${showOrig?`<div class="order-item-orig">${escapeHtml(it.name)}</div>`:''}
-        ${note?`<div style="margin-top:4px;padding:5px 8px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px;font-size:11.5px;color:#78350f;font-weight:500"><strong>Note:</strong> ${escapeHtml(note)}${origNote?` <span style="color:#94a3b8;font-weight:400;font-size:10px">(${escapeHtml(origNote)})</span>`:''}</div>`:''}
+        ${note?`<div style="margin-top:4px;padding:5px 8px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px;font-size:11.5px;color:#78350f;font-weight:500"><strong>Note:</strong> ${escapeHtml(note)}</div>`:''}
         ${allergens.length?`<div class="order-item-allergen">⚠ ${allergens.join(', ')}</div>`:''}
       </div>
     </div>`;
@@ -469,7 +457,7 @@ function renderOrderCard(o){
       <span class="order-status-pill ${statusClass}">${statusLabel}</span>
       <div class="order-time">${timeAgo}</div>
     </div>
-    ${o.noteTranslated||o.note?`<div class="order-customer-note">${escapeHtml(o.noteTranslated||o.note)}${o.noteTranslated&&o.note&&o.noteTranslated!==o.note?` <span style="color:#94a3b8;font-size:11px">(${escapeHtml(o.note)})</span>`:''}</div>`:''}
+    ${o.note?`<div class="order-customer-note">📝 ${escapeHtml(o.note)}</div>`:''}
     <div class="order-items-list">${itemsHtml}</div>
     <div class="order-card-foot">
       <div class="order-total">${symbol}${o.subtotal.toFixed(2)}</div>
@@ -608,10 +596,7 @@ function toast(msg,dur=2200){
     if(!org.onboardingCompleted){location.href='/editor.html';return;}
     startApp();
   }catch(e){
-    // api() 401 durumunda authScreen'i zaten gösteriyor.
-    // Başka hatalarda da auth ekranına düş.
     if(e.message!=='Session expired'){
-      token='';
       localStorage.removeItem('ms_token');
       localStorage.removeItem('ms_org');
       document.getElementById('authScreen').style.display='';
