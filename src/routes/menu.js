@@ -199,9 +199,12 @@ router.patch("/:id", requireAuth, async (req, res, next) => {
       data.allergens = req.body.allergens.filter(a => VALID_ALLERGENS.includes(a));
     }
 
-    // Cross-sell suggestion
+    // Cross-sell / upsell suggestions
     if (req.body.crossSellItemId !== undefined) {
       data.crossSellItemId = req.body.crossSellItemId || null;
+    }
+    if (Array.isArray(req.body.crossSellItemIds)) {
+      data.crossSellItemIds = req.body.crossSellItemIds;
     }
 
     if (Array.isArray(branchIds)) {
@@ -322,6 +325,125 @@ router.post("/:id/regenerate-description", requireAuth, async (req, res, next) =
       branchIds: updated.itemBranches.map(ib => ib.branchId),
       itemBranches: undefined,
     });
+  } catch (err) { next(err); }
+});
+
+/**
+ * POST /api/menu/generate
+ * Batch AI generation: dietary, allergens, marketing, descriptions, upsell
+ * Body: { types: ["dietary","marketing","descriptions","upsell"] }
+ */
+router.post("/generate", requireAuth, async (req, res, next) => {
+  try {
+    const { types } = req.body;
+    if (!Array.isArray(types) || types.length === 0) {
+      return res.status(400).json({ error: "types array required" });
+    }
+
+    const validTypes = ["dietary", "marketing", "descriptions", "upsell"];
+    const requested = types.filter(t => validTypes.includes(t));
+    if (requested.length === 0) return res.status(400).json({ error: "No valid types" });
+
+    const items = await prisma.menuItem.findMany({
+      where: { organizationId: req.org.id, active: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    if (items.length === 0) return res.json({ results: {}, updated: 0 });
+
+    const categories = await prisma.category.findMany({
+      where: { organizationId: req.org.id },
+    });
+
+    const lang = req.org.defaultLanguage || "en";
+    const ai = require("../services/ai");
+    const results = {};
+    let totalUpdated = 0;
+
+    // Dietary + Allergens
+    if (requested.includes("dietary")) {
+      try {
+        const dietaryResults = await ai.generateDietaryAllergens(items, lang);
+        let count = 0;
+        for (const r of dietaryResults) {
+          const existing = items.find(i => i.id === r.id);
+          if (!existing) continue;
+          await prisma.menuItem.update({
+            where: { id: r.id },
+            data: { tagDietary: r.tagDietary, allergens: r.allergens },
+          });
+          count++;
+        }
+        results.dietary = { count };
+        totalUpdated += count;
+      } catch (e) {
+        console.error("Generate dietary failed:", e.message);
+        results.dietary = { error: e.message };
+      }
+    }
+
+    // Marketing tags
+    if (requested.includes("marketing")) {
+      try {
+        const marketingResults = await ai.generateMarketingTags(items, lang);
+        let count = 0;
+        for (const r of marketingResults) {
+          const existing = items.find(i => i.id === r.id);
+          if (!existing) continue;
+          const data = { tagMarketing: r.tagMarketing };
+          if (r.tagMarketing === "BESTSELLER") data.isBestseller = true;
+          await prisma.menuItem.update({ where: { id: r.id }, data });
+          count++;
+        }
+        results.marketing = { count };
+        totalUpdated += count;
+      } catch (e) {
+        console.error("Generate marketing failed:", e.message);
+        results.marketing = { error: e.message };
+      }
+    }
+
+    // Descriptions
+    if (requested.includes("descriptions")) {
+      try {
+        const descResults = await ai.generateDescriptions(items, lang);
+        let count = 0;
+        for (const r of descResults) {
+          if (!r.description) continue;
+          await prisma.menuItem.update({
+            where: { id: r.id },
+            data: { description: r.description },
+          });
+          count++;
+        }
+        results.descriptions = { count };
+        totalUpdated += count;
+      } catch (e) {
+        console.error("Generate descriptions failed:", e.message);
+        results.descriptions = { error: e.message };
+      }
+    }
+
+    // Upsell combos
+    if (requested.includes("upsell")) {
+      try {
+        const upsellResults = await ai.generateUpsellCombos(items, categories, lang);
+        let count = 0;
+        for (const r of upsellResults) {
+          await prisma.menuItem.update({
+            where: { id: r.id },
+            data: { crossSellItemIds: r.crossSellItemIds },
+          });
+          count++;
+        }
+        results.upsell = { count };
+        totalUpdated += count;
+      } catch (e) {
+        console.error("Generate upsell failed:", e.message);
+        results.upsell = { error: e.message };
+      }
+    }
+
+    res.json({ results, updated: totalUpdated });
   } catch (err) { next(err); }
 });
 

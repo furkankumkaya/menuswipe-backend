@@ -460,6 +460,220 @@ Recommend the best 2-3 items from the menu. Respond in ${langName}.`;
   };
 }
 
+/**
+ * Batch generate dietary tags + allergens for menu items
+ */
+async function generateDietaryAllergens(items, language = "en") {
+  const langName = getLanguageName(language);
+  const VALID_DIETARY = ["SPICY","VEGAN","GLUTEN_FREE","HALAL","DAIRY_FREE","PROTEIN_PLUS"];
+  const VALID_ALLERGENS = ["GLUTEN","CRUSTACEANS","EGGS","FISH","PEANUTS","SOYBEANS","MILK","NUTS","CELERY","MUSTARD","SESAME","SULPHITES","LUPIN","MOLLUSCS"];
+
+  const itemList = items.map(it => ({
+    id: it.id,
+    name: it.name,
+    description: it.description || "",
+    category: it.category || "",
+  }));
+
+  const response = await client.messages.create({
+    model: MODEL_DESC,
+    max_tokens: 4000,
+    messages: [{
+      role: "user",
+      content: `You are a food safety and nutrition expert. Analyze these menu items (in ${langName}) and assign dietary tags and allergens.
+
+Menu items:
+${JSON.stringify(itemList)}
+
+Valid dietary tags (pick at most 1 per item, or null): ${VALID_DIETARY.join(", ")}
+Valid allergens (pick all that likely apply): ${VALID_ALLERGENS.join(", ")}
+
+Rules:
+- Base your analysis on the item name, description, and category
+- Be conservative: only tag allergens you're reasonably confident about
+- SPICY for clearly spicy dishes. VEGAN for plant-only. GLUTEN_FREE for naturally GF items. HALAL for clearly halal. DAIRY_FREE for dairy-free. PROTEIN_PLUS for high-protein.
+- Most bread/pasta/pizza items contain GLUTEN. Most items with cheese contain MILK. Seafood items may contain CRUSTACEANS, FISH, or MOLLUSCS.
+- If unsure about dietary, use null
+
+Respond with ONLY JSON array:
+[{"id":"...","tagDietary":"SPICY"|null,"allergens":["GLUTEN","MILK"]}]`,
+    }],
+  });
+
+  const textBlock = response.content.find(b => b.type === "text");
+  const raw = (textBlock?.text || "").trim();
+  let jsonText = raw;
+  if (jsonText.startsWith("```")) jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  const match = jsonText.match(/\[[\s\S]*\]/);
+  if (!match) return [];
+  const parsed = JSON.parse(match[0]);
+  return parsed.map(r => ({
+    id: r.id,
+    tagDietary: VALID_DIETARY.includes(r.tagDietary) ? r.tagDietary : null,
+    allergens: (r.allergens || []).filter(a => VALID_ALLERGENS.includes(a)),
+  }));
+}
+
+/**
+ * Batch generate marketing tags for menu items
+ */
+async function generateMarketingTags(items, language = "en") {
+  const langName = getLanguageName(language);
+  const VALID_MARKETING = ["NEW","BESTSELLER","OFFER","LIMITED","SEASONAL","LOCAL_FOOD"];
+
+  const itemList = items.map(it => ({
+    id: it.id,
+    name: it.name,
+    description: it.description || "",
+    price: it.price,
+    category: it.category || "",
+  }));
+
+  const response = await client.messages.create({
+    model: MODEL_DESC,
+    max_tokens: 4000,
+    messages: [{
+      role: "user",
+      content: `You are a restaurant marketing expert. Analyze these menu items (in ${langName}) and suggest marketing tags.
+
+Menu items:
+${JSON.stringify(itemList)}
+
+Valid marketing tags (pick at most 1 per item, or null): ${VALID_MARKETING.join(", ")}
+
+Rules:
+- BESTSELLER: dishes that are commonly popular in restaurants of this type
+- LOCAL_FOOD: regional/local specialty dishes
+- SEASONAL: items that are clearly seasonal
+- NEW, OFFER, LIMITED: use sparingly, only if the name/description suggests it
+- Most items should get null (no tag). Only ~20-30% should get a tag.
+- Be selective. A tag on every item defeats the purpose.
+
+Respond with ONLY JSON array:
+[{"id":"...","tagMarketing":"BESTSELLER"|null}]`,
+    }],
+  });
+
+  const textBlock = response.content.find(b => b.type === "text");
+  const raw = (textBlock?.text || "").trim();
+  let jsonText = raw;
+  if (jsonText.startsWith("```")) jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  const match = jsonText.match(/\[[\s\S]*\]/);
+  if (!match) return [];
+  const parsed = JSON.parse(match[0]);
+  return parsed.map(r => ({
+    id: r.id,
+    tagMarketing: VALID_MARKETING.includes(r.tagMarketing) ? r.tagMarketing : null,
+  }));
+}
+
+/**
+ * Batch generate descriptions for items that lack them
+ */
+async function generateDescriptions(items, language = "en") {
+  const langName = getLanguageName(language);
+  const needDesc = items.filter(it => !it.description || it.description.trim() === "");
+  if (needDesc.length === 0) return [];
+
+  const itemList = needDesc.map(it => ({
+    id: it.id,
+    name: it.name,
+    category: it.category || "",
+  }));
+
+  const response = await client.messages.create({
+    model: MODEL_DESC,
+    max_tokens: 6000,
+    messages: [{
+      role: "user",
+      content: `Write short, appetizing menu descriptions for these dishes. Language: ${langName}.
+
+Items needing descriptions:
+${JSON.stringify(itemList)}
+
+Rules:
+- Each description: 1-2 sentences, max 200 characters
+- Natural, restaurant-quality wording
+- Include key ingredients or preparation method if recognizable from the name
+- Do not repeat the dish name in the description
+
+Respond with ONLY JSON array:
+[{"id":"...","description":"Short appetizing description here."}]`,
+    }],
+  });
+
+  const textBlock = response.content.find(b => b.type === "text");
+  const raw = (textBlock?.text || "").trim();
+  let jsonText = raw;
+  if (jsonText.startsWith("```")) jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  const match = jsonText.match(/\[[\s\S]*\]/);
+  if (!match) return [];
+  return JSON.parse(match[0]).map(r => ({
+    id: r.id,
+    description: (r.description || "").slice(0, 200),
+  }));
+}
+
+/**
+ * Generate upsell combos: food-drink, food-side, food-dessert, dessert-drink
+ */
+async function generateUpsellCombos(items, categories, language = "en") {
+  const langName = getLanguageName(language);
+
+  // Build category group map
+  const catGroupMap = {};
+  for (const c of categories) catGroupMap[c.code] = c.group || "food";
+
+  const itemList = items.map(it => ({
+    id: it.id,
+    name: it.name,
+    price: it.price,
+    category: it.category,
+    group: catGroupMap[it.category] || "food",
+  }));
+
+  const response = await client.messages.create({
+    model: MODEL_DESC,
+    max_tokens: 6000,
+    messages: [{
+      role: "user",
+      content: `You are a restaurant upselling expert. Create smart upsell combinations for these menu items (in ${langName}).
+
+Menu items with their groups:
+${JSON.stringify(itemList)}
+
+Create upsell suggestions. For each item, suggest 1-3 complementary items from DIFFERENT groups:
+- Food items -> suggest drinks, sides, or desserts
+- Drink items -> suggest food or desserts
+- Dessert items -> suggest drinks or coffee
+
+Rules:
+- Only suggest items that naturally pair well together
+- A burger pairs well with a drink and fries. A steak pairs with wine. Dessert pairs with coffee/tea.
+- Each suggestion must use an actual item ID from the list
+- An item cannot suggest itself
+- Focus on the most natural pairings, not random combinations
+- Not every item needs upsells. Skip items with no good matches.
+
+Respond with ONLY JSON array:
+[{"id":"item_id","crossSellItemIds":["suggested_id_1","suggested_id_2"]}]`,
+    }],
+  });
+
+  const textBlock = response.content.find(b => b.type === "text");
+  const raw = (textBlock?.text || "").trim();
+  let jsonText = raw;
+  if (jsonText.startsWith("```")) jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+  const match = jsonText.match(/\[[\s\S]*\]/);
+  if (!match) return [];
+
+  const validIds = new Set(items.map(i => i.id));
+  return JSON.parse(match[0]).map(r => ({
+    id: r.id,
+    crossSellItemIds: (r.crossSellItemIds || []).filter(sid => validIds.has(sid) && sid !== r.id).slice(0, 3),
+  })).filter(r => r.crossSellItemIds.length > 0);
+}
+
 module.exports = {
   extractMenuFromFiles,
   generateDescription,
@@ -467,4 +681,8 @@ module.exports = {
   translateCategory,
   getLanguageName,
   recommendItems,
+  generateDietaryAllergens,
+  generateMarketingTags,
+  generateDescriptions,
+  generateUpsellCombos,
 };

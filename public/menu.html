@@ -789,36 +789,43 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 .cross-sell-card{
   position:fixed;
   top:max(calc(env(safe-area-inset-top,0px) + 90px), 110px);
-  left:16px;right:74px;
-  background:rgba(29,22,22,.92);
+  left:12px;right:12px;
+  background:rgba(29,22,22,.95);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border:0.5px solid rgba(255,255,255,.12);
   border-radius:16px;
-  padding:10px 12px;
-  display:flex;align-items:center;gap:11px;
+  padding:12px;
   box-shadow:0 12px 36px rgba(0,0,0,.55);
   z-index:60;
-  transform:translateX(120%);
-  transition:transform .35s cubic-bezier(.25,.46,.45,.94);
+  transform:translateY(-120%);opacity:0;
+  transition:transform .35s cubic-bezier(.25,.46,.45,.94),opacity .25s;
   touch-action:pan-x;
 }
-.cross-sell-card.visible{transform:translateX(0)}
+.cross-sell-card.visible{transform:translateY(0);opacity:1}
+.cs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cs-title{font-size:11px;font-weight:700;color:#D84040;letter-spacing:.4px;text-transform:uppercase}
+.cs-close{width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.5);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cs-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.cs-item:last-child{border-bottom:none}
 .cross-sell-thumb{
-  width:52px;height:52px;border-radius:12px;
+  width:44px;height:44px;border-radius:10px;
   background:rgba(255,255,255,.05);overflow:hidden;flex-shrink:0;
 }
 .cross-sell-thumb img{width:100%;height:100%;object-fit:cover}
 .cross-sell-text{flex:1;min-width:0}
-.cross-sell-label{font-size:10px;font-weight:700;color:#D84040;letter-spacing:.4px;text-transform:uppercase;margin-bottom:2px}
-.cross-sell-name{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cross-sell-price{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.cross-sell-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cross-sell-price{font-size:11px;color:rgba(255,255,255,.5);margin-top:1px}
 .cross-sell-add{
-  width:36px;height:36px;border-radius:10px;
+  width:32px;height:32px;border-radius:8px;
   background:#8E1616;border:none;color:#fff;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;flex-shrink:0;
-  font-size:20px;font-weight:300;
+  font-size:18px;font-weight:300;
 }
+.upsell-sub{display:flex;align-items:center;gap:8px;padding:4px 0 4px 62px;opacity:.7}
+.upsell-sub-name{font-size:11px;color:rgba(255,255,255,.7);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upsell-sub-price{font-size:11px;color:rgba(255,255,255,.4)}
+.upsell-sub-add{width:22px;height:22px;border-radius:6px;background:rgba(142,22,22,.6);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* WAITER MODE */
 .waiter-screen{position:fixed;inset:0;background:#000;z-index:200;color:#fff;display:none;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
@@ -1450,6 +1457,20 @@ function renderOrderSheet(){
     const hasAllergens = allergens.length > 0;
     const allergenNames = allergens.map(a => ALLERGEN_LIST.find(x=>x.code===a)?.label||a).join(', ');
     const hasNote = o.note && o.note.trim().length > 0;
+    // Upsell suggestions for this item in order
+    const srcItem = allItems.find(i => i.id === id);
+    let upsellIds = [];
+    if(srcItem){
+      upsellIds = srcItem.crossSellItemIds && srcItem.crossSellItemIds.length > 0
+        ? srcItem.crossSellItemIds : srcItem.crossSellItemId ? [srcItem.crossSellItemId] : [];
+    }
+    const upsells = upsellIds.map(uid => allItems.find(i => i.id === uid)).filter(u => u && !orderList[u.id]);
+    const upsellHtml = upsells.map(u => `<div class="upsell-sub">
+      <span class="upsell-sub-name">+ ${escapeHtml(u.name)}</span>
+      <span class="upsell-sub-price">${sym}${u.price}</span>
+      <button class="upsell-sub-add" onclick="event.stopPropagation();addUpsellFromOrder('${u.id}')">+</button>
+    </div>`).join('');
+
     return `<div class="order-row" data-item-id="${id}">
       <div class="order-thumb">${o.photoUrl?`<img src="${o.photoUrl}" alt=""/>`:'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" opacity=".4"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/></svg>'}</div>
       <div class="order-info">
@@ -1473,7 +1494,7 @@ function renderOrderSheet(){
         <span class="num">${o.qty}</span>
         <button type="button" data-action="inc">+</button>
       </div>
-    </div>`;
+    </div>${upsellHtml}`;
   }).join('');
   
   document.getElementById('orderTotal').textContent = sym + total.toFixed(2);
@@ -1549,42 +1570,46 @@ let _crossSellTouchStartX = 0;
 
 function triggerCrossSell(addedItem){
   try {
-    if(!addedItem || !addedItem.crossSellItemId) return;
-    
-    // Önerilen item zaten sepette ise gösterme
-    if(orderList[addedItem.crossSellItemId]) return;
-    
-    // Bu öneri daha önce bu session'da gösterildiyse tekrar gösterme
-    if(_crossSellShown.has(addedItem.crossSellItemId)) return;
-    
-    // Önerilen item'ı bul
-    const candidate = allItems.find(i => i.id === addedItem.crossSellItemId);
-    if(!candidate) return;
-    
-    _crossSellShown.add(candidate.id);
-    showCrossSellCard(candidate);
+    if(!addedItem) return;
+    // Use crossSellItemIds (array) first, fall back to single crossSellItemId
+    let candidateIds = addedItem.crossSellItemIds && addedItem.crossSellItemIds.length > 0
+      ? [...addedItem.crossSellItemIds]
+      : addedItem.crossSellItemId ? [addedItem.crossSellItemId] : [];
+
+    // Filter: not in cart, not shown before
+    candidateIds = candidateIds.filter(cid => !orderList[cid] && !_crossSellShown.has(cid));
+    if(candidateIds.length === 0) return;
+
+    const candidates = candidateIds.map(cid => allItems.find(i => i.id === cid)).filter(Boolean);
+    if(candidates.length === 0) return;
+
+    candidates.forEach(c => _crossSellShown.add(c.id));
+    showCrossSellCard(candidates);
   } catch(err) {
     console.error('cross-sell error', err);
   }
 }
 
-function showCrossSellCard(item){
+function showCrossSellCard(items){
   const sym = getSym();
   const card = document.getElementById('crossSellCard');
-  if(!card){console.error('cross-sell card el yok'); return;}
-  
-  const thumb = item.photos?.[0]?.url
-    ? `<div class="cross-sell-thumb"><img src="${item.photos[0].url}" alt=""/></div>`
-    : `<div class="cross-sell-thumb" style="display:flex;align-items:center;justify-content:center;font-size:22px">🍽</div>`;
-  card.innerHTML = `
-    ${thumb}
-    <div class="cross-sell-text">
-      <div class="cross-sell-label">Goes well with this</div>
-      <div class="cross-sell-name">${escapeHtml(item.name)}</div>
-      <div class="cross-sell-price">${sym}${item.price}</div>
-    </div>
-    <button class="cross-sell-add" onclick="event.stopPropagation();addFromCrossSell('${item.id}')">+</button>`;
-  card.onclick = (e) => { if(!e.target.closest('.cross-sell-add')) dismissCrossSell(); };
+  if(!card) return;
+
+  let html = `<div class="cs-header"><span class="cs-title">Goes well with this</span><button class="cs-close" onclick="event.stopPropagation();dismissCrossSell()">✕</button></div>`;
+  for(const item of items){
+    const thumb = item.photos?.[0]?.url
+      ? `<div class="cross-sell-thumb"><img src="${item.photos[0].url}" alt=""/></div>`
+      : `<div class="cross-sell-thumb" style="display:flex;align-items:center;justify-content:center;font-size:18px;color:rgba(255,255,255,.3)">🍽</div>`;
+    html += `<div class="cs-item">
+      ${thumb}
+      <div class="cross-sell-text">
+        <div class="cross-sell-name">${escapeHtml(item.name)}</div>
+        <div class="cross-sell-price">${sym}${item.price}</div>
+      </div>
+      <button class="cross-sell-add" onclick="event.stopPropagation();addFromCrossSell('${item.id}')">+</button>
+    </div>`;
+  }
+  card.innerHTML = html;
   card.ontouchstart = (e) => { _crossSellTouchStartX = e.touches[0].clientX; e.stopPropagation(); };
   card.ontouchmove = (e) => { e.stopPropagation(); };
   card.ontouchend = (e) => {
@@ -1592,19 +1617,21 @@ function showCrossSellCard(item){
     const dx = e.changedTouches[0].clientX - _crossSellTouchStartX;
     if(dx > 60) dismissCrossSell();
   };
-  // Force reflow + animation
   card.classList.remove('visible');
   void card.offsetWidth;
   setTimeout(() => card.classList.add('visible'), 50);
+  // Auto dismiss after 8 seconds
+  clearTimeout(card._autoHide);
+  card._autoHide = setTimeout(() => dismissCrossSell(), 8000);
 }
 
 function dismissCrossSell(){
-  document.getElementById('crossSellCard').classList.remove('visible');
+  const card = document.getElementById('crossSellCard');
+  card.classList.remove('visible');
+  clearTimeout(card._autoHide);
 }
 
 function addFromCrossSell(itemId){
-  dismissCrossSell();
-  // Cross-sell'den eklenen item için yeni cross-sell tetikleme — tek 1 öneri
   const item = allItems.find(i => i.id === itemId);
   if(!item) return;
   if(!orderList[itemId]){
@@ -1617,13 +1644,45 @@ function addFromCrossSell(itemId){
       allergens: item.allergens||[],
       category: item.category||'MAIN',
     };
-    // triggerCrossSell ÇAĞRILMIYOR — yalnızca 1 öneri
+  } else {
+    orderList[itemId].qty++;
+  }
+  // Remove added item from the card
+  const card = document.getElementById('crossSellCard');
+  const csItems = card.querySelectorAll('.cs-item');
+  let remaining = 0;
+  csItems.forEach(el => {
+    const btn = el.querySelector('.cross-sell-add');
+    if(btn && btn.getAttribute('onclick').includes(itemId)){
+      el.style.opacity='0';el.style.maxHeight='0';el.style.overflow='hidden';el.style.padding='0';el.style.transition='.25s';
+    } else { remaining++; }
+  });
+  if(remaining === 0) setTimeout(() => dismissCrossSell(), 300);
+  saveOrderList();
+  renderAddBox(item);
+  updateOrderFab();
+}
+
+function addUpsellFromOrder(itemId){
+  const item = allItems.find(i => i.id === itemId);
+  if(!item) return;
+  if(!orderList[itemId]){
+    orderList[itemId] = {
+      qty: 1,
+      name: item.name,
+      originalName: item.originalName||item.name,
+      price: item.price,
+      photoUrl: item.photos?.[0]?.url||null,
+      allergens: item.allergens||[],
+      category: item.category||'MAIN',
+    };
   } else {
     orderList[itemId].qty++;
   }
   saveOrderList();
   renderAddBox(item);
   updateOrderFab();
+  renderOrderSheet();
 }
 
 /* ============== AI MENU CONCIERGE ============== */

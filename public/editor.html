@@ -258,6 +258,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .m-title{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:3px}
 .m-sub{font-size:12px;color:#64748b;margin-bottom:16px}
 .m-row{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.aigen-opt{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:.15s}
+.aigen-opt:has(input:checked){border-color:#8B5CF6;background:#f5f3ff}
+.aigen-opt input{margin-top:3px;accent-color:#8B5CF6}
 .photo-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .pslot{aspect-ratio:1;border-radius:12px;border:2px dashed #e2e8f0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:#f8fafc;position:relative}
 .pslot img{width:100%;height:100%;object-fit:cover}
@@ -393,6 +396,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="ob-step-dot" id="obDot2"></div>
       <div class="ob-step-dot" id="obDot3"></div>
       <div class="ob-step-dot" id="obDot4"></div>
+      <div class="ob-step-dot" id="obDot5"></div>
     </div>
 
     <!-- STEP 1: Google Maps Link -->
@@ -490,10 +494,64 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         <button onclick="obPrevStep()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;text-decoration:underline">Back</button>
       </div>
     </div>
+
+    <!-- STEP 5: AI Auto-Generate -->
+    <div id="obStep5" class="ob-step">
+      <h2 style="font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">AI-enhance your menu</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:20px">Select what AI should auto-generate for your menu items.</p>
+
+      <div id="obGenOptions" style="display:flex;flex-direction:column;gap:8px">
+        <label class="ob-gen-opt">
+          <input type="checkbox" value="dietary" checked>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff">Dietary tags & Allergens</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Vegan, Gluten-free, Halal, Spicy + allergen warnings</div>
+          </div>
+        </label>
+        <label class="ob-gen-opt">
+          <input type="checkbox" value="marketing" checked>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff">Marketing tags</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Bestseller, Local food, Seasonal</div>
+          </div>
+        </label>
+        <label class="ob-gen-opt">
+          <input type="checkbox" value="descriptions" checked>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff">Descriptions</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Appetizing descriptions for items missing one</div>
+          </div>
+        </label>
+        <label class="ob-gen-opt">
+          <input type="checkbox" value="upsell" checked>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff">Upsell combos</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Food-drink, food-dessert pairing suggestions</div>
+          </div>
+        </label>
+      </div>
+
+      <div id="obGenProgress" style="display:none;text-align:center;padding:24px 0">
+        <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#8B5CF6;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px"></div>
+        <div id="obGenProgressText" style="font-size:13px;color:rgba(255,255,255,.6)">Generating...</div>
+      </div>
+
+      <button class="auth-btn" id="obGenRunBtn" onclick="obRunGenerate()" style="margin-top:20px;background:#8B5CF6">
+        Generate with AI
+      </button>
+
+      <div style="text-align:center;margin-top:12px">
+        <button onclick="obSkipGenerate()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer">Skip, I'll do it later</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <style>
+.ob-gen-opt{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1.5px solid #3d2828;border-radius:12px;cursor:pointer;transition:.15s;background:#2a1d1d}
+.ob-gen-opt:has(input:checked){border-color:#8B5CF6;background:#2d1f3d}
+.ob-gen-opt input{margin-top:3px;accent-color:#8B5CF6}
+
 .ob-step-dot{width:24px;height:6px;border-radius:3px;background:rgba(255,255,255,.15);transition:.2s}
 .ob-step-dot.on{background:#8E1616;width:36px}
 .ob-step-dot.done{background:rgba(142,22,22,.5)}
@@ -617,9 +675,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <span id="ptitle">Menu items</span>
     </div>
     <div class="top-acts" id="topActs">
-      <button class="btn-gh" onclick="openImport(false)" title="Import menu from PDF or photos">
+      <button class="btn-gh" onclick="openImport(false)" title="Import menu from PDF or photos" style="font-size:11px">
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4-4 4 4M2 12h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Import
+      </button>
+      <button class="btn-gh" onclick="openAiGenerate()" title="AI Generate" style="font-size:11px;color:#8B5CF6;border-color:#8B5CF6">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        AI Generate
       </button>
       <button class="btn-dk" onclick="showAddRow()">+ Add</button>
     </div>
@@ -707,6 +769,49 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         </div>
         <div id="crossSellList" style="max-height:55vh;overflow-y:auto;margin-bottom:14px"></div>
         <div class="m-row"><button class="btn-gh" onclick="closeCrossSellOverlay()">Cancel</button><button class="btn-dk" onclick="saveCrossSells()">Save all</button></div>
+      </div>
+    </div>
+
+    <!-- AI GENERATE OVERLAY -->
+    <div class="overlay" id="aiGenOverlay">
+      <div class="modal" style="max-width:440px">
+        <div class="modal-handle"></div>
+        <div class="m-title" style="display:flex;align-items:center;gap:8px">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" stroke="#8B5CF6" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          AI Generate
+        </div>
+        <div class="m-sub">Select what you want AI to generate for your menu items.</div>
+
+        <div id="aiGenOptions" style="display:flex;flex-direction:column;gap:8px;margin:16px 0">
+          <label class="aigen-opt">
+            <input type="checkbox" value="dietary" checked>
+            <div><strong>Dietary tags & Allergens</strong><br><span style="font-size:11px;color:#64748b">Vegan, Gluten-free, Halal, Spicy + allergen warnings</span></div>
+          </label>
+          <label class="aigen-opt">
+            <input type="checkbox" value="marketing" checked>
+            <div><strong>Marketing tags</strong><br><span style="font-size:11px;color:#64748b">Bestseller, Local food, Seasonal, New</span></div>
+          </label>
+          <label class="aigen-opt">
+            <input type="checkbox" value="descriptions" checked>
+            <div><strong>Descriptions</strong><br><span style="font-size:11px;color:#64748b">Appetizing descriptions for items without one</span></div>
+          </label>
+          <label class="aigen-opt">
+            <input type="checkbox" value="upsell" checked>
+            <div><strong>Upsell combos</strong><br><span style="font-size:11px;color:#64748b">Smart food-drink, food-dessert pairing suggestions</span></div>
+          </label>
+        </div>
+
+        <div id="aiGenProgress" style="display:none;text-align:center;padding:20px 0">
+          <div class="spinner" style="margin:0 auto 12px"></div>
+          <div id="aiGenProgressText" style="font-size:13px;color:#64748b">Generating...</div>
+        </div>
+
+        <div id="aiGenResult" style="display:none;margin:12px 0"></div>
+
+        <div class="m-row" id="aiGenButtons">
+          <button class="btn-gh" onclick="closeAiGenerate()">Cancel</button>
+          <button class="btn-dk" id="aiGenRunBtn" onclick="runAiGenerate()" style="background:#8B5CF6">Generate</button>
+        </div>
       </div>
     </div>
 
@@ -1237,16 +1342,15 @@ function showOnboarding(){
 
 function obSetStep(n){
   obCurrentStep = n;
-  for(let i=1;i<=4;i++){
-    document.getElementById('obStep'+i).classList.toggle('on', i===n);
+  for(let i=1;i<=5;i++){
+    const step = document.getElementById('obStep'+i);
+    if(step) step.classList.toggle('on', i===n);
     const dot = document.getElementById('obDot'+i);
-    dot.classList.remove('on','done');
-    if(i<n) dot.classList.add('done');
-    else if(i===n) dot.classList.add('on');
+    if(dot){ dot.classList.remove('on','done'); if(i<n) dot.classList.add('done'); else if(i===n) dot.classList.add('on'); }
   }
-  // Step 3'te dropdownları doldur
   if(n===3) obPopulateSettings();
 }
+function obGoToStep(n){ obSetStep(n); }
 
 function obNextStep(){ obSetStep(obCurrentStep+1); }
 function obPrevStep(){ obSetStep(obCurrentStep-1); }
@@ -1423,6 +1527,35 @@ async function obFinish(){
     document.getElementById('onboardingScreen').style.display = 'none';
     startApp();
   }catch(e){ toast('Failed: '+e.message); }
+}
+
+async function obRunGenerate(){
+  const checks = [...document.querySelectorAll('#obGenOptions input:checked')];
+  const types = checks.map(c => c.value);
+  if(types.length === 0){ toast('Select at least one option'); return; }
+
+  document.getElementById('obGenRunBtn').disabled = true;
+  document.getElementById('obGenRunBtn').textContent = 'Generating...';
+  document.querySelectorAll('#obGenOptions input').forEach(cb => cb.disabled = true);
+  document.getElementById('obGenProgress').style.display = 'block';
+  document.getElementById('obGenProgressText').textContent = 'AI is analyzing your menu...';
+
+  try {
+    await api('POST', '/api/menu/generate', { types });
+    document.getElementById('obGenProgress').style.display = 'none';
+    toast('AI generation complete!');
+    await obFinish();
+  } catch(e) {
+    document.getElementById('obGenProgress').style.display = 'none';
+    document.getElementById('obGenRunBtn').disabled = false;
+    document.getElementById('obGenRunBtn').textContent = 'Retry';
+    document.querySelectorAll('#obGenOptions input').forEach(cb => cb.disabled = false);
+    toast('Generation failed: ' + e.message);
+  }
+}
+
+function obSkipGenerate(){
+  obFinish();
 }
 
 function obOpenImport(){
@@ -1737,9 +1870,10 @@ async function applyImport(){
     closeImport();
     toast(`✓ Imported ${res.createdCount} items`);
     
-    // Onboarding'den geliyorsa onboarding'i bitir
+    // Onboarding'den geliyorsa AI generate adimina gec
     if(importFromOnboarding){
-      await obFinish();
+      obGoToStep(5);
+      return;
     } else {
       // Mevcut menüyü yeniden yükle
       await loadCats();
@@ -2505,6 +2639,63 @@ async function saveCrossSells(){
     toast(`Saved ${changes.length} cross-sell ${changes.length===1?'rule':'rules'}`);
   } catch(e){
     toast('Failed: '+e.message);
+  }
+}
+
+/* ============== AI GENERATE ============== */
+function openAiGenerate(){
+  document.getElementById('aiGenProgress').style.display = 'none';
+  document.getElementById('aiGenResult').style.display = 'none';
+  document.getElementById('aiGenResult').innerHTML = '';
+  document.getElementById('aiGenButtons').style.display = 'flex';
+  document.getElementById('aiGenRunBtn').disabled = false;
+  document.getElementById('aiGenRunBtn').textContent = 'Generate';
+  document.querySelectorAll('#aiGenOptions input').forEach(cb => { cb.checked = true; cb.disabled = false; });
+  document.getElementById('aiGenOverlay').classList.add('open');
+}
+function closeAiGenerate(){
+  document.getElementById('aiGenOverlay').classList.remove('open');
+}
+
+async function runAiGenerate(){
+  const checks = [...document.querySelectorAll('#aiGenOptions input:checked')];
+  const types = checks.map(c => c.value);
+  if(types.length === 0){ toast('Select at least one option'); return; }
+
+  document.getElementById('aiGenRunBtn').disabled = true;
+  document.getElementById('aiGenRunBtn').textContent = 'Generating...';
+  document.querySelectorAll('#aiGenOptions input').forEach(cb => cb.disabled = true);
+  document.getElementById('aiGenProgress').style.display = 'block';
+
+  const labels = { dietary:'Dietary & Allergens', marketing:'Marketing tags', descriptions:'Descriptions', upsell:'Upsell combos' };
+  const progressEl = document.getElementById('aiGenProgressText');
+  progressEl.textContent = 'Analyzing your menu with AI...';
+
+  try {
+    const res = await api('POST', '/api/menu/generate', { types });
+    document.getElementById('aiGenProgress').style.display = 'none';
+
+    let html = '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;font-size:13px;color:#166534;line-height:1.6">';
+    html += '<strong>Generation complete!</strong><br>';
+    for(const t of types){
+      const r = res.results[t];
+      if(r && r.error) html += `${labels[t]}: <span style="color:#dc2626">Failed</span><br>`;
+      else if(r) html += `${labels[t]}: ${r.count} items updated<br>`;
+    }
+    html += '</div>';
+    document.getElementById('aiGenResult').innerHTML = html;
+    document.getElementById('aiGenResult').style.display = 'block';
+    document.getElementById('aiGenRunBtn').textContent = 'Done';
+    document.getElementById('aiGenRunBtn').onclick = () => { closeAiGenerate(); };
+
+    await loadMenu();
+    toast(`AI generated data for ${res.updated} items`);
+  } catch(e){
+    document.getElementById('aiGenProgress').style.display = 'none';
+    toast('Generation failed: ' + e.message);
+    document.getElementById('aiGenRunBtn').disabled = false;
+    document.getElementById('aiGenRunBtn').textContent = 'Retry';
+    document.querySelectorAll('#aiGenOptions input').forEach(cb => cb.disabled = false);
   }
 }
 

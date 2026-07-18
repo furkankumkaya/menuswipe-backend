@@ -170,8 +170,9 @@ model MenuItem {
   // Alerjenler
   allergens       String[]     @default([])
   
-  // Cross-sell - bu item siparişe eklenince önerilecek başka bir item ID'si
-  crossSellItemId String?
+  // Upsell - bu item siparise eklenince onerilecek item ID'leri
+  crossSellItemId  String?
+  crossSellItemIds String[]     @default([])
   
   sortOrder       Int          @default(0)
   
