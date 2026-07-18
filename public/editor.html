@@ -126,10 +126,10 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .itable{min-width:660px;width:100%}
 .irow{background:#fff;border-bottom:1px solid #f1f5f9}
 .irow:last-child{border-bottom:none}
-.irow-main{display:grid;grid-template-columns:88px 88px 60px minmax(140px,1fr) 80px 70px 76px 60px;align-items:center}
+.irow-main{display:grid;grid-template-columns:88px 88px 60px minmax(120px,1fr) minmax(80px,auto) minmax(70px,auto) 76px 60px;align-items:center}
 .irow.hdr .irow-main{background:#f8fafc;border-radius:14px 14px 0 0}
 .irow.hdr span{font-size:10px;color:#64748b;font-weight:700;padding:10px 12px;display:block;text-transform:uppercase;letter-spacing:.4px}
-.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px}
+.icell{padding:10px 8px;display:flex;align-items:center;min-height:54px;overflow:hidden}
 .tag-cell{padding:8px 6px;display:flex;align-items:center;min-height:54px}
 .tag-select{font-size:10px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:5px 6px;cursor:pointer;width:100%;font-weight:700}
 /* Marketing tags */
@@ -157,7 +157,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .bestseller-badge{font-size:9px;padding:2px 6px;border-radius:6px;background:#fef3c7;color:#92400e;font-weight:700;letter-spacing:.3px}
 .idesc-text{font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idesc-text.empty{font-style:italic}
-.ctag{font-size:10px;padding:3px 9px;border-radius:20px;background:#eef2ff;color:var(--accent);white-space:nowrap;font-weight:600}
+.ctag{font-size:10px;padding:3px 9px;border-radius:20px;background:#eef2ff;color:var(--accent);white-space:nowrap;font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .irow.editing .irow-main{background:#f8fafc}
 .edit-inp{font-size:12px;font-weight:600;color:#1e293b;background:transparent;border:none;outline:none;width:100%;padding:0}
 .cat-sel{font-size:11px;color:#1e293b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;outline:none;padding:4px 6px;cursor:pointer;width:100%}
@@ -2277,7 +2277,7 @@ function renderItems(){
             </div>
           </div>
           <div class="icell"><span class="ctag" style="border-left:3px solid ${cat.color}">${cat.label}</span></div>
-          <div class="icell" style="font-size:13px;font-weight:700;color:#1e293b">${sym}${item.price}</div>
+          <div class="icell" style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap">${sym}${item.price}</div>
           <div class="icell"><button class="photo-ibtn" onclick="openPhoto('${item.id}')">${PHOTO_ICO} ${photos.length}/3</button></div>
           <div class="act-cell">
             ${(org?.enabledLanguages||[]).length>0?`<button class="ib" onclick="openItemTranslations('${item.id}')" title="Translations">${TRANSLATE_ICO}</button>`:''}
