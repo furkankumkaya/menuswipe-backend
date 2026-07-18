@@ -95,8 +95,8 @@ async function seedBetaAccounts() {
         });
         console.log(`[seed] password reset + PRO granted: ${email}`);
       } else {
-        const name = email.split("@")[0];
-        let slug = name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 40);
+        const name = "My Restaurant";
+        let slug = "restaurant";
         const exists = await prisma.organization.findUnique({ where: { slug } });
         if (exists) slug = slug + "-" + Date.now();
 

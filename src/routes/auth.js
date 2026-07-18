@@ -131,9 +131,11 @@ router.patch("/organization", requireAuth, async (req, res, next) => {
     for (const key of allowed) {
       if (req.body[key] !== undefined) data[key] = req.body[key];
     }
-    // If name changed, regenerate slug from new name
-    if (data.name && data.name !== req.org.name) {
-      data.slug = await uniqueSlug(data.name);
+    // Regenerate slug if name changed OR slug doesn't match current name
+    const currentName = data.name || req.org.name;
+    const expectedSlug = slugify(currentName);
+    if ((data.name && data.name !== req.org.name) || (expectedSlug && !req.org.slug.startsWith(expectedSlug))) {
+      data.slug = await uniqueSlug(currentName);
     }
     // Generate qrSecret if missing
     if (!req.org.qrSecret) {
