@@ -2663,8 +2663,9 @@ const FOOD_KEYWORDS = ['food','yemek','burger','pizza','salad','soup','grill','k
 const DRINK_KEYWORDS = ['drink','beer','wine','cocktail','coffee','tea','juice','soda','water','smoothie','shake','lemonade','icecek','bira','sarap','kahve','cay','su','mocktail','spirits','soft','beverage'];
 const DESSERT_KEYWORDS = ['dessert','sweet','cake','ice cream','pastry','chocolate','cookie','brownie','tiramisu','cheesecake','tatli','dondurma','pasta','baklava','kunefe','sorbet','gelato','macaron','waffle','pancake','crepe'];
 
-function classifyCategory(catCode, catLabel){
-  const text = (catCode + ' ' + catLabel).toLowerCase();
+function classifyCategory(catCode, catLabel, originalLabel){
+  // Use originalLabel (default language) for classification so groups stay consistent across languages
+  const text = (catCode + ' ' + (originalLabel || catLabel) + ' ' + catLabel).toLowerCase();
   if(DRINK_KEYWORDS.some(k => text.includes(k))) return 'drinks';
   if(DESSERT_KEYWORDS.some(k => text.includes(k))) return 'dessert';
   if(FOOD_KEYWORDS.some(k => text.includes(k))) return 'food';
@@ -2680,7 +2681,7 @@ function buildCatGroups(){
   const groups = {food:[], drinks:[], dessert:[]};
 
   visibleCats.forEach(c => {
-    const g = classifyCategory(c.code, c.label);
+    const g = classifyCategory(c.code, c.label, c.originalLabel);
     catGroupMap[c.code] = g;
     if(!groups[g]) groups[g] = [];
     groups[g].push(c);
