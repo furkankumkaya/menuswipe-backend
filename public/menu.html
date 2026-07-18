@@ -2115,6 +2115,7 @@ async function openTablePicker(){
   if(qrSessionTableId){
     closeOrderSheet();
     _pendingOrderOpts = { tableId: qrSessionTableId };
+    document.getElementById('tablePickerOverlay').style.display = 'flex';
     showOrderConfirmStep();
     return;
   }
