@@ -463,6 +463,25 @@ Recommend the best 2-3 items from the menu. Respond in ${langName}.`;
 /**
  * Batch generate dietary tags + allergens for menu items
  */
+// Allergen reference database: common food types and their typical allergens
+const ALLERGEN_REFERENCE = `
+ALLERGEN REFERENCE DATABASE (EU 14 major allergens):
+- GLUTEN: wheat, barley, rye, oats, spelt. Found in: bread, pasta, pizza dough, flour tortillas, soy sauce, beer, breadcrumbs, couscous, bulgur, seitan, crackers, pastries, cakes, cookies, pancakes, waffles, noodles, dumplings, tempura batter
+- CRUSTACEANS: shrimp, prawns, crab, lobster, crayfish, langoustine. Found in: paella, seafood platters, bisque, shrimp cocktail, pad thai (often), fish sauce (sometimes)
+- EGGS: chicken eggs. Found in: mayonnaise, pasta (fresh), cakes, meringue, ice cream, french toast, quiche, custard, hollandaise, carbonara, egg noodles, breaded/battered items, meatballs (often), tiramisu
+- FISH: all fin fish. Found in: Caesar dressing (anchovies), Worcestershire sauce, fish sauce, surimi, bouillabaisse, paella, sushi
+- PEANUTS: groundnuts. Found in: satay sauce, pad thai, African stews, some curries, peanut butter, snack mixes, some Asian sauces
+- SOYBEANS: soy. Found in: soy sauce, tofu, miso, edamame, tempeh, teriyaki sauce, many Asian sauces, vegetable oil (sometimes)
+- MILK: cow's milk, dairy. Found in: cheese, butter, cream, yogurt, ice cream, whey, casein, milk chocolate, bechamel, alfredo, risotto, mashed potatoes (often), naan bread, many baked goods
+- NUTS: almonds, hazelnuts, walnuts, cashews, pecans, pistachios, macadamia, brazil nuts. Found in: pesto (pine nuts), baklava, praline, marzipan, some curries, granola, many desserts
+- CELERY: celery and celeriac. Found in: soups, stocks, Waldorf salad, coleslaw (sometimes), Bloody Mary, stuffing
+- MUSTARD: mustard seeds, powder. Found in: salad dressings, marinades, barbecue sauce, pickles, curry powder
+- SESAME: sesame seeds, tahini. Found in: hummus, halva, sushi, burger buns (often), Middle Eastern dishes, Asian stir-fries
+- SULPHITES: E220-E228. Found in: wine, dried fruits, vinegar, pickled foods, some sausages, pre-made salads
+- LUPIN: lupin beans/flour. Found in: some European breads, pastries, pasta (gluten-free alternatives)
+- MOLLUSCS: mussels, oysters, squid/calamari, octopus, snails, clams, scallops. Found in: calamari, paella, seafood pasta, chowder
+`;
+
 async function generateDietaryAllergens(items, language = "en") {
   const langName = getLanguageName(language);
   const VALID_DIETARY = ["SPICY","VEGAN","GLUTEN_FREE","HALAL","DAIRY_FREE","PROTEIN_PLUS"];
@@ -477,26 +496,32 @@ async function generateDietaryAllergens(items, language = "en") {
 
   const response = await client.messages.create({
     model: MODEL_DESC,
-    max_tokens: 4000,
+    max_tokens: 8000,
     messages: [{
       role: "user",
-      content: `You are a food safety and nutrition expert. Analyze these menu items (in ${langName}) and assign dietary tags and allergens.
+      content: `You are a food safety and nutrition expert. Analyze these menu items (in ${langName}) and assign dietary tags and allergens using the reference database below.
 
-Menu items:
+${ALLERGEN_REFERENCE}
+
+Menu items to analyze:
 ${JSON.stringify(itemList)}
 
 Valid dietary tags (pick at most 1 per item, or null): ${VALID_DIETARY.join(", ")}
-Valid allergens (pick all that likely apply): ${VALID_ALLERGENS.join(", ")}
+Valid allergens (pick all that LIKELY apply based on typical recipes): ${VALID_ALLERGENS.join(", ")}
 
 Rules:
-- Base your analysis on the item name, description, and category
-- Be conservative: only tag allergens you're reasonably confident about
-- SPICY for clearly spicy dishes. VEGAN for plant-only. GLUTEN_FREE for naturally GF items. HALAL for clearly halal. DAIRY_FREE for dairy-free. PROTEIN_PLUS for high-protein.
-- Most bread/pasta/pizza items contain GLUTEN. Most items with cheese contain MILK. Seafood items may contain CRUSTACEANS, FISH, or MOLLUSCS.
-- If unsure about dietary, use null
+- Use the ALLERGEN REFERENCE DATABASE above to identify which allergens each dish likely contains
+- Think about the typical ingredients and preparation of each dish
+- GLUTEN: any dish with bread, pasta, flour, batter, soy sauce
+- MILK: any dish with cheese, cream, butter, yogurt
+- EGGS: any breaded/battered item, fresh pasta, cakes, mayonnaise-based sauces
+- Be thorough but reasonable. A plain grilled chicken has no major allergens. A chicken parmesan has GLUTEN (breading), MILK (cheese), EGGS (breading)
+- For dietary tags: SPICY for chili/hot dishes, VEGAN for 100% plant-based, GLUTEN_FREE for naturally GF dishes (grilled meat, rice, salads without croutons), HALAL for clearly halal items, DAIRY_FREE for no dairy, PROTEIN_PLUS for high-protein (steaks, grilled chicken, fish)
+- If truly unsure about dietary tag, use null
+- These are AI SUGGESTIONS that the restaurant owner will review. Be helpful and thorough.
 
-Respond with ONLY JSON array:
-[{"id":"...","tagDietary":"SPICY"|null,"allergens":["GLUTEN","MILK"]}]`,
+Respond with ONLY a JSON array, no other text:
+[{"id":"...","tagDietary":"SPICY","allergens":["GLUTEN","MILK"]}]`,
     }],
   });
 
@@ -505,13 +530,21 @@ Respond with ONLY JSON array:
   let jsonText = raw;
   if (jsonText.startsWith("```")) jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   const match = jsonText.match(/\[[\s\S]*\]/);
-  if (!match) return [];
-  const parsed = JSON.parse(match[0]);
-  return parsed.map(r => ({
-    id: r.id,
-    tagDietary: VALID_DIETARY.includes(r.tagDietary) ? r.tagDietary : null,
-    allergens: (r.allergens || []).filter(a => VALID_ALLERGENS.includes(a)),
-  }));
+  if (!match) {
+    console.error("[generateDietaryAllergens] No JSON array found in response:", raw.slice(0, 500));
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(match[0]);
+    return parsed.map(r => ({
+      id: r.id,
+      tagDietary: VALID_DIETARY.includes(r.tagDietary) ? r.tagDietary : null,
+      allergens: (r.allergens || []).filter(a => VALID_ALLERGENS.includes(a)),
+    }));
+  } catch (e) {
+    console.error("[generateDietaryAllergens] JSON parse failed:", e.message, raw.slice(0, 500));
+    return [];
+  }
 }
 
 /**

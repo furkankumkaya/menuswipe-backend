@@ -330,120 +330,77 @@ router.post("/:id/regenerate-description", requireAuth, async (req, res, next) =
 
 /**
  * POST /api/menu/generate
- * Batch AI generation: dietary, allergens, marketing, descriptions, upsell
- * Body: { types: ["dietary","marketing","descriptions","upsell"] }
+ * Single-type AI generation. Call once per type for sequential progress.
+ * Body: { type: "dietary" | "marketing" | "descriptions" | "upsell" }
  */
 router.post("/generate", requireAuth, async (req, res, next) => {
   try {
-    const { types } = req.body;
-    if (!Array.isArray(types) || types.length === 0) {
-      return res.status(400).json({ error: "types array required" });
-    }
-
+    const { type } = req.body;
     const validTypes = ["dietary", "marketing", "descriptions", "upsell"];
-    const requested = types.filter(t => validTypes.includes(t));
-    if (requested.length === 0) return res.status(400).json({ error: "No valid types" });
+    if (!type || !validTypes.includes(type)) {
+      return res.status(400).json({ error: "Valid type required: " + validTypes.join(", ") });
+    }
 
     const items = await prisma.menuItem.findMany({
       where: { organizationId: req.org.id, active: true },
       orderBy: { sortOrder: "asc" },
     });
-    if (items.length === 0) return res.json({ results: {}, updated: 0 });
-
-    const categories = await prisma.category.findMany({
-      where: { organizationId: req.org.id },
-    });
+    if (items.length === 0) return res.json({ type, count: 0 });
 
     const lang = req.org.defaultLanguage || "en";
     const ai = require("../services/ai");
-    const results = {};
-    let totalUpdated = 0;
+    let count = 0;
 
-    // Dietary + Allergens
-    if (requested.includes("dietary")) {
-      try {
-        const dietaryResults = await ai.generateDietaryAllergens(items, lang);
-        let count = 0;
-        for (const r of dietaryResults) {
-          const existing = items.find(i => i.id === r.id);
-          if (!existing) continue;
-          await prisma.menuItem.update({
-            where: { id: r.id },
-            data: { tagDietary: r.tagDietary, allergens: r.allergens },
-          });
-          count++;
-        }
-        results.dietary = { count };
-        totalUpdated += count;
-      } catch (e) {
-        console.error("Generate dietary failed:", e.message);
-        results.dietary = { error: e.message };
+    if (type === "dietary") {
+      const results = await ai.generateDietaryAllergens(items, lang);
+      for (const r of results) {
+        if (!items.find(i => i.id === r.id)) continue;
+        await prisma.menuItem.update({
+          where: { id: r.id },
+          data: { tagDietary: r.tagDietary, allergens: r.allergens },
+        });
+        count++;
       }
     }
 
-    // Marketing tags
-    if (requested.includes("marketing")) {
-      try {
-        const marketingResults = await ai.generateMarketingTags(items, lang);
-        let count = 0;
-        for (const r of marketingResults) {
-          const existing = items.find(i => i.id === r.id);
-          if (!existing) continue;
-          const data = { tagMarketing: r.tagMarketing };
-          if (r.tagMarketing === "BESTSELLER") data.isBestseller = true;
-          await prisma.menuItem.update({ where: { id: r.id }, data });
-          count++;
-        }
-        results.marketing = { count };
-        totalUpdated += count;
-      } catch (e) {
-        console.error("Generate marketing failed:", e.message);
-        results.marketing = { error: e.message };
+    if (type === "marketing") {
+      const results = await ai.generateMarketingTags(items, lang);
+      for (const r of results) {
+        if (!items.find(i => i.id === r.id)) continue;
+        const data = { tagMarketing: r.tagMarketing };
+        if (r.tagMarketing === "BESTSELLER") data.isBestseller = true;
+        await prisma.menuItem.update({ where: { id: r.id }, data });
+        count++;
       }
     }
 
-    // Descriptions
-    if (requested.includes("descriptions")) {
-      try {
-        const descResults = await ai.generateDescriptions(items, lang);
-        let count = 0;
-        for (const r of descResults) {
-          if (!r.description) continue;
-          await prisma.menuItem.update({
-            where: { id: r.id },
-            data: { description: r.description },
-          });
-          count++;
-        }
-        results.descriptions = { count };
-        totalUpdated += count;
-      } catch (e) {
-        console.error("Generate descriptions failed:", e.message);
-        results.descriptions = { error: e.message };
+    if (type === "descriptions") {
+      const results = await ai.generateDescriptions(items, lang);
+      for (const r of results) {
+        if (!r.description) continue;
+        await prisma.menuItem.update({
+          where: { id: r.id },
+          data: { description: r.description },
+        });
+        count++;
       }
     }
 
-    // Upsell combos
-    if (requested.includes("upsell")) {
-      try {
-        const upsellResults = await ai.generateUpsellCombos(items, categories, lang);
-        let count = 0;
-        for (const r of upsellResults) {
-          await prisma.menuItem.update({
-            where: { id: r.id },
-            data: { crossSellItemIds: r.crossSellItemIds },
-          });
-          count++;
-        }
-        results.upsell = { count };
-        totalUpdated += count;
-      } catch (e) {
-        console.error("Generate upsell failed:", e.message);
-        results.upsell = { error: e.message };
+    if (type === "upsell") {
+      const categories = await prisma.category.findMany({
+        where: { organizationId: req.org.id },
+      });
+      const results = await ai.generateUpsellCombos(items, categories, lang);
+      for (const r of results) {
+        await prisma.menuItem.update({
+          where: { id: r.id },
+          data: { crossSellItemIds: r.crossSellItemIds },
+        });
+        count++;
       }
     }
 
-    res.json({ results, updated: totalUpdated });
+    res.json({ type, count });
   } catch (err) { next(err); }
 });
 
