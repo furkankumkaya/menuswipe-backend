@@ -751,75 +751,75 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       </div>
     </div>
 
-    <!-- PREVIEW PANEL -->
-    <!-- TABLES PANEL -->
+    <!-- TABLES & QR PANEL -->
     <div class="panel" id="p-tables">
       <div style="padding:14px">
         <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
           <strong>Tables let customers order to a specific table.</strong> Add your tables here. Customers will pick from this list when sending an order.
         </div>
-        
+
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
           <button class="btn-pr" onclick="openAddTableSingle()" style="flex:1;min-width:140px">+ Add table</button>
           <button class="btn-gh" onclick="openAddTablesBulk()" style="flex:1;min-width:140px">Generate multiple</button>
         </div>
-        
+
         <div id="tablesList"></div>
       </div>
-    </div>
 
-    <!-- QR PANEL -->
-    <div class="panel" id="p-qr">
-      <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
-        <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
-        <select id="qrBranchSelect" onchange="qrGenerate()"></select>
-      </div>
+      <div style="padding:0 14px 14px">
+        <div style="height:1px;background:#e2e8f0;margin-bottom:18px"></div>
 
-      <!-- QR Mode Toggle -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-t">QR Code Mode</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button class="dl-btn" id="qrModeSingle" onclick="setQrMode('single')" style="flex:1;font-weight:600">Single QR (All tables)</button>
-          <button class="dl-btn" id="qrModePerTable" onclick="setQrMode('perTable')" style="flex:1;font-weight:600">Per-table QR</button>
+        <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
+          <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
+          <select id="qrBranchSelect" onchange="qrGenerate()"></select>
         </div>
-        <div style="font-size:11px;color:#94a3b8" id="qrModeHint">One QR code for all tables. Customers pick their table when ordering.</div>
-      </div>
 
-      <!-- Single QR View -->
-      <div id="qrSingleView" class="qr-grid">
-        <div>
+        <!-- QR Mode Toggle -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-t">QR Code Mode</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="dl-btn" id="qrModeSingle" onclick="setQrMode('single')" style="flex:1;font-weight:600">Single QR (All tables)</button>
+            <button class="dl-btn" id="qrModePerTable" onclick="setQrMode('perTable')" style="flex:1;font-weight:600">Per-table QR</button>
+          </div>
+          <div style="font-size:11px;color:#94a3b8" id="qrModeHint">One QR code for all tables. Customers pick their table when ordering.</div>
+        </div>
+
+        <!-- Single QR View -->
+        <div id="qrSingleView" class="qr-grid">
+          <div>
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-t">Menu link</div>
+              <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
+              <div style="font-size:11px;color:#94a3b8">This link contains a security token. Only QR scans can place orders.</div>
+            </div>
+            <div class="card">
+              <div class="card-t">Download</div>
+              <button class="dl-btn" onclick="qrDlPNG()">Download PNG (Print)</button>
+              <button class="dl-btn" onclick="qrDlSVG()">Download SVG (Vector)</button>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:12px">
+              <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Secure QR ready</div>
+            </div>
+            <div class="card">
+              <div class="card-t">Share</div>
+              <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-Table QR View -->
+        <div id="qrPerTableView" style="display:none">
           <div class="card" style="margin-bottom:12px">
-            <div class="card-t">Menu link</div>
-            <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
-            <div style="font-size:11px;color:#94a3b8">This link contains a security token. Only QR scans can place orders.</div>
-          </div>
-          <div class="card">
-            <div class="card-t">Download</div>
-            <button class="dl-btn" onclick="qrDlPNG()">Download PNG (Print)</button>
-            <button class="dl-btn" onclick="qrDlSVG()">Download SVG (Vector)</button>
-          </div>
-        </div>
-        <div>
-          <div class="card" style="margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:12px">
-            <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Secure QR ready</div>
-          </div>
-          <div class="card">
-            <div class="card-t">Share</div>
-            <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Per-Table QR View -->
-      <div id="qrPerTableView" style="display:none">
-        <div class="card" style="margin-bottom:12px">
-          <div class="card-t">Per-table QR Codes</div>
-          <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.5">Each table gets its own QR code. When a customer scans it, their table is automatically assigned. No table picker needed.</div>
-          <div id="qrTableList" style="display:flex;flex-direction:column;gap:8px"></div>
-          <div style="margin-top:16px;display:flex;gap:8px">
-            <button class="dl-btn" onclick="qrBulkDownloadPNG()" style="flex:1">Download All PNGs (ZIP)</button>
-            <button class="dl-btn" onclick="qrBulkDownloadSVG()" style="flex:1">Download All SVGs (ZIP)</button>
+            <div class="card-t">Per-table QR Codes</div>
+            <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.5">Each table gets its own QR code. When a customer scans it, their table is automatically assigned. No table picker needed.</div>
+            <div id="qrTableList" style="display:flex;flex-direction:column;gap:8px"></div>
+            <div style="margin-top:16px;display:flex;gap:8px">
+              <button class="dl-btn" onclick="qrBulkDownloadPNG()" style="flex:1">Download All PNGs (ZIP)</button>
+              <button class="dl-btn" onclick="qrBulkDownloadSVG()" style="flex:1">Download All SVGs (ZIP)</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1027,12 +1027,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     </button>
     <button class="nav-btn" id="nav-tables" onclick="go('tables',this)">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 5v13M15 5v13" stroke="currentColor" stroke-width="2"/></svg>
-      <span>Tables</span>
-      <div class="nav-dot"></div>
-    </button>
-    <button class="nav-btn" id="nav-qr" onclick="go('qr',this)">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M12 12h3v3H12zM15 15h4M15 19v-4M19 12v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>QR & Link</span>
+      <span>Tables & QR</span>
       <div class="nav-dot"></div>
     </button>
     <button class="nav-btn" id="nav-analytics" onclick="go('analytics',this)">
@@ -1808,14 +1803,13 @@ function go(id,el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   const targetPanel=document.getElementById('p-'+id);
   if(targetPanel)targetPanel.classList.add('on');
-  const titles={menu:'Menu items',tables:'Tables',qr:'QR & link',analytics:'Analytics',profile:'Profile'};
+  const titles={menu:'Menu items',tables:'Tables & QR',analytics:'Analytics',profile:'Profile'};
   document.getElementById('ptitle').textContent=titles[id]||id;
   document.getElementById('topActs').style.display=id==='menu'?'flex':'none';
   document.getElementById('backBtn').style.display='none';
-  if(id==='qr'){buildQrBranchSelector();qrGenerate();}
   if(id==='analytics')loadAnalytics();
   if(id==='profile'){loadBranches();loadGoogleInsights();}
-  if(id==='tables')loadTables();
+  if(id==='tables'){loadTables();buildQrBranchSelector();qrGenerate();}
   // hash güncelle
   if(history.replaceState)history.replaceState(null,'','#'+id);
   document.getElementById('appContent').scrollTop=0;
@@ -1824,8 +1818,9 @@ function goBack(){go('profile',document.getElementById('nav-profile'));}
 
 // Hash routing: /editor.html#tables, #qr, #profile, #analytics, #menu
 function applyHash(){
-  const h=(location.hash||'').replace('#','').toLowerCase();
-  const allowed=['menu','tables','qr','analytics','profile'];
+  let h=(location.hash||'').replace('#','').toLowerCase();
+  if(h==='qr')h='tables'; // QR merged into Tables
+  const allowed=['menu','tables','analytics','profile'];
   if(!h)return;
   if(allowed.includes(h)){
     const btn=document.getElementById('nav-'+h);
