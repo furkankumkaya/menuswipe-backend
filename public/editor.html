@@ -3023,11 +3023,74 @@ function renderPerTableQrs(){
   }).join('');
 }
 
+function buildTableQrCanvas(url, label, restaurantName){
+  return new Promise(resolve => {
+    const qrCanvas = document.createElement('canvas');
+    QRCode.toCanvas(qrCanvas, url, {width:800, margin:2, errorCorrectionLevel:'H'}, ()=>{
+      const W = 1000, pad = 100, qrSize = 800;
+      const headerH = 160, footerH = 80, totalH = headerH + qrSize + footerH;
+      const out = document.createElement('canvas');
+      out.width = W; out.height = totalH;
+      const ctx = out.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, totalH);
+
+      // Header background
+      const accent = (org && org.accentColor) || '#8E1616';
+      ctx.fillStyle = accent;
+      ctx.fillRect(0, 0, W, headerH);
+
+      // Table icon (simple plate/circle)
+      const iconX = W/2, iconY = 50;
+      ctx.beginPath();
+      ctx.arc(iconX, iconY, 24, 0, Math.PI*2);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      // Fork-knife inside
+      ctx.beginPath();
+      ctx.moveTo(iconX-8, iconY-12); ctx.lineTo(iconX-8, iconY+12);
+      ctx.moveTo(iconX+8, iconY-12); ctx.lineTo(iconX+8, iconY+12);
+      ctx.moveTo(iconX+8, iconY-6); ctx.lineTo(iconX+8, iconY-12);
+      ctx.arc(iconX+8, iconY-6, 4, -Math.PI/2, Math.PI/2, true);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Table label
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 52px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, W/2, iconY + 52);
+
+      // QR code
+      ctx.drawImage(qrCanvas, pad, headerH, qrSize, qrSize);
+
+      // Footer: restaurant name
+      ctx.fillStyle = '#666666';
+      ctx.font = '28px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const rName = restaurantName || (org && org.name) || '';
+      ctx.fillText(rName, W/2, headerH + qrSize + footerH/2);
+
+      // Subtle border
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, W-2, totalH-2);
+
+      resolve(out);
+    });
+  });
+}
+
 function qrDlTablePNG(tableId, label){
   const url = getQrUrl(tableId);
-  const tmp = document.createElement('canvas');
-  QRCode.toCanvas(tmp,url,{width:1000,margin:2,errorCorrectionLevel:'H'},()=>{
-    const a=document.createElement('a');a.download='qr-'+org.slug+'-table-'+label+'.png';a.href=tmp.toDataURL('image/png');
+  buildTableQrCanvas(url, label).then(out => {
+    const a=document.createElement('a');a.download='qr-'+org.slug+'-table-'+label+'.png';a.href=out.toDataURL('image/png');
     document.body.appendChild(a);a.click();document.body.removeChild(a);
   });
 }
@@ -3044,11 +3107,8 @@ async function qrBulkDownloadPNG(){
 
   for(const t of tables){
     const url = getQrUrl(t.tableId);
-    const canvas = document.createElement('canvas');
-    await new Promise(resolve => {
-      QRCode.toCanvas(canvas,url,{width:1000,margin:2,errorCorrectionLevel:'H'},resolve);
-    });
-    const dataUrl = canvas.toDataURL('image/png');
+    const out = await buildTableQrCanvas(url, t.label);
+    const dataUrl = out.toDataURL('image/png');
     const base64 = dataUrl.split(',')[1];
     zip.file('qr-table-'+t.label+'.png', base64, {base64:true});
   }
