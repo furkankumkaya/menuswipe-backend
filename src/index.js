@@ -65,6 +65,7 @@ app.listen(PORT, () => {
   console.log(`MenuSwipe running on port ${PORT}`);
   seedBetaAccounts().catch(e => console.error("[seed] failed:", e.message));
   backfillQrSecrets().catch(e => console.error("[backfill] qrSecret failed:", e.message));
+  backfillCategoryGroups().catch(e => console.error("[backfill] category groups failed:", e.message));
 });
 
 // Beta hesaplarını otomatik oluştur/güncelle
@@ -118,6 +119,38 @@ async function seedBetaAccounts() {
     } catch (e) {
       console.error(`[seed] error for ${email}:`, e.message);
     }
+  }
+  await prisma.$disconnect();
+}
+
+// Backfill category groups for existing categories that still have default "food"
+async function backfillCategoryGroups() {
+  const { PrismaClient } = require("@prisma/client");
+  const prisma = new PrismaClient();
+
+  const DRINK_KW = ['drink','beer','wine','cocktail','coffee','tea','juice','soda','water','smoothie','shake','lemonade','icecek','bira','sarap','kahve','cay','su','mocktail','spirits','soft','beverage'];
+  const DESSERT_KW = ['dessert','sweet','cake','ice cream','pastry','chocolate','cookie','brownie','tiramisu','cheesecake','tatli','dondurma','baklava','kunefe','sorbet','gelato','macaron','waffle','pancake','crepe','sufle','souffle','profiterol'];
+
+  function classify(code, label) {
+    const text = (code + ' ' + label).toLowerCase();
+    if (DRINK_KW.some(k => text.includes(k))) return 'drinks';
+    if (DESSERT_KW.some(k => text.includes(k))) return 'dessert';
+    return 'food';
+  }
+
+  try {
+    const cats = await prisma.category.findMany({ where: { group: "food" } });
+    let updated = 0;
+    for (const c of cats) {
+      const g = classify(c.code, c.label);
+      if (g !== "food") {
+        await prisma.category.update({ where: { id: c.id }, data: { group: g } });
+        updated++;
+      }
+    }
+    if (updated > 0) console.log(`[backfill] category groups updated: ${updated}`);
+  } catch (e) {
+    console.error("[backfill] category groups error:", e.message);
   }
   await prisma.$disconnect();
 }

@@ -2658,30 +2658,16 @@ function getGroupLabel(key){
   return (GROUP_LABELS[key]||{})[lang] || (GROUP_LABELS[key]||{})['en'] || key;
 }
 
-// Keywords to auto-classify categories into groups
-const FOOD_KEYWORDS = ['food','yemek','burger','pizza','salad','soup','grill','kebab','pasta','meat','chicken','fish','seafood','steak','wrap','sandwich','bowl','plate','main','starter','appetizer','side','local','heroes','banh','pho','bun','noodle','rice','breakfast','brunch','lunch','dinner','ana','yemekler','mezeler','atistirmalik','kahvalti'];
-const DRINK_KEYWORDS = ['drink','beer','wine','cocktail','coffee','tea','juice','soda','water','smoothie','shake','lemonade','icecek','bira','sarap','kahve','cay','su','mocktail','spirits','soft','beverage'];
-const DESSERT_KEYWORDS = ['dessert','sweet','cake','ice cream','pastry','chocolate','cookie','brownie','tiramisu','cheesecake','tatli','dondurma','pasta','baklava','kunefe','sorbet','gelato','macaron','waffle','pancake','crepe'];
-
-function classifyCategory(catCode, catLabel, originalLabel){
-  // Use originalLabel (default language) for classification so groups stay consistent across languages
-  const text = (catCode + ' ' + (originalLabel || catLabel) + ' ' + catLabel).toLowerCase();
-  if(DRINK_KEYWORDS.some(k => text.includes(k))) return 'drinks';
-  if(DESSERT_KEYWORDS.some(k => text.includes(k))) return 'dessert';
-  if(FOOD_KEYWORDS.some(k => text.includes(k))) return 'food';
-  return 'food'; // default to food
-}
-
 function buildCatGroups(){
   const usedCats = new Set(allItems.map(i=>i.category||'MAIN'));
   const visibleCats = [...categoriesMeta].filter(c => usedCats.has(c.code));
 
-  // Classify each category
+  // Use stored group field from database
   catGroupMap = {};
   const groups = {food:[], drinks:[], dessert:[]};
 
   visibleCats.forEach(c => {
-    const g = classifyCategory(c.code, c.label, c.originalLabel);
+    const g = c.group || 'food';
     catGroupMap[c.code] = g;
     if(!groups[g]) groups[g] = [];
     groups[g].push(c);

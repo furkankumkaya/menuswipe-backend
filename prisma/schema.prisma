@@ -125,12 +125,13 @@ model Category {
   color           String       @default("#8E1616")
   visible         Boolean      @default(true)
   sortOrder       Int          @default(0)
-  
+  group           String       @default("food")  // food, drinks, dessert
+
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-  
+
   translations    CategoryTranslation[]
-  
+
   @@unique([organizationId, code])
 }
 

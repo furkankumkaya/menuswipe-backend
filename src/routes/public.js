@@ -189,6 +189,7 @@ router.get("/:orgSlug/:branchSlug?", async (req, res, next) => {
         code: c.code,
         label: useTranslation ? tr.label : c.label,
         originalLabel: c.label,
+        group: c.group || 'food',
         color: c.color,
         sortOrder: c.sortOrder,
       };

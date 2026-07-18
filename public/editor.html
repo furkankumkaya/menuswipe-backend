@@ -657,8 +657,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="modal">
         <div class="modal-handle"></div>
         <div class="m-title">Manage categories</div>
-        <div class="m-sub">Customize categories shown on your menu.</div>
-        <div class="cat-mgmt-list" id="catMgmtList"></div>
+        <div class="m-sub">Drag categories between groups to reassign. Auto-classified on creation.</div>
+        <div id="catMgmtGrouped"></div>
+        <div class="cat-mgmt-list" id="catMgmtList" style="display:none"></div>
         <button class="btn-gh" onclick="addCategory()" style="font-size:12px;width:100%;justify-content:center">
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Add category
         </button>
@@ -1981,14 +1982,139 @@ function visCats(){return cats.filter(c=>c.visible);}
 
 function openCatsOverlay(){renderCatMgmt();document.getElementById('catsOverlay').classList.add('open');}
 function closeCatsOverlay(){document.getElementById('catsOverlay').classList.remove('open');loadMenu();}
+const GROUP_META = {
+  food:   {icon:'🍽️', label:'Food',   labelTr:'Yemek'},
+  drinks: {icon:'🥤', label:'Drinks', labelTr:'İçecek'},
+  dessert:{icon:'🍰', label:'Dessert',labelTr:'Tatlı'},
+};
+
 function renderCatMgmt(){
-  document.getElementById('catMgmtList').innerHTML=cats.map(c=>`
-    <div class="cat-mgmt-item">
-      <input type="color" value="${c.color}" oninput="onCatColorInput('${c.id}',this.value)" onchange="onCatColorChange('${c.id}',this.value)" style="width:24px;height:24px;border:none;background:none;cursor:pointer;padding:0"/>
-      <input class="cat-name-inp" value="${c.label}" oninput="onCatLabelInput('${c.id}',this.value)" onblur="onCatLabelBlur('${c.id}',this.value)"/>
-      <label class="tog"><input type="checkbox" ${c.visible?'checked':''} onchange="onCatVisibleToggle('${c.id}',this)"/><div class="tog-t"></div><div class="tog-th"></div></label>
-      <button onclick="deleteCat('${c.id}')" style="width:30px;height:30px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#ef4444">${TRASH}</button>
-    </div>`).join('');
+  const container = document.getElementById('catMgmtGrouped');
+  const groupOrder = ['food','drinks','dessert'];
+  let html = '';
+
+  for(const gKey of groupOrder){
+    const gm = GROUP_META[gKey];
+    const groupCats = cats.filter(c => (c.group||'food') === gKey);
+    html += `<div class="cat-group-section" data-group="${gKey}">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;margin-top:${gKey==='food'?'0':'12'}px">
+        <span style="font-size:16px">${gm.icon}</span>
+        <span style="font-weight:700;font-size:13px;color:#1e293b">${gm.label}</span>
+        <span style="font-size:11px;color:#94a3b8">${groupCats.length}</span>
+      </div>
+      <div class="cat-group-drop" data-group="${gKey}" style="min-height:40px;border:2px dashed transparent;border-radius:10px;transition:border-color .2s;padding:2px">
+        ${groupCats.length === 0 ? '<div style="text-align:center;padding:10px;color:#cbd5e1;font-size:11px">Drag categories here</div>' : ''}
+        ${groupCats.map(c => `
+          <div class="cat-mgmt-item" draggable="true" data-cat-id="${c.id}" style="cursor:grab">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="#94a3b8" style="flex-shrink:0"><circle cx="5" cy="3" r="1.2"/><circle cx="9" cy="3" r="1.2"/><circle cx="5" cy="7" r="1.2"/><circle cx="9" cy="7" r="1.2"/><circle cx="5" cy="11" r="1.2"/><circle cx="9" cy="11" r="1.2"/></svg>
+            <input type="color" value="${c.color}" oninput="onCatColorInput('${c.id}',this.value)" onchange="onCatColorChange('${c.id}',this.value)" style="width:24px;height:24px;border:none;background:none;cursor:pointer;padding:0"/>
+            <input class="cat-name-inp" value="${escapeHtml(c.label)}" oninput="onCatLabelInput('${c.id}',this.value)" onblur="onCatLabelBlur('${c.id}',this.value)"/>
+            <label class="tog"><input type="checkbox" ${c.visible?'checked':''} onchange="onCatVisibleToggle('${c.id}',this)"/><div class="tog-t"></div><div class="tog-th"></div></label>
+            <button onclick="deleteCat('${c.id}')" style="width:30px;height:30px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#ef4444">${TRASH}</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  container.innerHTML = html;
+  initCatDragDrop();
+}
+
+let _dragCatId = null;
+function initCatDragDrop(){
+  const items = document.querySelectorAll('.cat-mgmt-item[draggable]');
+  const zones = document.querySelectorAll('.cat-group-drop');
+
+  items.forEach(item => {
+    item.addEventListener('dragstart', e => {
+      _dragCatId = item.dataset.catId;
+      item.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.style.opacity = '1';
+      zones.forEach(z => z.style.borderColor = 'transparent');
+    });
+  });
+
+  zones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      zone.style.borderColor = 'var(--accent, #8E1616)';
+    });
+    zone.addEventListener('dragleave', () => {
+      zone.style.borderColor = 'transparent';
+    });
+    zone.addEventListener('drop', async e => {
+      e.preventDefault();
+      zone.style.borderColor = 'transparent';
+      const newGroup = zone.dataset.group;
+      if(!_dragCatId || !newGroup) return;
+      const cat = cats.find(c => c.id === _dragCatId);
+      if(!cat || cat.group === newGroup) return;
+      cat.group = newGroup;
+      renderCatMgmt();
+      try {
+        await api('PATCH', '/api/categories/bulk-group', { updates: [{ id: cat.id, group: newGroup }] });
+        toast('Moved to ' + (GROUP_META[newGroup]||{}).label);
+      } catch(err) { toast('Failed: ' + err.message); }
+    });
+  });
+
+  // Touch drag support for mobile
+  items.forEach(item => {
+    let touchClone = null, startY = 0, startX = 0;
+    item.addEventListener('touchstart', e => {
+      if(e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+      _dragCatId = item.dataset.catId;
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+    }, {passive:true});
+    item.addEventListener('touchmove', e => {
+      if(!_dragCatId || _dragCatId !== item.dataset.catId) return;
+      const t = e.touches[0];
+      if(!touchClone && (Math.abs(t.clientY-startY)>10 || Math.abs(t.clientX-startX)>10)){
+        touchClone = item.cloneNode(true);
+        touchClone.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;opacity:0.8;width:'+item.offsetWidth+'px;box-shadow:0 4px 16px rgba(0,0,0,.2);border-radius:8px;background:#fff';
+        document.body.appendChild(touchClone);
+        item.style.opacity = '0.3';
+      }
+      if(touchClone){
+        e.preventDefault();
+        touchClone.style.left = (t.clientX - 40) + 'px';
+        touchClone.style.top = (t.clientY - 20) + 'px';
+        zones.forEach(z => {
+          const r = z.getBoundingClientRect();
+          z.style.borderColor = (t.clientX>=r.left && t.clientX<=r.right && t.clientY>=r.top && t.clientY<=r.bottom) ? 'var(--accent, #8E1616)' : 'transparent';
+        });
+      }
+    }, {passive:false});
+    item.addEventListener('touchend', async e => {
+      if(touchClone){
+        touchClone.remove(); touchClone = null;
+        item.style.opacity = '1';
+        const t = e.changedTouches[0];
+        let targetGroup = null;
+        zones.forEach(z => {
+          const r = z.getBoundingClientRect();
+          if(t.clientX>=r.left && t.clientX<=r.right && t.clientY>=r.top && t.clientY<=r.bottom) targetGroup = z.dataset.group;
+          z.style.borderColor = 'transparent';
+        });
+        if(targetGroup && _dragCatId){
+          const cat = cats.find(c => c.id === _dragCatId);
+          if(cat && cat.group !== targetGroup){
+            cat.group = targetGroup;
+            renderCatMgmt();
+            try {
+              await api('PATCH', '/api/categories/bulk-group', { updates: [{ id: cat.id, group: targetGroup }] });
+              toast('Moved to ' + (GROUP_META[targetGroup]||{}).label);
+            } catch(err) { toast('Failed: ' + err.message); }
+          }
+        }
+      }
+      _dragCatId = null;
+    });
+  });
 }
 
 const catUpdateTimers = {};
@@ -2048,7 +2174,7 @@ async function addCategory(){
       label: 'New category',
       color: colors[cats.length%5],
     });
-    cats.push({ id: created.id, code: created.code, label: created.label, color: created.color, visible: created.visible });
+    cats.push({ id: created.id, code: created.code, label: created.label, color: created.color, visible: created.visible, group: created.group || 'food' });
     renderCatMgmt();
     buildCatPills();
     populateAddSel();
