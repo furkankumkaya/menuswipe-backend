@@ -102,7 +102,8 @@ self.addEventListener("fetch", (event) => {
       const networkFetch = fetch(req)
         .then((resp) => {
           if (resp.ok) {
-            caches.open(STATIC_CACHE).then((cache) => cache.put(req, resp.clone()));
+            const cloned = resp.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(req, cloned));
           }
           return resp;
         })
