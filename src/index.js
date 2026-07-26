@@ -23,6 +23,7 @@ const tablesRoutes = require("./routes/tables");
 const ordersRoutes = require("./routes/orders");
 const googleInsightsRoutes = require("./routes/google-insights");
 const translationsRoutes = require("./routes/translations");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 
@@ -46,10 +47,12 @@ app.use("/api/orders", ordersRoutes);
 app.use("/api/google-insights", googleInsightsRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "../public/admin.html")));
+app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "../public/dashboard.html")));
 app.get("/menu/:slug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
 app.get("/menu/:slug/:branchSlug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
 
