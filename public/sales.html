@@ -71,6 +71,8 @@ input::placeholder{color:#475569}
     <input type="tel" id="regPhone" placeholder="+44 7911 123456" autocomplete="tel"/>
     <label>Password</label>
     <input type="password" id="regPass" placeholder="At least 6 characters" autocomplete="new-password"/>
+    <label>Confirm password</label>
+    <input type="password" id="regPassConfirm" placeholder="Repeat your password" autocomplete="new-password"/>
     <div class="err" id="regErr"></div>
     <div class="success" id="regSuccess"></div>
     <button class="btn btn-primary" onclick="doRegister()" id="regBtn">Submit application</button>
@@ -129,6 +131,7 @@ async function doRegister() {
   const email = document.getElementById('regEmail').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
   const password = document.getElementById('regPass').value;
+  const passwordConfirm = document.getElementById('regPassConfirm').value;
   const err = document.getElementById('regErr');
   const success = document.getElementById('regSuccess');
   const btn = document.getElementById('regBtn');
@@ -136,6 +139,7 @@ async function doRegister() {
 
   if (!name || !email || !password) { err.textContent = 'Fill in all required fields'; err.style.display = 'block'; return; }
   if (password.length < 6) { err.textContent = 'Password must be at least 6 characters'; err.style.display = 'block'; return; }
+  if (password !== passwordConfirm) { err.textContent = 'Passwords do not match'; err.style.display = 'block'; return; }
 
   btn.textContent = 'Submitting...'; btn.disabled = true;
   try {

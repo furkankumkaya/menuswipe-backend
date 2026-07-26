@@ -525,7 +525,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         <label class="ob-gen-opt">
           <input type="checkbox" value="upsell" checked>
           <div>
-            <div style="font-size:14px;font-weight:600;color:#fff">Upsell combos</div>
+            <div style="font-size:14px;font-weight:600;color:#fff">Cross-sell combos</div>
             <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Food-drink, food-dessert pairing suggestions</div>
           </div>
         </label>
@@ -797,7 +797,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
           </label>
           <label class="aigen-opt">
             <input type="checkbox" value="upsell" checked>
-            <div><strong>Upsell combos</strong><br><span style="font-size:11px;color:#64748b">Smart food-drink, food-dessert pairing suggestions</span></div>
+            <div><strong>Cross-sell combos</strong><br><span style="font-size:11px;color:#64748b">Smart food-drink, food-dessert pairing suggestions</span></div>
           </label>
         </div>
 
@@ -1539,7 +1539,7 @@ async function obRunGenerate(){
   document.querySelectorAll('#obGenOptions input').forEach(cb => cb.disabled = true);
   document.getElementById('obGenProgress').style.display = 'block';
 
-  const labels = { dietary:'Dietary & Allergens', marketing:'Marketing tags', descriptions:'Descriptions', upsell:'Upsell combos' };
+  const labels = { dietary:'Dietary & Allergens', marketing:'Marketing tags', descriptions:'Descriptions', upsell:'Cross-sell combos' };
   const progressEl = document.getElementById('obGenProgressText');
   let hasDietary = false;
   let failed = false;
@@ -2698,7 +2698,7 @@ async function runAiGenerate(){
   document.getElementById('aiGenResult').style.display = 'block';
   document.getElementById('aiGenResult').innerHTML = '';
 
-  const labels = { dietary:'Dietary & Allergens', marketing:'Marketing tags', descriptions:'Descriptions', upsell:'Upsell combos' };
+  const labels = { dietary:'Dietary & Allergens', marketing:'Marketing tags', descriptions:'Descriptions', upsell:'Cross-sell combos' };
   const progressEl = document.getElementById('aiGenProgressText');
   const resultEl = document.getElementById('aiGenResult');
   let totalUpdated = 0;
