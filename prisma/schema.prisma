@@ -255,6 +255,34 @@ model RestaurantTable {
   @@index([organizationId, sortOrder])
 }
 
+model SalesApplication {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  phone           String?
+  passwordHash    String
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason String?
+  approvedAt      DateTime?
+  createdAt       DateTime @default(now())
+}
+
+model SalesDemo {
+  id              String   @id @default(uuid())
+  salesUserId     String
+  organizationId  String
+  orgName         String?
+  status          String   @default("CREATED") // CREATED, CLAIMED, TRIAL, SUBSCRIBED, CHURNED
+  claimToken      String?  @unique
+  claimUrl        String?
+  claimedByUserId String?
+  claimedAt       DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([salesUserId])
+  @@index([organizationId])
+}
+
 model Order {
   id              String       @id @default(uuid())
   organizationId  String

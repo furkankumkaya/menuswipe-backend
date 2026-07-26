@@ -24,6 +24,7 @@ const ordersRoutes = require("./routes/orders");
 const googleInsightsRoutes = require("./routes/google-insights");
 const translationsRoutes = require("./routes/translations");
 const adminRoutes = require("./routes/admin");
+const salesRoutes = require("./routes/sales");
 
 const app = express();
 
@@ -48,11 +49,14 @@ app.use("/api/google-insights", googleInsightsRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/sales", salesRoutes);
 
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "../public/admin.html")));
 app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "../public/dashboard.html")));
+app.get("/sales", (req, res) => res.sendFile(path.join(__dirname, "../public/sales.html")));
+app.get("/sales-panel", (req, res) => res.sendFile(path.join(__dirname, "../public/sales-panel.html")));
 app.get("/menu/:slug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
 app.get("/menu/:slug/:branchSlug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
 

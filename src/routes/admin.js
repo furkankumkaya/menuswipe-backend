@@ -176,29 +176,95 @@ router.get("/revenue", requireAuth, requireAdmin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// ── SALES (stubs, no model yet) ──────────────────────
-router.get("/sales-applications", requireAuth, requireAdmin, async (req, res) => {
-  res.json([]);
+// ── SALES APPLICATIONS ───────────────────────────────
+router.get("/sales-applications", requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const apps = await prisma.salesApplication.findMany({ orderBy: { createdAt: "desc" } });
+    res.json(apps);
+  } catch (err) { next(err); }
 });
 
-router.post("/approve-sales/:id", requireAuth, requireAdmin, async (req, res) => {
-  res.json({ ok: true });
+router.post("/approve-sales/:id", requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const bcrypt = require("bcryptjs");
+    const crypto = require("crypto");
+    const app = await prisma.salesApplication.findUnique({ where: { id: req.params.id } });
+    if (!app) return res.status(404).json({ error: "Application not found" });
+    if (app.status !== "PENDING") return res.status(400).json({ error: "Already processed" });
+
+    // Create sales user with their own org
+    const slug = app.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 30) + "-sales-" + Date.now();
+    const org = await prisma.organization.create({
+      data: {
+        name: app.name + " (Sales)", slug,
+        currency: "USD", defaultLanguage: "en", enabledLanguages: [],
+        plan: "PRO", subscriptionStatus: "ACTIVE",
+        subscriptionEndsAt: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
+        onboardingCompleted: true,
+        qrSecret: crypto.randomBytes(16).toString("hex"),
+        users: { create: { email: app.email, passwordHash: app.passwordHash, name: app.name, role: "SALES" } },
+        branches: { create: { name: app.name, slug: "main", active: true } },
+      },
+    });
+
+    await prisma.salesApplication.update({
+      where: { id: req.params.id },
+      data: { status: "APPROVED", approvedAt: new Date() },
+    });
+
+    res.json({ ok: true });
+  } catch (err) { next(err); }
 });
 
-router.post("/reject-sales/:id", requireAuth, requireAdmin, async (req, res) => {
-  res.json({ ok: true });
+router.post("/reject-sales/:id", requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    await prisma.salesApplication.update({
+      where: { id: req.params.id },
+      data: { status: "REJECTED", rejectionReason: req.body.reason || null },
+    });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
 });
 
-router.get("/sales-team", requireAuth, requireAdmin, async (req, res) => {
-  res.json([]);
+// ── SALES TEAM ───────────────────────────────────────
+router.get("/sales-team", requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const salesUsers = await prisma.user.findMany({
+      where: { role: "SALES" },
+      include: { organization: { select: { name: true } } },
+    });
+
+    const result = [];
+    for (const u of salesUsers) {
+      const demos = await prisma.salesDemo.findMany({ where: { salesUserId: u.id } });
+      const totalClaims = demos.length;
+      const claimedCount = demos.filter(d => d.status !== "CREATED").length;
+      const conversionRate = totalClaims > 0 ? Math.round((claimedCount / totalClaims) * 100) : 0;
+      result.push({ name: u.name, email: u.email, orgName: u.organization?.name, totalClaims, claimedCount, conversionRate });
+    }
+
+    res.json(result);
+  } catch (err) { next(err); }
 });
 
-router.post("/grant-sales", requireAuth, requireAdmin, async (req, res) => {
-  res.json({ ok: true });
+router.post("/grant-sales", requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    await prisma.user.update({ where: { id: user.id }, data: { role: "SALES" } });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
 });
 
-router.post("/revoke-sales", requireAuth, requireAdmin, async (req, res) => {
-  res.json({ ok: true });
+router.post("/revoke-sales", requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    await prisma.user.update({ where: { id: user.id }, data: { role: "OWNER" } });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
 });
 
 // ── ERROR LOGS (stub) ────────────────────────────────
