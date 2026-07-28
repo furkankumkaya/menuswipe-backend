@@ -94,6 +94,29 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
 .comm-name{font-size:13px;font-weight:600}
 .comm-plan{font-size:11px;color:var(--muted)}
 .comm-amount{font-size:14px;font-weight:700;color:var(--green)}
+
+/* MOBILE RESPONSIVE */
+@media(max-width:480px){
+  .topbar{padding:10px 12px;flex-wrap:wrap;gap:8px}
+  .topbar-title{font-size:14px}
+  .topbar-badge{font-size:9px}
+  .topbar-right{gap:8px}
+  .topbar-user{display:none}
+  .main{padding:16px 12px}
+  .stat-row{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+  .stat{padding:14px}
+  .stat-val{font-size:22px}
+  .demo-card{padding:14px;gap:12px;flex-wrap:wrap}
+  .demo-icon{width:40px;height:40px;border-radius:10px}
+  .demo-name{font-size:13px}
+  .demo-meta{font-size:11px}
+  .demo-right{flex-direction:row;align-items:center;width:100%;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)}
+  .balance-card{padding:18px}
+  .balance-amount{font-size:28px}
+  .modal{padding:18px;max-width:calc(100vw - 32px)}
+  .section-head{flex-wrap:wrap;gap:10px}
+  .btn-create{font-size:12px;padding:8px 16px}
+}
 </style>
 </head>
 <body>
@@ -290,7 +313,6 @@ async function loadCommissions() {
 
 function openCreateDemo() {
   document.getElementById('demoName').value = '';
-  document.getElementById('demoMaps').value = '';
   document.getElementById('demoErr').style.display = 'none';
   document.getElementById('demoCrtBtn').textContent = 'Create and start editing';
   document.getElementById('demoCrtBtn').disabled = false;
