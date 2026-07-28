@@ -188,4 +188,67 @@ router.post("/generate-claim/:orgId", requireSales, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── CLAIM: Validate token (public, no auth) ────────
+router.get("/claim/:token", async (req, res, next) => {
+  try {
+    const demo = await prisma.salesDemo.findUnique({ where: { claimToken: req.params.token } });
+    if (!demo) return res.status(404).json({ error: "This claim link is invalid or has expired." });
+    if (demo.status !== "CREATED") return res.status(400).json({ error: "This menu has already been claimed." });
+
+    const org = await prisma.organization.findUnique({ where: { id: demo.organizationId } });
+    if (!org) return res.status(404).json({ error: "Restaurant not found." });
+
+    res.json({ restaurantName: org.name, menuItems: await prisma.menuItem.count({ where: { organizationId: org.id } }) });
+  } catch (err) { next(err); }
+});
+
+// ── CLAIM: Create account & transfer ownership (public, no auth) ──
+router.post("/claim/:token", async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!email || !email.includes("@")) return res.status(400).json({ error: "Valid email required" });
+    if (!password || password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
+
+    const demo = await prisma.salesDemo.findUnique({ where: { claimToken: req.params.token } });
+    if (!demo) return res.status(404).json({ error: "Invalid claim link." });
+    if (demo.status !== "CREATED") return res.status(400).json({ error: "This menu has already been claimed." });
+
+    // Check if email already in use
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) return res.status(400).json({ error: "An account with this email already exists. Please use a different email." });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const orgId = demo.organizationId;
+
+    // Replace placeholder user with the real owner
+    const placeholders = await prisma.user.findMany({ where: { organizationId: orgId, role: "PLACEHOLDER" } });
+    for (const ph of placeholders) {
+      await prisma.user.delete({ where: { id: ph.id } });
+    }
+
+    const user = await prisma.user.create({
+      data: { email, passwordHash, name: name || email.split("@")[0], role: "OWNER", organizationId: orgId },
+    });
+
+    // Update org name if the owner provides a different name
+    await prisma.organization.update({
+      where: { id: orgId },
+      data: {
+        trialEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // Reset 15-day trial from claim date
+      },
+    });
+
+    // Mark demo as claimed
+    await prisma.salesDemo.update({
+      where: { id: demo.id },
+      data: { status: "CLAIMED", claimedByUserId: user.id, claimedAt: new Date() },
+    });
+
+    const org = await prisma.organization.findUnique({ where: { id: orgId } });
+    const token = signToken(user.id);
+
+    res.json({ token, organization: { id: org.id, name: org.name, slug: org.slug } });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

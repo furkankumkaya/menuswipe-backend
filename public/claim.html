@@ -131,7 +131,7 @@ let restaurantName = '';
 
 async function init(){
   try{
-    const r = await fetch('/api/demo/claim/'+token);
+    const r = await fetch('/api/sales/claim/'+token);
     const d = await r.json();
     if(!r.ok){
       showError(d.error||'Invalid link');
@@ -170,7 +170,7 @@ async function doClaim(){
   btn.disabled = true;
 
   try{
-    const r = await fetch('/api/demo/claim/'+token, {
+    const r = await fetch('/api/sales/claim/'+token, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({name, email, password}),

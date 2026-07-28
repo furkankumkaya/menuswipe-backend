@@ -57,6 +57,7 @@ app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "../public/adm
 app.get("/dashboard", (req, res) => res.sendFile(path.join(__dirname, "../public/dashboard.html")));
 app.get("/sales", (req, res) => res.sendFile(path.join(__dirname, "../public/sales.html")));
 app.get("/sales-panel", (req, res) => res.sendFile(path.join(__dirname, "../public/sales-panel.html")));
+app.get("/claim/:token", (req, res) => res.sendFile(path.join(__dirname, "../public/claim.html")));
 app.get("/menu/:slug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
 app.get("/menu/:slug/:branchSlug", (req, res) => res.sendFile(path.join(__dirname, "../public/menu.html")));
 

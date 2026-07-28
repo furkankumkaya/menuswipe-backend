@@ -226,6 +226,9 @@ router.post("/reject-sales/:id", requireAuth, requireAdmin, async (req, res, nex
   } catch (err) { next(err); }
 });
 
+// Commission rates (placeholder until payment integration)
+const COMMISSION = { CLAIMED: 10, SUBSCRIBED: 50 };
+
 // ── SALES TEAM ───────────────────────────────────────
 router.get("/sales-team", requireAuth, requireAdmin, async (req, res, next) => {
   try {
@@ -235,15 +238,32 @@ router.get("/sales-team", requireAuth, requireAdmin, async (req, res, next) => {
     });
 
     const result = [];
+    let grandTotalEarned = 0, grandTotalPending = 0;
+
     for (const u of salesUsers) {
       const demos = await prisma.salesDemo.findMany({ where: { salesUserId: u.id } });
       const totalClaims = demos.length;
       const claimedCount = demos.filter(d => d.status !== "CREATED").length;
+      const subscribedCount = demos.filter(d => d.status === "SUBSCRIBED").length;
       const conversionRate = totalClaims > 0 ? Math.round((claimedCount / totalClaims) * 100) : 0;
-      result.push({ name: u.name, email: u.email, orgName: u.organization?.name, totalClaims, claimedCount, conversionRate });
+
+      // Calculate commissions
+      const earned = (claimedCount * COMMISSION.CLAIMED) + (subscribedCount * COMMISSION.SUBSCRIBED);
+      const paid = 0; // placeholder until payment tracking
+      const pending = earned - paid;
+
+      grandTotalEarned += earned;
+      grandTotalPending += pending;
+
+      result.push({
+        name: u.name, email: u.email, orgName: u.organization?.name,
+        totalClaims, claimedCount, subscribedCount, conversionRate,
+        earned, paid, pending,
+        demos: demos.map(d => ({ id: d.id, orgName: d.orgName, status: d.status, createdAt: d.createdAt, claimedAt: d.claimedAt })),
+      });
     }
 
-    res.json(result);
+    res.json({ users: result, summary: { totalEarned: grandTotalEarned, totalPending: grandTotalPending, totalPaid: 0, commissionRates: COMMISSION } });
   } catch (err) { next(err); }
 });
 
