@@ -57,15 +57,31 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 }
 .cat-sub-bar::-webkit-scrollbar{display:none}
 .cat-sub-chip{
-  flex-shrink:0;padding:5px 12px;border-radius:100px;border:none;
-  font-size:11px;font-weight:500;cursor:pointer;
+  flex-shrink:0;padding:7px 16px;border-radius:100px;border:none;
+  font-size:14px;font-weight:500;cursor:pointer;
   background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  white-space:nowrap;display:flex;align-items:center;gap:4px;
+  white-space:nowrap;display:flex;align-items:center;gap:5px;
   transition:all 0.15s;
 }
 .cat-sub-chip.on{background:rgba(255,255,255,.2);color:#fff;font-weight:600}
-.cat-sub-count{opacity:.45;font-size:10px}
+.cat-sub-count{opacity:.45;font-size:12px}
+.menu-search-bar{
+  padding:0 16px 8px;display:flex;align-items:center;gap:8px;
+}
+.menu-search-input{
+  flex:1;padding:9px 14px 9px 36px;border-radius:12px;border:none;
+  background:rgba(255,255,255,.1);color:#fff;font-size:14px;
+  outline:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.menu-search-input::placeholder{color:rgba(255,255,255,.35)}
+.menu-search-wrap{position:relative;flex:1}
+.menu-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.35)}
+.menu-search-clear{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;
+  cursor:pointer;display:none;padding:0;line-height:1;
+}
 .profile-btn{
   width:42px;height:42px;border-radius:50%;
   background:rgba(255,255,255,.12);
@@ -881,6 +897,13 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
     </div>
     <div class="cat-sub-bar" id="catSubBar"></div>
     <div class="cats" id="catBar" style="display:none"></div>
+    <div class="menu-search-bar" id="menuSearchBar">
+      <div class="menu-search-wrap">
+        <svg class="menu-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input class="menu-search-input" id="menuSearchInput" type="text" placeholder="Search menu..." oninput="onMenuSearch(this.value)"/>
+        <button class="menu-search-clear" id="menuSearchClear" onclick="clearMenuSearch()">&times;</button>
+      </div>
+    </div>
   </div>
   <div class="slides-wrap" id="slidesWrap"></div>
   <div class="action-col" id="actionCol">
@@ -1632,7 +1655,7 @@ const AI_LABELS_BY_LANG = {
     step1Title:"What are you looking for?",step1Sub:"Choose one option",
     step2Title:"How hungry are you?",step2Sub:"This helps me suggest the right portion",
     step3Title:"Any dietary preferences?",step3Sub:"Select all that apply, or skip",
-    step4Title:"Anything to avoid?",step4Sub:"Allergens to skip — optional",
+    step4Title:"Anything to avoid?",step4Sub:"Allergens to skip - optional",
     step5Title:"What flavors are you craving?",step5Sub:"Pick a few or skip",
     food:"Food",drink:"Drink",both:"Food & drink",snack:"Just a snack",
     light:"A bit peckish",medium:"Normal hungry",hearty:"Very hungry",
@@ -1647,14 +1670,9 @@ const AI_LABELS_BY_LANG = {
     rateLimit:"Too many requests. Try again in an hour.",
     new:"Try again",close:"Close",
     introFallback:"Here's what I'd suggest:",
-    // Google reviews
-    tapToSelect:"Tap to select",
-    tryAgain:"Try again",
-    // Chef note (yemek seçildikten sonra)
-    chefNoteTitle:"Note to chef",
-    chefNoteSub:"Any preferences? Optional",
-    chefNotePlaceholder:"e.g. no onion, extra spicy...",
-    addAndSendOrder:"Add & review order",
+    tapToSelect:"Tap to select",tryAgain:"Try again",
+    chefNoteTitle:"Note to chef",chefNoteSub:"Any preferences? Optional",
+    chefNotePlaceholder:"e.g. no onion, extra spicy...",addAndSendOrder:"Add & review order",
   },
   tr: {
     title:"Menü yardımcısı",sub:"Damak tadına uygun olanı bulalım",
@@ -1676,14 +1694,423 @@ const AI_LABELS_BY_LANG = {
     rateLimit:"Çok fazla istek. 1 saat sonra tekrar deneyin.",
     new:"Tekrar dene",close:"Kapat",
     introFallback:"İşte size önerilerim:",
-    // Google reviews
-    tapToSelect:"Seçmek için dokunun",
-    tryAgain:"Tekrar dene",
-    // Chef note (yemek seçildikten sonra)
-    chefNoteTitle:"Şefe not",
-    chefNoteSub:"Tercihiniz var mı? Opsiyonel",
-    chefNotePlaceholder:"örn. soğansız, ekstra acılı...",
-    addAndSendOrder:"Ekle ve siparişi gözden geçir",
+    tapToSelect:"Seçmek için dokunun",tryAgain:"Tekrar dene",
+    chefNoteTitle:"Şefe not",chefNoteSub:"Tercihiniz var mı? Opsiyonel",
+    chefNotePlaceholder:"örn. soğansız, ekstra acılı...",addAndSendOrder:"Ekle ve siparişi gözden geçir",
+  },
+  de: {
+    title:"Menü-Helfer",sub:"Finden wir, was Ihnen schmeckt",
+    step1Title:"Wonach suchen Sie?",step1Sub:"Wählen Sie eine Option",
+    step2Title:"Wie hungrig sind Sie?",step2Sub:"Das hilft mir, die richtige Portion vorzuschlagen",
+    step3Title:"Ernährungspräferenzen?",step3Sub:"Zutreffendes auswählen oder überspringen",
+    step4Title:"Etwas zu vermeiden?",step4Sub:"Allergene auswählen - optional",
+    step5Title:"Welche Geschmacksrichtungen?",step5Sub:"Einige auswählen oder überspringen",
+    food:"Essen",drink:"Getränk",both:"Essen & Getränk",snack:"Nur ein Snack",
+    light:"Leicht hungrig",medium:"Normal hungrig",hearty:"Sehr hungrig",
+    vegan:"Vegan",vegetarian:"Vegetarisch",glutenFree:"Glutenfrei",halal:"Halal",dairyFree:"Laktosefrei",
+    nothing:"Keine Allergene",
+    spicy:"Scharf",mild:"Mild",meat:"Fleischlastig",veggie:"Gemüse",creamy:"Cremig",grilled:"Gegrillt",sweet:"Süß",fresh:"Frisch",
+    back:"Zurück",next:"Weiter",skip:"Überspringen",getRec:"Vorschläge erhalten",
+    findingFood:"Finde die perfekte Auswahl für Sie...",
+    addedToOrder:"Hinzugefügt",add:"Hinzufügen",
+    errorTitle:"Vorschläge nicht möglich",errorTry:"Bitte erneut versuchen",
+    noMenu:"Die Speisekarte ist derzeit leer.",
+    rateLimit:"Zu viele Anfragen. Versuchen Sie es in einer Stunde erneut.",
+    new:"Nochmal",close:"Schließen",introFallback:"Meine Empfehlungen:",
+    tapToSelect:"Tippen zum Auswählen",tryAgain:"Nochmal versuchen",
+    chefNoteTitle:"Nachricht an den Koch",chefNoteSub:"Wünsche? Optional",
+    chefNotePlaceholder:"z.B. ohne Zwiebeln, extra scharf...",addAndSendOrder:"Hinzufügen & Bestellung prüfen",
+  },
+  fr: {
+    title:"Assistant menu",sub:"Trouvons ce qui vous plaira",
+    step1Title:"Que cherchez-vous ?",step1Sub:"Choisissez une option",
+    step2Title:"Quelle est votre faim ?",step2Sub:"Cela m'aide à suggérer la bonne portion",
+    step3Title:"Préférences alimentaires ?",step3Sub:"Sélectionnez ou passez",
+    step4Title:"Quelque chose à éviter ?",step4Sub:"Allergènes à éviter - optionnel",
+    step5Title:"Quelles saveurs vous tentent ?",step5Sub:"Choisissez-en quelques-unes ou passez",
+    food:"Plat",drink:"Boisson",both:"Plat et boisson",snack:"Un en-cas",
+    light:"Un peu faim",medium:"Faim normale",hearty:"Très faim",
+    vegan:"Végan",vegetarian:"Végétarien",glutenFree:"Sans gluten",halal:"Halal",dairyFree:"Sans lactose",
+    nothing:"Aucun allergène",
+    spicy:"Épicé",mild:"Doux",meat:"Viande",veggie:"Légumes",creamy:"Crémeux",grilled:"Grillé",sweet:"Sucré",fresh:"Frais",
+    back:"Retour",next:"Suivant",skip:"Passer",getRec:"Obtenir des suggestions",
+    findingFood:"Recherche des meilleurs choix pour vous...",
+    addedToOrder:"Ajouté",add:"Ajouter",
+    errorTitle:"Impossible d'obtenir des suggestions",errorTry:"Veuillez réessayer",
+    noMenu:"Le menu de ce restaurant est vide.",
+    rateLimit:"Trop de requêtes. Réessayez dans une heure.",
+    new:"Réessayer",close:"Fermer",introFallback:"Voici mes suggestions :",
+    tapToSelect:"Appuyez pour sélectionner",tryAgain:"Réessayer",
+    chefNoteTitle:"Note au chef",chefNoteSub:"Des préférences ? Optionnel",
+    chefNotePlaceholder:"ex. sans oignon, extra épicé...",addAndSendOrder:"Ajouter et revoir la commande",
+  },
+  es: {
+    title:"Asistente de menú",sub:"Encontremos lo que te encantará",
+    step1Title:"¿Qué buscas?",step1Sub:"Elige una opción",
+    step2Title:"¿Cuánta hambre tienes?",step2Sub:"Me ayuda a sugerir la porción adecuada",
+    step3Title:"¿Preferencias dietéticas?",step3Sub:"Selecciona las que apliquen o salta",
+    step4Title:"¿Algo que evitar?",step4Sub:"Alérgenos a evitar - opcional",
+    step5Title:"¿Qué sabores te apetecen?",step5Sub:"Elige algunos o salta",
+    food:"Comida",drink:"Bebida",both:"Comida y bebida",snack:"Solo un aperitivo",
+    light:"Poca hambre",medium:"Hambre normal",hearty:"Mucha hambre",
+    vegan:"Vegano",vegetarian:"Vegetariano",glutenFree:"Sin gluten",halal:"Halal",dairyFree:"Sin lácteos",
+    nothing:"Sin alérgenos",
+    spicy:"Picante",mild:"Suave",meat:"Con carne",veggie:"Vegetal",creamy:"Cremoso",grilled:"A la parrilla",sweet:"Dulce",fresh:"Fresco",
+    back:"Atrás",next:"Siguiente",skip:"Saltar",getRec:"Obtener sugerencias",
+    findingFood:"Buscando las mejores opciones para ti...",
+    addedToOrder:"Añadido",add:"Añadir",
+    errorTitle:"No se pudieron obtener sugerencias",errorTry:"Por favor, inténtalo de nuevo",
+    noMenu:"El menú de este restaurante está vacío.",
+    rateLimit:"Demasiadas solicitudes. Inténtalo en una hora.",
+    new:"Reintentar",close:"Cerrar",introFallback:"Mis sugerencias:",
+    tapToSelect:"Toca para seleccionar",tryAgain:"Reintentar",
+    chefNoteTitle:"Nota al chef",chefNoteSub:"¿Preferencias? Opcional",
+    chefNotePlaceholder:"ej. sin cebolla, extra picante...",addAndSendOrder:"Añadir y revisar pedido",
+  },
+  ar: {
+    title:"مساعد القائمة",sub:"لنجد ما يناسب ذوقك",
+    step1Title:"ماذا تبحث عنه؟",step1Sub:"اختر خياراً واحداً",
+    step2Title:"ما مدى جوعك؟",step2Sub:"هذا يساعدني في اقتراح الحصة المناسبة",
+    step3Title:"تفضيلات غذائية؟",step3Sub:"اختر ما ينطبق أو تخطَّ",
+    step4Title:"شيء يجب تجنبه؟",step4Sub:"مسببات الحساسية - اختياري",
+    step5Title:"ما النكهات التي تشتهيها؟",step5Sub:"اختر بعضها أو تخطَّ",
+    food:"طعام",drink:"مشروب",both:"طعام ومشروب",snack:"وجبة خفيفة",
+    light:"جوع خفيف",medium:"جوع عادي",hearty:"جائع جداً",
+    vegan:"نباتي",vegetarian:"نباتي",glutenFree:"خالي من الغلوتين",halal:"حلال",dairyFree:"خالي من الألبان",
+    nothing:"لا حساسية",
+    spicy:"حار",mild:"معتدل",meat:"لحوم",veggie:"خضار",creamy:"كريمي",grilled:"مشوي",sweet:"حلو",fresh:"منعش",
+    back:"رجوع",next:"التالي",skip:"تخطي",getRec:"احصل على اقتراحات",
+    findingFood:"أبحث عن أفضل الخيارات لك...",
+    addedToOrder:"تمت الإضافة",add:"إضافة",
+    errorTitle:"تعذر الحصول على اقتراحات",errorTry:"يرجى المحاولة مرة أخرى",
+    noMenu:"قائمة هذا المطعم فارغة حالياً.",
+    rateLimit:"طلبات كثيرة. حاول مرة أخرى بعد ساعة.",
+    new:"حاول مجدداً",close:"إغلاق",introFallback:"إليك اقتراحاتي:",
+    tapToSelect:"انقر للاختيار",tryAgain:"حاول مجدداً",
+    chefNoteTitle:"ملاحظة للشيف",chefNoteSub:"أي تفضيلات؟ اختياري",
+    chefNotePlaceholder:"مثال: بدون بصل، حار جداً...",addAndSendOrder:"إضافة ومراجعة الطلب",
+  },
+  it: {
+    title:"Assistente menù",sub:"Troviamo quello che ti piacerà",
+    step1Title:"Cosa cerchi?",step1Sub:"Scegli un'opzione",
+    step2Title:"Quanta fame hai?",step2Sub:"Mi aiuta a suggerire la porzione giusta",
+    step3Title:"Preferenze alimentari?",step3Sub:"Seleziona quelle che si applicano o salta",
+    step4Title:"Qualcosa da evitare?",step4Sub:"Allergeni da evitare - opzionale",
+    step5Title:"Che sapori ti attirano?",step5Sub:"Scegline alcuni o salta",
+    food:"Cibo",drink:"Bevanda",both:"Cibo e bevanda",snack:"Solo uno snack",
+    light:"Poca fame",medium:"Fame normale",hearty:"Molta fame",
+    vegan:"Vegano",vegetarian:"Vegetariano",glutenFree:"Senza glutine",halal:"Halal",dairyFree:"Senza lattosio",
+    nothing:"Nessun allergene",
+    spicy:"Piccante",mild:"Delicato",meat:"Carne",veggie:"Verdure",creamy:"Cremoso",grilled:"Grigliato",sweet:"Dolce",fresh:"Fresco",
+    back:"Indietro",next:"Avanti",skip:"Salta",getRec:"Ottieni suggerimenti",
+    findingFood:"Cerco le scelte perfette per te...",
+    addedToOrder:"Aggiunto",add:"Aggiungi",
+    errorTitle:"Impossibile ottenere suggerimenti",errorTry:"Riprova per favore",
+    noMenu:"Il menù di questo ristorante è vuoto.",
+    rateLimit:"Troppe richieste. Riprova tra un'ora.",
+    new:"Riprova",close:"Chiudi",introFallback:"Ecco i miei suggerimenti:",
+    tapToSelect:"Tocca per selezionare",tryAgain:"Riprova",
+    chefNoteTitle:"Nota allo chef",chefNoteSub:"Preferenze? Opzionale",
+    chefNotePlaceholder:"es. senza cipolla, extra piccante...",addAndSendOrder:"Aggiungi e rivedi ordine",
+  },
+  pt: {
+    title:"Assistente do menu",sub:"Vamos encontrar o que vai adorar",
+    step1Title:"O que procura?",step1Sub:"Escolha uma opção",
+    step2Title:"Quanta fome tem?",step2Sub:"Ajuda a sugerir a porção certa",
+    step3Title:"Preferências alimentares?",step3Sub:"Selecione as que se aplicam ou avance",
+    step4Title:"Algo a evitar?",step4Sub:"Alergénios a evitar - opcional",
+    step5Title:"Que sabores deseja?",step5Sub:"Escolha alguns ou avance",
+    food:"Comida",drink:"Bebida",both:"Comida e bebida",snack:"Só um lanche",
+    light:"Pouca fome",medium:"Fome normal",hearty:"Muita fome",
+    vegan:"Vegano",vegetarian:"Vegetariano",glutenFree:"Sem glúten",halal:"Halal",dairyFree:"Sem lactose",
+    nothing:"Sem alergénios",
+    spicy:"Picante",mild:"Suave",meat:"Carne",veggie:"Vegetais",creamy:"Cremoso",grilled:"Grelhado",sweet:"Doce",fresh:"Fresco",
+    back:"Voltar",next:"Seguinte",skip:"Saltar",getRec:"Obter sugestões",
+    findingFood:"A procurar as melhores opções para si...",
+    addedToOrder:"Adicionado",add:"Adicionar",
+    errorTitle:"Não foi possível obter sugestões",errorTry:"Por favor, tente novamente",
+    noMenu:"O menu deste restaurante está vazio.",
+    rateLimit:"Muitos pedidos. Tente novamente em uma hora.",
+    new:"Tentar de novo",close:"Fechar",introFallback:"As minhas sugestões:",
+    tapToSelect:"Toque para selecionar",tryAgain:"Tentar de novo",
+    chefNoteTitle:"Nota ao chef",chefNoteSub:"Preferências? Opcional",
+    chefNotePlaceholder:"ex. sem cebola, extra picante...",addAndSendOrder:"Adicionar e rever pedido",
+  },
+  ru: {
+    title:"Помощник меню",sub:"Найдём то, что вам понравится",
+    step1Title:"Что вы ищете?",step1Sub:"Выберите один вариант",
+    step2Title:"Насколько вы голодны?",step2Sub:"Это поможет подобрать порцию",
+    step3Title:"Диетические предпочтения?",step3Sub:"Выберите подходящие или пропустите",
+    step4Title:"Что-то избегать?",step4Sub:"Аллергены - необязательно",
+    step5Title:"Какие вкусы вам нравятся?",step5Sub:"Выберите несколько или пропустите",
+    food:"Еда",drink:"Напиток",both:"Еда и напиток",snack:"Перекус",
+    light:"Немного голоден",medium:"Обычный голод",hearty:"Очень голоден",
+    vegan:"Веган",vegetarian:"Вегетарианец",glutenFree:"Без глютена",halal:"Халяль",dairyFree:"Без лактозы",
+    nothing:"Нет аллергенов",
+    spicy:"Острое",mild:"Мягкое",meat:"Мясное",veggie:"Овощное",creamy:"Сливочное",grilled:"Гриль",sweet:"Сладкое",fresh:"Свежее",
+    back:"Назад",next:"Далее",skip:"Пропустить",getRec:"Получить рекомендации",
+    findingFood:"Ищу лучшие варианты для вас...",
+    addedToOrder:"Добавлено",add:"Добавить",
+    errorTitle:"Не удалось получить рекомендации",errorTry:"Попробуйте ещё раз",
+    noMenu:"Меню этого ресторана сейчас пусто.",
+    rateLimit:"Слишком много запросов. Попробуйте через час.",
+    new:"Заново",close:"Закрыть",introFallback:"Вот мои рекомендации:",
+    tapToSelect:"Нажмите для выбора",tryAgain:"Попробовать снова",
+    chefNoteTitle:"Записка повару",chefNoteSub:"Пожелания? Необязательно",
+    chefNotePlaceholder:"напр. без лука, очень острое...",addAndSendOrder:"Добавить и проверить заказ",
+  },
+  zh: {
+    title:"菜单助手",sub:"为您找到最喜欢的菜品",
+    step1Title:"您在找什么？",step1Sub:"选择一个选项",
+    step2Title:"您有多饿？",step2Sub:"帮我为您推荐合适的份量",
+    step3Title:"饮食偏好？",step3Sub:"选择适用的或跳过",
+    step4Title:"需要避免什么？",step4Sub:"过敏原 - 可选",
+    step5Title:"想要什么口味？",step5Sub:"选几个或跳过",
+    food:"食物",drink:"饮品",both:"食物和饮品",snack:"小吃",
+    light:"有点饿",medium:"一般饿",hearty:"非常饿",
+    vegan:"纯素",vegetarian:"素食",glutenFree:"无麸质",halal:"清真",dairyFree:"无乳制品",
+    nothing:"无过敏原",
+    spicy:"辣",mild:"清淡",meat:"肉类",veggie:"蔬菜",creamy:"奶油",grilled:"烧烤",sweet:"甜",fresh:"清爽",
+    back:"返回",next:"下一步",skip:"跳过",getRec:"获取推荐",
+    findingFood:"正在为您寻找最佳选择...",
+    addedToOrder:"已添加",add:"添加",
+    errorTitle:"无法获取推荐",errorTry:"请重试",
+    noMenu:"该餐厅菜单目前为空。",
+    rateLimit:"请求过多。请一小时后再试。",
+    new:"重试",close:"关闭",introFallback:"以下是我的推荐：",
+    tapToSelect:"点击选择",tryAgain:"重试",
+    chefNoteTitle:"给厨师的备注",chefNoteSub:"有什么偏好？可选",
+    chefNotePlaceholder:"例如：不要洋葱、加辣...",addAndSendOrder:"添加并查看订单",
+  },
+  ja: {
+    title:"メニューヘルパー",sub:"お好みの料理を見つけましょう",
+    step1Title:"何をお探しですか？",step1Sub:"一つ選んでください",
+    step2Title:"どのくらいお腹が空いていますか？",step2Sub:"適切な量をお勧めします",
+    step3Title:"食事の好み？",step3Sub:"該当するものを選ぶかスキップ",
+    step4Title:"避けたいものは？",step4Sub:"アレルゲン - 任意",
+    step5Title:"どんな味がお好みですか？",step5Sub:"いくつか選ぶかスキップ",
+    food:"食事",drink:"飲み物",both:"食事と飲み物",snack:"軽食",
+    light:"少しお腹が空いた",medium:"普通にお腹が空いた",hearty:"とてもお腹が空いた",
+    vegan:"ヴィーガン",vegetarian:"ベジタリアン",glutenFree:"グルテンフリー",halal:"ハラール",dairyFree:"乳製品不使用",
+    nothing:"アレルゲンなし",
+    spicy:"辛い",mild:"マイルド",meat:"肉料理",veggie:"野菜",creamy:"クリーミー",grilled:"グリル",sweet:"甘い",fresh:"さっぱり",
+    back:"戻る",next:"次へ",skip:"スキップ",getRec:"おすすめを見る",
+    findingFood:"最適な料理を探しています...",
+    addedToOrder:"追加済み",add:"追加",
+    errorTitle:"おすすめを取得できませんでした",errorTry:"もう一度お試しください",
+    noMenu:"このレストランのメニューは現在空です。",
+    rateLimit:"リクエストが多すぎます。1時間後にお試しください。",
+    new:"もう一度",close:"閉じる",introFallback:"おすすめはこちら：",
+    tapToSelect:"タップして選択",tryAgain:"もう一度試す",
+    chefNoteTitle:"シェフへのメモ",chefNoteSub:"ご要望は？任意",
+    chefNotePlaceholder:"例：玉ねぎ抜き、辛めに...",addAndSendOrder:"追加して注文を確認",
+  },
+  ko: {
+    title:"메뉴 도우미",sub:"마음에 드는 메뉴를 찾아드릴게요",
+    step1Title:"무엇을 찾으시나요?",step1Sub:"하나를 선택하세요",
+    step2Title:"얼마나 배고프신가요?",step2Sub:"적절한 양을 추천해 드릴게요",
+    step3Title:"식이 선호가 있나요?",step3Sub:"해당하는 것을 선택하거나 건너뛰세요",
+    step4Title:"피해야 할 것이 있나요?",step4Sub:"알레르기 유발 물질 - 선택사항",
+    step5Title:"어떤 맛을 원하시나요?",step5Sub:"몇 가지 선택하거나 건너뛰세요",
+    food:"음식",drink:"음료",both:"음식과 음료",snack:"간식",
+    light:"약간 배고픔",medium:"보통 배고픔",hearty:"매우 배고픔",
+    vegan:"비건",vegetarian:"채식",glutenFree:"글루텐프리",halal:"할랄",dairyFree:"유제품 없음",
+    nothing:"알레르기 없음",
+    spicy:"매운",mild:"순한",meat:"고기",veggie:"채소",creamy:"크리미",grilled:"그릴",sweet:"달콤한",fresh:"상큼한",
+    back:"뒤로",next:"다음",skip:"건너뛰기",getRec:"추천 받기",
+    findingFood:"최적의 메뉴를 찾고 있어요...",
+    addedToOrder:"추가됨",add:"추가",
+    errorTitle:"추천을 받을 수 없습니다",errorTry:"다시 시도해 주세요",
+    noMenu:"이 레스토랑의 메뉴가 비어 있습니다.",
+    rateLimit:"요청이 너무 많습니다. 1시간 후 다시 시도하세요.",
+    new:"다시 시도",close:"닫기",introFallback:"추천 메뉴입니다:",
+    tapToSelect:"탭하여 선택",tryAgain:"다시 시도",
+    chefNoteTitle:"셰프에게 메모",chefNoteSub:"요청 사항? 선택사항",
+    chefNotePlaceholder:"예: 양파 빼기, 매운맛 추가...",addAndSendOrder:"추가 후 주문 확인",
+  },
+  nl: {
+    title:"Menuhelper",sub:"Laten we vinden wat je lekker vindt",
+    step1Title:"Wat zoek je?",step1Sub:"Kies een optie",
+    step2Title:"Hoe hongerig ben je?",step2Sub:"Dit helpt me de juiste portie voor te stellen",
+    step3Title:"Dieetvoorkeuren?",step3Sub:"Selecteer wat van toepassing is of sla over",
+    step4Title:"Iets te vermijden?",step4Sub:"Allergenen - optioneel",
+    step5Title:"Welke smaken spreken je aan?",step5Sub:"Kies er een paar of sla over",
+    food:"Eten",drink:"Drinken",both:"Eten en drinken",snack:"Snack",
+    light:"Beetje honger",medium:"Normaal honger",hearty:"Erg hongerig",
+    vegan:"Veganistisch",vegetarian:"Vegetarisch",glutenFree:"Glutenvrij",halal:"Halal",dairyFree:"Zuivelvrij",
+    nothing:"Geen allergenen",
+    spicy:"Pittig",mild:"Mild",meat:"Vlees",veggie:"Groente",creamy:"Romig",grilled:"Gegrild",sweet:"Zoet",fresh:"Fris",
+    back:"Terug",next:"Volgende",skip:"Overslaan",getRec:"Suggesties krijgen",
+    findingFood:"De perfecte keuzes voor je zoeken...",
+    addedToOrder:"Toegevoegd",add:"Toevoegen",
+    errorTitle:"Kon geen suggesties ophalen",errorTry:"Probeer het opnieuw",
+    noMenu:"Het menu van dit restaurant is momenteel leeg.",
+    rateLimit:"Te veel verzoeken. Probeer het over een uur opnieuw.",
+    new:"Opnieuw",close:"Sluiten",introFallback:"Mijn suggesties:",
+    tapToSelect:"Tik om te selecteren",tryAgain:"Opnieuw proberen",
+    chefNoteTitle:"Opmerking voor de chef",chefNoteSub:"Voorkeuren? Optioneel",
+    chefNotePlaceholder:"bijv. zonder ui, extra pittig...",addAndSendOrder:"Toevoegen en bestelling bekijken",
+  },
+  vi: {
+    title:"Trợ lý thực đơn",sub:"Hãy tìm món bạn yêu thích",
+    step1Title:"Bạn đang tìm gì?",step1Sub:"Chọn một lựa chọn",
+    step2Title:"Bạn đói đến mức nào?",step2Sub:"Giúp tôi gợi ý phần ăn phù hợp",
+    step3Title:"Sở thích ăn uống?",step3Sub:"Chọn những gì phù hợp hoặc bỏ qua",
+    step4Title:"Cần tránh gì không?",step4Sub:"Chất gây dị ứng - tùy chọn",
+    step5Title:"Bạn thích hương vị nào?",step5Sub:"Chọn vài cái hoặc bỏ qua",
+    food:"Đồ ăn",drink:"Đồ uống",both:"Đồ ăn và uống",snack:"Ăn nhẹ",
+    light:"Hơi đói",medium:"Đói bình thường",hearty:"Rất đói",
+    vegan:"Thuần chay",vegetarian:"Ăn chay",glutenFree:"Không gluten",halal:"Halal",dairyFree:"Không sữa",
+    nothing:"Không dị ứng",
+    spicy:"Cay",mild:"Nhẹ",meat:"Nhiều thịt",veggie:"Rau",creamy:"Béo",grilled:"Nướng",sweet:"Ngọt",fresh:"Tươi mát",
+    back:"Quay lại",next:"Tiếp",skip:"Bỏ qua",getRec:"Nhận gợi ý",
+    findingFood:"Đang tìm những món phù hợp nhất cho bạn...",
+    addedToOrder:"Đã thêm",add:"Thêm",
+    errorTitle:"Không thể lấy gợi ý",errorTry:"Vui lòng thử lại",
+    noMenu:"Thực đơn nhà hàng hiện đang trống.",
+    rateLimit:"Quá nhiều yêu cầu. Thử lại sau một giờ.",
+    new:"Thử lại",close:"Đóng",introFallback:"Đây là gợi ý của tôi:",
+    tapToSelect:"Chạm để chọn",tryAgain:"Thử lại",
+    chefNoteTitle:"Ghi chú cho đầu bếp",chefNoteSub:"Yêu cầu đặc biệt? Tùy chọn",
+    chefNotePlaceholder:"VD: không hành, thêm cay...",addAndSendOrder:"Thêm và xem lại đơn",
+  },
+  th: {
+    title:"ตัวช่วยเมนู",sub:"มาหาเมนูที่คุณจะชอบกัน",
+    step1Title:"คุณกำลังมองหาอะไร?",step1Sub:"เลือกหนึ่งตัวเลือก",
+    step2Title:"คุณหิวแค่ไหน?",step2Sub:"ช่วยแนะนำขนาดที่เหมาะ",
+    step3Title:"ข้อจำกัดด้านอาหาร?",step3Sub:"เลือกที่เกี่ยวข้องหรือข้าม",
+    step4Title:"มีอะไรต้องหลีกเลี่ยง?",step4Sub:"สารก่อภูมิแพ้ - ไม่บังคับ",
+    step5Title:"อยากกินรสชาติแบบไหน?",step5Sub:"เลือกสักสองสามอันหรือข้าม",
+    food:"อาหาร",drink:"เครื่องดื่ม",both:"อาหารและเครื่องดื่ม",snack:"ของว่าง",
+    light:"หิวเล็กน้อย",medium:"หิวปกติ",hearty:"หิวมาก",
+    vegan:"วีแกน",vegetarian:"มังสวิรัติ",glutenFree:"ไม่มีกลูเตน",halal:"ฮาลาล",dairyFree:"ไม่มีนม",
+    nothing:"ไม่มีสารก่อภูมิแพ้",
+    spicy:"เผ็ด",mild:"อ่อน",meat:"เนื้อสัตว์",veggie:"ผัก",creamy:"ครีมมี่",grilled:"ย่าง",sweet:"หวาน",fresh:"สดชื่น",
+    back:"กลับ",next:"ถัดไป",skip:"ข้าม",getRec:"รับคำแนะนำ",
+    findingFood:"กำลังหาเมนูที่ดีที่สุดให้คุณ...",
+    addedToOrder:"เพิ่มแล้ว",add:"เพิ่ม",
+    errorTitle:"ไม่สามารถรับคำแนะนำได้",errorTry:"กรุณาลองอีกครั้ง",
+    noMenu:"เมนูร้านนี้ว่างเปล่า",
+    rateLimit:"คำขอมากเกินไป ลองอีกครั้งใน 1 ชั่วโมง",
+    new:"ลองใหม่",close:"ปิด",introFallback:"นี่คือคำแนะนำ:",
+    tapToSelect:"แตะเพื่อเลือก",tryAgain:"ลองอีกครั้ง",
+    chefNoteTitle:"หมายเหตุถึงเชฟ",chefNoteSub:"มีคำขอพิเศษ? ไม่บังคับ",
+    chefNotePlaceholder:"เช่น ไม่ใส่หัวหอม เผ็ดพิเศษ...",addAndSendOrder:"เพิ่มและตรวจสอบออเดอร์",
+  },
+  hi: {
+    title:"मेनू सहायक",sub:"आइए आपकी पसंद ढूंढें",
+    step1Title:"आप क्या ढूंढ रहे हैं?",step1Sub:"एक विकल्प चुनें",
+    step2Title:"आपको कितनी भूख लगी है?",step2Sub:"सही मात्रा सुझाने में मदद करता है",
+    step3Title:"आहार संबंधी प्राथमिकताएं?",step3Sub:"लागू होने वाले चुनें या छोड़ दें",
+    step4Title:"कुछ बचना है?",step4Sub:"एलर्जी कारक - वैकल्पिक",
+    step5Title:"कौन से स्वाद पसंद हैं?",step5Sub:"कुछ चुनें या छोड़ दें",
+    food:"खाना",drink:"पेय",both:"खाना और पेय",snack:"स्नैक",
+    light:"थोड़ी भूख",medium:"सामान्य भूख",hearty:"बहुत भूख",
+    vegan:"वीगन",vegetarian:"शाकाहारी",glutenFree:"ग्लूटन-मुक्त",halal:"हलाल",dairyFree:"डेयरी-मुक्त",
+    nothing:"कोई एलर्जी नहीं",
+    spicy:"मसालेदार",mild:"हल्का",meat:"मांसाहारी",veggie:"सब्जी",creamy:"क्रीमी",grilled:"ग्रिल्ड",sweet:"मीठा",fresh:"ताजा",
+    back:"वापस",next:"अगला",skip:"छोड़ें",getRec:"सुझाव पाएं",
+    findingFood:"आपके लिए सबसे अच्छे विकल्प ढूंढ रहा हूं...",
+    addedToOrder:"जोड़ा गया",add:"जोड़ें",
+    errorTitle:"सुझाव नहीं मिल सके",errorTry:"कृपया फिर से प्रयास करें",
+    noMenu:"इस रेस्तरां का मेनू अभी खाली है।",
+    rateLimit:"बहुत अधिक अनुरोध। एक घंटे बाद पुनः प्रयास करें।",
+    new:"फिर से",close:"बंद करें",introFallback:"मेरे सुझाव:",
+    tapToSelect:"चुनने के लिए टैप करें",tryAgain:"फिर से प्रयास",
+    chefNoteTitle:"शेफ के लिए नोट",chefNoteSub:"कोई प्राथमिकता? वैकल्पिक",
+    chefNotePlaceholder:"जैसे: प्याज नहीं, ज्यादा मसालेदार...",addAndSendOrder:"जोड़ें और ऑर्डर देखें",
+  },
+  pl: {
+    title:"Pomocnik menu",sub:"Znajdźmy to, co polubisz",
+    step1Title:"Czego szukasz?",step1Sub:"Wybierz jedną opcję",
+    step2Title:"Jak bardzo jesteś głodny?",step2Sub:"Pomoże mi zasugerować odpowiednią porcję",
+    step3Title:"Preferencje dietetyczne?",step3Sub:"Wybierz odpowiednie lub pomiń",
+    step4Title:"Czegoś unikać?",step4Sub:"Alergeny - opcjonalnie",
+    step5Title:"Jakie smaki cię kuszą?",step5Sub:"Wybierz kilka lub pomiń",
+    food:"Jedzenie",drink:"Napój",both:"Jedzenie i napój",snack:"Przekąska",
+    light:"Lekki głód",medium:"Normalny głód",hearty:"Bardzo głodny",
+    vegan:"Wegański",vegetarian:"Wegetariański",glutenFree:"Bezglutenowy",halal:"Halal",dairyFree:"Bez laktozy",
+    nothing:"Brak alergenów",
+    spicy:"Ostry",mild:"Łagodny",meat:"Mięsny",veggie:"Warzywny",creamy:"Kremowy",grilled:"Grillowany",sweet:"Słodki",fresh:"Świeży",
+    back:"Wstecz",next:"Dalej",skip:"Pomiń",getRec:"Pokaż sugestie",
+    findingFood:"Szukam najlepszych opcji...",
+    addedToOrder:"Dodano",add:"Dodaj",
+    errorTitle:"Nie udało się uzyskać sugestii",errorTry:"Spróbuj ponownie",
+    noMenu:"Menu tej restauracji jest puste.",
+    rateLimit:"Za dużo zapytań. Spróbuj za godzinę.",
+    new:"Ponownie",close:"Zamknij",introFallback:"Moje sugestie:",
+    tapToSelect:"Dotknij, aby wybrać",tryAgain:"Spróbuj ponownie",
+    chefNoteTitle:"Notatka do szefa kuchni",chefNoteSub:"Preferencje? Opcjonalnie",
+    chefNotePlaceholder:"np. bez cebuli, ekstra ostro...",addAndSendOrder:"Dodaj i sprawdź zamówienie",
+  },
+  el: {
+    title:"Βοηθός μενού",sub:"Ας βρούμε αυτό που θα σας αρέσει",
+    step1Title:"Τι ψάχνετε;",step1Sub:"Επιλέξτε μία επιλογή",
+    step2Title:"Πόσο πεινάτε;",step2Sub:"Βοηθά να προτείνω τη σωστή μερίδα",
+    step3Title:"Διατροφικές προτιμήσεις;",step3Sub:"Επιλέξτε ή παραλείψτε",
+    step4Title:"Κάτι να αποφύγετε;",step4Sub:"Αλλεργιογόνα - προαιρετικά",
+    step5Title:"Τι γεύσεις σας αρέσουν;",step5Sub:"Επιλέξτε μερικές ή παραλείψτε",
+    food:"Φαγητό",drink:"Ποτό",both:"Φαγητό και ποτό",snack:"Σνακ",
+    light:"Λίγο πεινασμένος",medium:"Κανονική πείνα",hearty:"Πολύ πεινασμένος",
+    vegan:"Vegan",vegetarian:"Χορτοφάγος",glutenFree:"Χωρίς γλουτένη",halal:"Halal",dairyFree:"Χωρίς γαλακτοκομικά",
+    nothing:"Χωρίς αλλεργίες",
+    spicy:"Πικάντικο",mild:"Ήπιο",meat:"Κρεατικά",veggie:"Λαχανικά",creamy:"Κρεμώδες",grilled:"Ψητό",sweet:"Γλυκό",fresh:"Φρέσκο",
+    back:"Πίσω",next:"Επόμενο",skip:"Παράλειψη",getRec:"Λήψη προτάσεων",
+    findingFood:"Ψάχνω τις καλύτερες επιλογές...",
+    addedToOrder:"Προστέθηκε",add:"Προσθήκη",
+    errorTitle:"Αδυναμία λήψης προτάσεων",errorTry:"Δοκιμάστε ξανά",
+    noMenu:"Το μενού αυτού του εστιατορίου είναι κενό.",
+    rateLimit:"Πάρα πολλά αιτήματα. Δοκιμάστε σε μία ώρα.",
+    new:"Ξανά",close:"Κλείσιμο",introFallback:"Οι προτάσεις μου:",
+    tapToSelect:"Πατήστε για επιλογή",tryAgain:"Δοκιμάστε ξανά",
+    chefNoteTitle:"Σημείωση στον σεφ",chefNoteSub:"Προτιμήσεις; Προαιρετικά",
+    chefNotePlaceholder:"π.χ. χωρίς κρεμμύδι, εξτρά πικάντικο...",addAndSendOrder:"Προσθήκη και έλεγχος παραγγελίας",
+  },
+  sv: {
+    title:"Menyhjälp",sub:"Låt oss hitta det du gillar",
+    step1Title:"Vad letar du efter?",step1Sub:"Välj ett alternativ",
+    step2Title:"Hur hungrig är du?",step2Sub:"Hjälper mig föreslå rätt portion",
+    step3Title:"Kostpreferenser?",step3Sub:"Välj de som gäller eller hoppa över",
+    step4Title:"Något att undvika?",step4Sub:"Allergener - valfritt",
+    step5Title:"Vilka smaker lockar?",step5Sub:"Välj några eller hoppa över",
+    food:"Mat",drink:"Dryck",both:"Mat och dryck",snack:"Bara en snack",
+    light:"Lite hungrig",medium:"Lagom hungrig",hearty:"Väldigt hungrig",
+    vegan:"Vegansk",vegetarian:"Vegetarisk",glutenFree:"Glutenfri",halal:"Halal",dairyFree:"Laktosfri",
+    nothing:"Inga allergener",
+    spicy:"Kryddstarkt",mild:"Milt",meat:"Kött",veggie:"Grönsaker",creamy:"Krämigt",grilled:"Grillat",sweet:"Sött",fresh:"Fräscht",
+    back:"Tillbaka",next:"Nästa",skip:"Hoppa över",getRec:"Få förslag",
+    findingFood:"Letar efter de bästa valen...",
+    addedToOrder:"Tillagd",add:"Lägg till",
+    errorTitle:"Kunde inte hämta förslag",errorTry:"Försök igen",
+    noMenu:"Den här restaurangens meny är tom.",
+    rateLimit:"För många förfrågningar. Försök igen om en timme.",
+    new:"Försök igen",close:"Stäng",introFallback:"Mina förslag:",
+    tapToSelect:"Tryck för att välja",tryAgain:"Försök igen",
+    chefNoteTitle:"Meddelande till kocken",chefNoteSub:"Önskemål? Valfritt",
+    chefNotePlaceholder:"t.ex. utan lök, extra kryddigt...",addAndSendOrder:"Lägg till och granska beställning",
+  },
+  az: {
+    title:"Menyu köməkçisi",sub:"Zövqünüzə uyğun olanı tapaq",
+    step1Title:"Nə axtarırsınız?",step1Sub:"Bir seçim edin",
+    step2Title:"Nə qədər acsınız?",step2Sub:"Sizə uyğun porsiyanı təklif edim",
+    step3Title:"Pəhriz üstünlükləriniz var?",step3Sub:"Uyğun olanları seçin və ya keçin",
+    step4Title:"Qaçınmalı olduğunuz bir şey var?",step4Sub:"Allergenlər - istəyə bağlı",
+    step5Title:"Hansı dadlar xoşunuza gəlir?",step5Sub:"Bir neçəsini seçin və ya keçin",
+    food:"Yemək",drink:"İçki",both:"Yemək və içki",snack:"Qəlyanaltı",
+    light:"Bir az acam",medium:"Normal ac",hearty:"Çox acam",
+    vegan:"Vegan",vegetarian:"Vegetarian",glutenFree:"Glutensiz",halal:"Halal",dairyFree:"Südsüz",
+    nothing:"Allergen yoxdur",
+    spicy:"Acılı",mild:"Yumşaq",meat:"Ətli",veggie:"Tərəvəzli",creamy:"Kremlı",grilled:"Qrild",sweet:"Şirin",fresh:"Təzə",
+    back:"Geri",next:"İrəli",skip:"Keç",getRec:"Təklif al",
+    findingFood:"Sizin üçün ən yaxşılarını axtarıram...",
+    addedToOrder:"Əlavə edildi",add:"Əlavə et",
+    errorTitle:"Təkliflər alına bilmədi",errorTry:"Zəhmət olmasa yenidən cəhd edin",
+    noMenu:"Bu restoranın menyusu hazırda boşdur.",
+    rateLimit:"Çox sayda sorğu. 1 saat sonra yenidən cəhd edin.",
+    new:"Yenidən",close:"Bağla",introFallback:"Təkliflərim bunlardır:",
+    tapToSelect:"Seçmək üçün toxunun",tryAgain:"Yenidən cəhd et",
+    chefNoteTitle:"Aşpaza qeyd",chefNoteSub:"İstəyiniz var? İstəyə bağlı",
+    chefNotePlaceholder:"məs. soğansız, əlavə acılı...",addAndSendOrder:"Əlavə et və sifarişi yoxla",
   },
 };
 
@@ -2389,6 +2816,23 @@ const ORDER_LABELS_BY_LANG = {
   en: {sending:'Sending order...',orderSent:'Order sent!',orderSentSub:'The kitchen has received your order. We will start preparing it shortly.',failed:'Could not send order',order:'Order',table:'Table',pending:'Waiting for confirmation',preparing:'Being prepared',ready:'Ready to serve',completed:'Completed',cancelled:'Cancelled',sendOrder:'Send order',tableNumber:'Table number',orLeaveBlank:'Or leave blank if no table',cancel:'Cancel',noteForChef:'Note for the kitchen',notePlaceholder:'Allergies, special requests...', back:'Back'},
   tr: {sending:'Sipariş gönderiliyor...',orderSent:'Sipariş alındı!',orderSentSub:'Mutfak siparişinizi aldı. Birazdan hazırlamaya başlıyorlar.',failed:'Sipariş gönderilemedi',order:'Sipariş',table:'Masa',pending:'Onay bekleniyor',preparing:'Hazırlanıyor',ready:'Hazır',completed:'Tamamlandı',cancelled:'İptal edildi',sendOrder:'Sipariş ver',tableNumber:'Masa numarası',orLeaveBlank:'Veya masa yoksa boş bırakın',cancel:'İptal',noteForChef:'Mutfağa not',notePlaceholder:'Alerji, özel istek...', back:'Geri'},
   vi: {sending:'Đang gửi đơn...',orderSent:'Đã gửi đơn!',orderSentSub:'Nhà bếp đã nhận đơn hàng. Chúng tôi sẽ bắt đầu chuẩn bị ngay.',failed:'Không gửi được đơn',order:'Đơn hàng',table:'Bàn',pending:'Chờ xác nhận',preparing:'Đang chuẩn bị',ready:'Sẵn sàng phục vụ',completed:'Hoàn thành',cancelled:'Đã hủy',sendOrder:'Gửi đơn',tableNumber:'Số bàn',orLeaveBlank:'Hoặc bỏ trống nếu không có bàn',cancel:'Hủy',noteForChef:'Ghi chú cho bếp',notePlaceholder:'Dị ứng, yêu cầu đặc biệt...', back:'Quay lại'},
+  de: {sending:'Bestellung wird gesendet...',orderSent:'Bestellung gesendet!',orderSentSub:'Die Küche hat Ihre Bestellung erhalten. Wir beginnen in Kürze mit der Zubereitung.',failed:'Bestellung konnte nicht gesendet werden',order:'Bestellung',table:'Tisch',pending:'Warten auf Bestätigung',preparing:'Wird zubereitet',ready:'Bereit zum Servieren',completed:'Abgeschlossen',cancelled:'Storniert',sendOrder:'Bestellen',tableNumber:'Tischnummer',orLeaveBlank:'Oder leer lassen wenn kein Tisch',cancel:'Abbrechen',noteForChef:'Nachricht an die Küche',notePlaceholder:'Allergien, Sonderwünsche...', back:'Zurück'},
+  fr: {sending:'Envoi de la commande...',orderSent:'Commande envoyée !',orderSentSub:'La cuisine a reçu votre commande. La préparation va commencer sous peu.',failed:'Impossible d\'envoyer la commande',order:'Commande',table:'Table',pending:'En attente de confirmation',preparing:'En préparation',ready:'Prêt à servir',completed:'Terminé',cancelled:'Annulé',sendOrder:'Envoyer la commande',tableNumber:'Numéro de table',orLeaveBlank:'Ou laisser vide sans table',cancel:'Annuler',noteForChef:'Note pour la cuisine',notePlaceholder:'Allergies, demandes spéciales...', back:'Retour'},
+  es: {sending:'Enviando pedido...',orderSent:'Pedido enviado!',orderSentSub:'La cocina ha recibido tu pedido. Empezaremos a prepararlo en breve.',failed:'No se pudo enviar el pedido',order:'Pedido',table:'Mesa',pending:'Esperando confirmación',preparing:'En preparación',ready:'Listo para servir',completed:'Completado',cancelled:'Cancelado',sendOrder:'Enviar pedido',tableNumber:'Número de mesa',orLeaveBlank:'O dejar en blanco sin mesa',cancel:'Cancelar',noteForChef:'Nota para la cocina',notePlaceholder:'Alergias, solicitudes especiales...', back:'Atrás'},
+  ar: {sending:'جاري إرسال الطلب...',orderSent:'تم إرسال الطلب!',orderSentSub:'استلم المطبخ طلبك. سنبدأ بالتحضير قريباً.',failed:'تعذر إرسال الطلب',order:'الطلب',table:'الطاولة',pending:'بانتظار التأكيد',preparing:'قيد التحضير',ready:'جاهز للتقديم',completed:'مكتمل',cancelled:'ملغي',sendOrder:'إرسال الطلب',tableNumber:'رقم الطاولة',orLeaveBlank:'أو اترك فارغاً بدون طاولة',cancel:'إلغاء',noteForChef:'ملاحظة للمطبخ',notePlaceholder:'حساسية، طلبات خاصة...', back:'رجوع'},
+  it: {sending:'Invio dell\'ordine...',orderSent:'Ordine inviato!',orderSentSub:'La cucina ha ricevuto il tuo ordine. Inizieremo a prepararlo a breve.',failed:'Impossibile inviare l\'ordine',order:'Ordine',table:'Tavolo',pending:'In attesa di conferma',preparing:'In preparazione',ready:'Pronto da servire',completed:'Completato',cancelled:'Annullato',sendOrder:'Invia ordine',tableNumber:'Numero tavolo',orLeaveBlank:'O lascia vuoto senza tavolo',cancel:'Annulla',noteForChef:'Nota per la cucina',notePlaceholder:'Allergie, richieste speciali...', back:'Indietro'},
+  pt: {sending:'Enviando pedido...',orderSent:'Pedido enviado!',orderSentSub:'A cozinha recebeu seu pedido. Começaremos a preparar em breve.',failed:'Não foi possível enviar o pedido',order:'Pedido',table:'Mesa',pending:'Aguardando confirmação',preparing:'Em preparação',ready:'Pronto para servir',completed:'Concluído',cancelled:'Cancelado',sendOrder:'Enviar pedido',tableNumber:'Número da mesa',orLeaveBlank:'Ou deixe em branco sem mesa',cancel:'Cancelar',noteForChef:'Nota para a cozinha',notePlaceholder:'Alergias, pedidos especiais...', back:'Voltar'},
+  ru: {sending:'Отправка заказа...',orderSent:'Заказ отправлен!',orderSentSub:'Кухня получила ваш заказ. Скоро начнём готовить.',failed:'Не удалось отправить заказ',order:'Заказ',table:'Стол',pending:'Ожидание подтверждения',preparing:'Готовится',ready:'Готов к подаче',completed:'Завершён',cancelled:'Отменён',sendOrder:'Отправить заказ',tableNumber:'Номер стола',orLeaveBlank:'Или оставьте пустым без стола',cancel:'Отмена',noteForChef:'Заметка для кухни',notePlaceholder:'Аллергии, особые пожелания...', back:'Назад'},
+  zh: {sending:'正在发送订单...',orderSent:'订单已发送！',orderSentSub:'厨房已收到您的订单，即将开始准备。',failed:'无法发送订单',order:'订单',table:'桌号',pending:'等待确认',preparing:'准备中',ready:'可上菜',completed:'已完成',cancelled:'已取消',sendOrder:'发送订单',tableNumber:'桌号',orLeaveBlank:'或不填桌号',cancel:'取消',noteForChef:'给厨房的备注',notePlaceholder:'过敏、特殊要求...', back:'返回'},
+  ja: {sending:'注文を送信中...',orderSent:'注文完了！',orderSentSub:'キッチンが注文を受け取りました。まもなく準備を始めます。',failed:'注文を送信できませんでした',order:'注文',table:'テーブル',pending:'確認待ち',preparing:'調理中',ready:'提供準備完了',completed:'完了',cancelled:'キャンセル済み',sendOrder:'注文する',tableNumber:'テーブル番号',orLeaveBlank:'テーブルがない場合は空欄',cancel:'キャンセル',noteForChef:'キッチンへのメモ',notePlaceholder:'アレルギー、特別なリクエスト...', back:'戻る'},
+  ko: {sending:'주문 전송 중...',orderSent:'주문 완료!',orderSentSub:'주방에서 주문을 받았습니다. 곧 준비를 시작합니다.',failed:'주문을 보낼 수 없습니다',order:'주문',table:'테이블',pending:'확인 대기',preparing:'준비 중',ready:'서빙 준비 완료',completed:'완료',cancelled:'취소됨',sendOrder:'주문하기',tableNumber:'테이블 번호',orLeaveBlank:'테이블 없으면 비워두세요',cancel:'취소',noteForChef:'주방 메모',notePlaceholder:'알레르기, 특별 요청...', back:'뒤로'},
+  nl: {sending:'Bestelling verzenden...',orderSent:'Bestelling verzonden!',orderSentSub:'De keuken heeft uw bestelling ontvangen. We beginnen binnenkort met de bereiding.',failed:'Bestelling kon niet worden verzonden',order:'Bestelling',table:'Tafel',pending:'Wachten op bevestiging',preparing:'Wordt bereid',ready:'Klaar om te serveren',completed:'Voltooid',cancelled:'Geannuleerd',sendOrder:'Bestelling plaatsen',tableNumber:'Tafelnummer',orLeaveBlank:'Of laat leeg zonder tafel',cancel:'Annuleren',noteForChef:'Opmerking voor de keuken',notePlaceholder:'Allergieën, speciale verzoeken...', back:'Terug'},
+  th: {sending:'กำลังส่งออเดอร์...',orderSent:'ส่งออเดอร์แล้ว!',orderSentSub:'ครัวได้รับออเดอร์ของคุณแล้ว จะเริ่มเตรียมเร็วๆ นี้',failed:'ไม่สามารถส่งออเดอร์ได้',order:'ออเดอร์',table:'โต๊ะ',pending:'รอการยืนยัน',preparing:'กำลังเตรียม',ready:'พร้อมเสิร์ฟ',completed:'เสร็จสิ้น',cancelled:'ยกเลิก',sendOrder:'ส่งออเดอร์',tableNumber:'หมายเลขโต๊ะ',orLeaveBlank:'หรือเว้นว่างถ้าไม่มีโต๊ะ',cancel:'ยกเลิก',noteForChef:'หมายเหตุสำหรับครัว',notePlaceholder:'อาการแพ้ คำขอพิเศษ...', back:'กลับ'},
+  hi: {sending:'ऑर्डर भेज रहे हैं...',orderSent:'ऑर्डर भेज दिया!',orderSentSub:'किचन ने आपका ऑर्डर प्राप्त कर लिया है। जल्द ही तैयारी शुरू होगी।',failed:'ऑर्डर नहीं भेजा जा सका',order:'ऑर्डर',table:'टेबल',pending:'पुष्टि की प्रतीक्षा',preparing:'तैयारी हो रही है',ready:'परोसने के लिए तैयार',completed:'पूर्ण',cancelled:'रद्द',sendOrder:'ऑर्डर भेजें',tableNumber:'टेबल नंबर',orLeaveBlank:'या बिना टेबल के खाली छोड़ें',cancel:'रद्द करें',noteForChef:'किचन के लिए नोट',notePlaceholder:'एलर्जी, विशेष अनुरोध...', back:'वापस'},
+  pl: {sending:'Wysyłanie zamówienia...',orderSent:'Zamówienie wysłane!',orderSentSub:'Kuchnia otrzymała zamówienie. Wkrótce zaczniemy przygotowanie.',failed:'Nie udało się wysłać zamówienia',order:'Zamówienie',table:'Stolik',pending:'Oczekiwanie na potwierdzenie',preparing:'W przygotowaniu',ready:'Gotowe do podania',completed:'Zakończone',cancelled:'Anulowane',sendOrder:'Złóż zamówienie',tableNumber:'Numer stolika',orLeaveBlank:'Lub zostaw puste bez stolika',cancel:'Anuluj',noteForChef:'Notatka dla kuchni',notePlaceholder:'Alergie, specjalne życzenia...', back:'Wstecz'},
+  el: {sending:'Αποστολή παραγγελίας...',orderSent:'Η παραγγελία στάλθηκε!',orderSentSub:'Η κουζίνα έλαβε την παραγγελία σας. Θα αρχίσουμε την προετοιμασία σύντομα.',failed:'Δεν ήταν δυνατή η αποστολή',order:'Παραγγελία',table:'Τραπέζι',pending:'Αναμονή επιβεβαίωσης',preparing:'Προετοιμάζεται',ready:'Έτοιμο για σερβίρισμα',completed:'Ολοκληρώθηκε',cancelled:'Ακυρώθηκε',sendOrder:'Αποστολή παραγγελίας',tableNumber:'Αριθμός τραπεζιού',orLeaveBlank:'Ή αφήστε κενό χωρίς τραπέζι',cancel:'Ακύρωση',noteForChef:'Σημείωση για την κουζίνα',notePlaceholder:'Αλλεργίες, ειδικά αιτήματα...', back:'Πίσω'},
+  sv: {sending:'Skickar beställning...',orderSent:'Beställning skickad!',orderSentSub:'Köket har tagit emot din beställning. Vi börjar förbereda den snart.',failed:'Kunde inte skicka beställningen',order:'Beställning',table:'Bord',pending:'Väntar på bekräftelse',preparing:'Förbereds',ready:'Redo att serveras',completed:'Klar',cancelled:'Avbruten',sendOrder:'Skicka beställning',tableNumber:'Bordsnummer',orLeaveBlank:'Eller lämna tomt utan bord',cancel:'Avbryt',noteForChef:'Meddelande till köket',notePlaceholder:'Allergier, speciella önskemål...', back:'Tillbaka'},
+  az: {sending:'Sifariş göndərilir...',orderSent:'Sifariş göndərildi!',orderSentSub:'Mətbəx sifarişinizi aldı. Tezliklə hazırlamağa başlayacağıq.',failed:'Sifariş göndərilə bilmədi',order:'Sifariş',table:'Masa',pending:'Təsdiq gözlənilir',preparing:'Hazırlanır',ready:'Xidmətə hazır',completed:'Tamamlandı',cancelled:'Ləğv edildi',sendOrder:'Sifariş ver',tableNumber:'Masa nömrəsi',orLeaveBlank:'Və ya masa yoxdursa boş buraxın',cancel:'Ləğv et',noteForChef:'Mətbəxə qeyd',notePlaceholder:'Allergiya, xüsusi istəklər...', back:'Geri'},
 };
 function tOrder(key){
   const lang = currentLang || defaultLanguage || 'en';
@@ -2524,8 +2968,41 @@ function catMeta(code){
   return categoriesMeta.find(c=>c.code===code) || {code, label:code, color:'#334155'};
 }
 
+let _menuSearchQuery = '';
+
+function onMenuSearch(val){
+  _menuSearchQuery = (val||'').trim().toLowerCase();
+  const clearBtn = document.getElementById('menuSearchClear');
+  if(clearBtn) clearBtn.style.display = _menuSearchQuery ? 'block' : 'none';
+  filteredItems = getFiltered();
+  curItem = 0;
+  buildSlides();
+  updateProgress();
+}
+
+function clearMenuSearch(){
+  _menuSearchQuery = '';
+  const inp = document.getElementById('menuSearchInput');
+  if(inp) inp.value = '';
+  const clearBtn = document.getElementById('menuSearchClear');
+  if(clearBtn) clearBtn.style.display = 'none';
+  filteredItems = getFiltered();
+  curItem = 0;
+  buildSlides();
+  updateProgress();
+}
+
 function getFiltered(){
   let list = allItems;
+  // Search filter
+  if(_menuSearchQuery){
+    list = list.filter(i => {
+      const name = (i.name||'').toLowerCase();
+      const desc = (i.description||'').toLowerCase();
+      const cat = (i.category||'').toLowerCase();
+      return name.includes(_menuSearchQuery) || desc.includes(_menuSearchQuery) || cat.includes(_menuSearchQuery);
+    });
+  }
   // Group filter: if a group is selected, only show items from that group's categories
   if(currentGroup !== 'all' && catGroups.length > 1){
     const grp = catGroups.find(g => g.key === currentGroup);
@@ -3102,7 +3579,7 @@ function setupTouch(){
     touchEnded = true;
 
     // İnteraktif elementse atla
-    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,textarea,.add-btn,.qty-btn,.qty-controls,.cat,.cat-group-btn,.cat-sub-chip,.action-col-btn,.action-col,.profile-btn,.cross-sell-card,.order-fab,.cart-fab,.ai-overlay,.ai-modal,.ai-opt,.cat-group-bar,.cat-sub-bar');
+    const isInteractive = touchTarget && touchTarget.closest('button,a,select,input,textarea,.add-btn,.qty-btn,.qty-controls,.cat,.cat-group-btn,.cat-sub-chip,.action-col-btn,.action-col,.profile-btn,.cross-sell-card,.order-fab,.cart-fab,.ai-overlay,.ai-modal,.ai-opt,.cat-group-bar,.cat-sub-bar,.menu-search-bar');
     if(isInteractive) return;
 
     // Animasyon kilidi
@@ -3237,6 +3714,14 @@ function buildInfoContent(){
 }
 
 boot();
+
+// Prevent double-tap zoom on iOS Safari
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(e){
+  const now = Date.now();
+  if(now - lastTouchEnd <= 300){ e.preventDefault(); }
+  lastTouchEnd = now;
+}, {passive:false});
 </script>
 </body>
 </html>

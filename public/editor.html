@@ -763,9 +763,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
       <div class="modal" style="max-width:600px">
         <div class="modal-handle"></div>
         <div class="m-title">Cross-sell suggestions</div>
-        <div class="m-sub">For each item, choose what to suggest when a customer adds it to their order. Leave blank for no suggestion.</div>
+        <div class="m-sub">For each item, choose 1-3 items to suggest when a customer adds it to their order.</div>
         <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:9px 12px;font-size:11px;color:#713f12;line-height:1.5;margin:10px 0 14px">
-          Example: Customer adds Köfte → suggest Ayran. Customer adds Pizza → suggest Cola.
+          Example: Customer adds Köfte → suggest Ayran, Salad. Customer adds Pizza → suggest Cola, Tiramisu.
         </div>
         <div id="crossSellList" style="max-height:55vh;overflow-y:auto;margin-bottom:14px"></div>
         <div class="m-row"><button class="btn-gh" onclick="closeCrossSellOverlay()">Cancel</button><button class="btn-dk" onclick="saveCrossSells()">Save all</button></div>
@@ -2154,6 +2154,11 @@ function renderCatMgmt(){
             <svg width="14" height="14" viewBox="0 0 14 14" fill="#94a3b8" style="flex-shrink:0"><circle cx="5" cy="3" r="1.2"/><circle cx="9" cy="3" r="1.2"/><circle cx="5" cy="7" r="1.2"/><circle cx="9" cy="7" r="1.2"/><circle cx="5" cy="11" r="1.2"/><circle cx="9" cy="11" r="1.2"/></svg>
             <input type="color" value="${c.color}" oninput="onCatColorInput('${c.id}',this.value)" onchange="onCatColorChange('${c.id}',this.value)" style="width:24px;height:24px;border:none;background:none;cursor:pointer;padding:0"/>
             <input class="cat-name-inp" value="${escapeHtml(c.label)}" oninput="onCatLabelInput('${c.id}',this.value)" onblur="onCatLabelBlur('${c.id}',this.value)"/>
+            <select class="cat-group-sel" onchange="onCatGroupChange('${c.id}',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#475569;cursor:pointer;min-width:70px">
+              <option value="food"${(c.group||'food')==='food'?' selected':''}>🍽️ Food</option>
+              <option value="drinks"${c.group==='drinks'?' selected':''}>🥤 Drinks</option>
+              <option value="dessert"${c.group==='dessert'?' selected':''}>🍰 Dessert</option>
+            </select>
             <label class="tog"><input type="checkbox" ${c.visible?'checked':''} onchange="onCatVisibleToggle('${c.id}',this)"/><div class="tog-t"></div><div class="tog-th"></div></label>
             <button onclick="deleteCat('${c.id}')" style="width:30px;height:30px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#ef4444">${TRASH}</button>
           </div>`).join('')}
@@ -2289,12 +2294,22 @@ function onCatVisibleToggle(id, cb){
   buildCatPills();
   saveCatRemote(id,{visible:cb.checked});
 }
+async function onCatGroupChange(id, newGroup){
+  const c = cats.find(x=>x.id===id); if(!c) return;
+  if(c.group === newGroup) return;
+  c.group = newGroup;
+  renderCatMgmt();
+  try{
+    await api('PATCH','/api/categories/'+id, {group:newGroup});
+    toast('Moved to '+(GROUP_META[newGroup]||{}).label);
+  }catch(e){toast('Failed: '+e.message);}
+}
 
 async function saveCatRemote(id, data){
   try{
     const updated = await api('PATCH','/api/categories/'+id, data);
     const c = cats.find(x=>x.id===id);
-    if(c) Object.assign(c, { label: updated.label, color: updated.color, visible: updated.visible });
+    if(c) Object.assign(c, { label: updated.label, color: updated.color, visible: updated.visible, group: updated.group || c.group });
     renderItems();
   }catch(e){toast('Save failed: '+e.message);}
 }
@@ -2588,7 +2603,13 @@ let _crossSellEdits = {};
 
 function openCrossSellOverlay(){
   _crossSellEdits = {};
-  items.forEach(it => { _crossSellEdits[it.id] = it.crossSellItemId || ''; });
+  items.forEach(it => {
+    // Merge both old single and new array fields
+    let ids = it.crossSellItemIds && it.crossSellItemIds.length > 0
+      ? [...it.crossSellItemIds]
+      : (it.crossSellItemId ? [it.crossSellItemId] : []);
+    _crossSellEdits[it.id] = ids;
+  });
   renderCrossSellList();
   document.getElementById('crossSellOverlay').classList.add('open');
 }
@@ -2599,7 +2620,6 @@ function renderCrossSellList(){
     body.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px 16px;font-size:13px">No items yet. Add some menu items first.</div>';
     return;
   }
-  // Kategori bazlı sırala
   const sorted = [...items].sort((a,b) => {
     const ca = cats.findIndex(c => c.code === (a.category||'MAIN'));
     const cb = cats.findIndex(c => c.code === (b.category||'MAIN'));
@@ -2609,23 +2629,47 @@ function renderCrossSellList(){
   body.innerHTML = sorted.map(item => {
     const cat = cats.find(c => c.code === (item.category||'MAIN'));
     const catLabel = cat?.label || 'MAIN';
-    const currentValue = _crossSellEdits[item.id] || '';
+    const selected = _crossSellEdits[item.id] || [];
+    const chips = selected.map(sid => {
+      const si = items.find(i => i.id === sid);
+      return si ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:3px 8px;font-size:11px;color:#166534;white-space:nowrap">${escAdm(si.name)}<span onclick="csRemove('${item.id}','${sid}')" style="cursor:pointer;color:#dc2626;font-weight:700;font-size:13px;line-height:1">&times;</span></span>` : '';
+    }).join('');
+    const canAdd = selected.length < 3;
     const opts = items
-      .filter(i => i.id !== item.id)
-      .map(i => `<option value="${i.id}"${i.id===currentValue?' selected':''}>${escAdm(i.name)}</option>`)
+      .filter(i => i.id !== item.id && !selected.includes(i.id))
+      .map(i => `<option value="${i.id}">${escAdm(i.name)}</option>`)
       .join('');
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f1f5f9">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escAdm(item.name)}</div>
-        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">${escAdm(catLabel)}</div>
+    const addBtn = canAdd && opts
+      ? `<select onchange="csAdd('${item.id}',this.value);this.value=''" style="padding:5px 6px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;background:#fff;cursor:pointer;color:#64748b;max-width:140px">
+          <option value="">+ Add</option>${opts}
+        </select>`
+      : (selected.length >= 3 ? '<span style="font-size:10px;color:#94a3b8">max 3</span>' : '');
+    return `<div style="padding:10px;border-bottom:1px solid #f1f5f9">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:${selected.length?'6':'0'}px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escAdm(item.name)}</div>
+          <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-top:1px">${escAdm(catLabel)}</div>
+        </div>
+        <div style="font-size:14px;color:#cbd5e1;flex-shrink:0">→</div>
+        ${addBtn}
       </div>
-      <div style="font-size:14px;color:#cbd5e1;flex-shrink:0">→</div>
-      <select onchange="_crossSellEdits['${item.id}']=this.value" style="flex:1.2;min-width:0;padding:7px 8px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;cursor:pointer">
-        <option value="">— No suggestion —</option>
-        ${opts}
-      </select>
+      ${selected.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-left:0;padding-left:0">${chips}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+function csAdd(itemId, targetId){
+  if(!targetId) return;
+  const arr = _crossSellEdits[itemId] || [];
+  if(arr.length >= 3 || arr.includes(targetId)) return;
+  arr.push(targetId);
+  _crossSellEdits[itemId] = arr;
+  renderCrossSellList();
+}
+
+function csRemove(itemId, targetId){
+  _crossSellEdits[itemId] = (_crossSellEdits[itemId] || []).filter(id => id !== targetId);
+  renderCrossSellList();
 }
 
 function escAdm(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -2637,9 +2681,13 @@ function closeCrossSellOverlay(){
 async function saveCrossSells(){
   const changes = [];
   items.forEach(it => {
-    const newVal = _crossSellEdits[it.id] || null;
-    const oldVal = it.crossSellItemId || null;
-    if(newVal !== oldVal) changes.push({ id: it.id, crossSellItemId: newVal });
+    const newIds = (_crossSellEdits[it.id] || []).slice(0, 3);
+    const oldIds = it.crossSellItemIds && it.crossSellItemIds.length > 0
+      ? it.crossSellItemIds
+      : (it.crossSellItemId ? [it.crossSellItemId] : []);
+    if(JSON.stringify(newIds) !== JSON.stringify(oldIds)){
+      changes.push({ id: it.id, crossSellItemIds: newIds, crossSellItemId: newIds[0] || null });
+    }
   });
   if(changes.length === 0){
     closeCrossSellOverlay();
@@ -2648,7 +2696,7 @@ async function saveCrossSells(){
   }
   try {
     for(const c of changes){
-      await api('PATCH', '/api/menu/'+c.id, { crossSellItemId: c.crossSellItemId });
+      await api('PATCH', '/api/menu/'+c.id, { crossSellItemIds: c.crossSellItemIds, crossSellItemId: c.crossSellItemId });
     }
     await loadMenu();
     closeCrossSellOverlay();
