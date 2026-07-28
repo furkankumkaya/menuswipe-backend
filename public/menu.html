@@ -430,66 +430,6 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 }
 .ai-rec-add.added{background:#1a8754}
 
-/* Google quote block in AI rec card */
-.ai-rec-google{
-  margin-top:8px;padding:7px 9px;
-  background:rgba(245,158,11,0.08);
-  border:0.5px solid rgba(245,158,11,0.25);
-  border-radius:8px;
-}
-.ai-rec-google-head{
-  display:flex;align-items:center;gap:5px;
-  font-size:10px;color:#fcd34d;
-  font-weight:600;letter-spacing:.3px;
-  margin-bottom:3px;
-}
-.ai-rec-google-quote{
-  font-size:11.5px;color:rgba(255,255,255,.78);
-  line-height:1.4;font-style:italic;
-}
-
-/* Google toggle card (anketin ilk adımında) */
-.google-toggle-card{
-  background:linear-gradient(135deg,rgba(245,158,11,0.12) 0%,rgba(245,158,11,0.06) 100%);
-  border:0.5px solid rgba(245,158,11,0.3);
-  border-radius:12px;
-  padding:11px 12px;
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:18px;
-}
-.google-toggle-icon{
-  width:32px;height:32px;border-radius:8px;
-  background:rgba(245,158,11,0.18);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-}
-.google-toggle-text{flex:1;min-width:0}
-.google-toggle-title{
-  font-size:12px;font-weight:600;color:#fff;
-  line-height:1.2;margin-bottom:2px;
-}
-.google-toggle-sub{
-  font-size:10.5px;color:rgba(255,255,255,.55);
-  line-height:1.3;
-}
-.google-toggle-switch{
-  position:relative;display:inline-block;
-  width:36px;height:20px;flex-shrink:0;
-}
-.google-toggle-switch input{opacity:0;width:0;height:0}
-.google-toggle-slider{
-  position:absolute;cursor:pointer;inset:0;
-  background:rgba(255,255,255,0.15);
-  border-radius:20px;transition:.2s;
-}
-.google-toggle-slider:before{
-  content:'';position:absolute;
-  height:14px;width:14px;left:3px;top:3px;
-  background:#fff;border-radius:50%;transition:.2s;
-}
-.google-toggle-switch input:checked + .google-toggle-slider{background:#f59e0b}
-.google-toggle-switch input:checked + .google-toggle-slider:before{transform:translateX(16px)}
-
 .ai-error{
   padding:30px 20px;text-align:center;
   color:rgba(255,255,255,.6);font-size:13px;line-height:1.5;
@@ -1708,10 +1648,6 @@ const AI_LABELS_BY_LANG = {
     new:"Try again",close:"Close",
     introFallback:"Here's what I'd suggest:",
     // Google reviews
-    useGoogleTitle:"Use Google reviews",
-    useGoogleSub:"Popular dishes from real customer reviews",
-    googleReviewLabel:"Google review",
-    mentions:"mentions",
     tapToSelect:"Tap to select",
     tryAgain:"Try again",
     // Chef note (yemek seçildikten sonra)
@@ -1741,10 +1677,6 @@ const AI_LABELS_BY_LANG = {
     new:"Tekrar dene",close:"Kapat",
     introFallback:"İşte size önerilerim:",
     // Google reviews
-    useGoogleTitle:"Google yorumlarını kullan",
-    useGoogleSub:"Gerçek müşteri yorumlarından popüler yemekler",
-    googleReviewLabel:"Google yorumu",
-    mentions:"övgü",
     tapToSelect:"Seçmek için dokunun",
     tryAgain:"Tekrar dene",
     // Chef note (yemek seçildikten sonra)
@@ -1763,13 +1695,8 @@ function tAi(key){
 const AI_STEPS = ['lookingFor', 'hungerLevel', 'dietary', 'allergens', 'taste', 'note'];
 let _aiAnswers = {};
 let _aiCurrentStep = 0;
-let _aiUseGoogleReviews = true; // default açık
 let _aiResult = null; // son AI sonucu
 let _aiSelectedRecItem = null; // chef note için seçilen item
-
-function toggleGoogleReviews(checked){
-  _aiUseGoogleReviews = !!checked;
-}
 
 function openAiPicker(){
   _aiAnswers = {
@@ -1828,25 +1755,7 @@ function renderAiStep(){
   let html = progressHtml;
   
   if(stepKey === 'lookingFor'){
-    // Google reviews toggle (sadece insights varsa)
-    let googleToggle = '';
-    if(orgData?.googleInsightsAvailable){
-      googleToggle = `<div class="google-toggle-card">
-        <div class="google-toggle-icon">
-          <svg viewBox="0 0 24 24" fill="#f59e0b" width="20" height="20"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg>
-        </div>
-        <div class="google-toggle-text">
-          <div class="google-toggle-title">${tAi('useGoogleTitle')}</div>
-          <div class="google-toggle-sub">${tAi('useGoogleSub')}</div>
-        </div>
-        <label class="google-toggle-switch">
-          <input type="checkbox" id="aiGoogleToggle" ${_aiUseGoogleReviews?'checked':''} onchange="toggleGoogleReviews(this.checked)"/>
-          <span class="google-toggle-slider"></span>
-        </label>
-      </div>`;
-    }
-    
-    html += googleToggle + `<div class="ai-step-title">${tAi('step1Title')}</div>
+    html += `<div class="ai-step-title">${tAi('step1Title')}</div>
       <div class="ai-step-sub">${tAi('step1Sub')}</div>
       <div class="ai-step-options" style="flex-direction:column">
         ${[
@@ -1964,7 +1873,6 @@ async function aiSubmit(){
       body: JSON.stringify({
         answers: _aiAnswers,
         language: currentLang || defaultLanguage,
-        useGoogleReviews: _aiUseGoogleReviews,
       }),
     });
     
@@ -2009,25 +1917,12 @@ function renderAiResults(data){
       ? `<div class="ai-rec-thumb"><img src="${rec.photoUrl}" alt=""/></div>`
       : `<div class="ai-rec-thumb" style="font-size:24px">🍽️</div>`;
     
-    // Google quote bloğu (varsa)
-    let googleBlock = '';
-    if(rec.googleQuote && rec.googleQuote.quote){
-      googleBlock = `<div class="ai-rec-google">
-        <div class="ai-rec-google-head">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg>
-          <span>${tAi('googleReviewLabel')} · ${rec.googleQuote.mentions} ${tAi('mentions')}</span>
-        </div>
-        <div class="ai-rec-google-quote">"${escapeHtml(rec.googleQuote.quote)}"</div>
-      </div>`;
-    }
-    
     html += `
       <div class="ai-rec-card" onclick='aiSelectRecItem(${JSON.stringify(rec).replace(/'/g,"&#39;")})'>
         ${thumb}
         <div class="ai-rec-info">
           <div class="ai-rec-name">${escapeHtml(rec.name)}</div>
           <div class="ai-rec-reason">${escapeHtml(rec.reason)}</div>
-          ${googleBlock}
           <div class="ai-rec-bottom">
             <span class="ai-rec-price">${sym}${rec.price}</span>
             <span class="ai-rec-select-hint">${tAi('tapToSelect')} →</span>

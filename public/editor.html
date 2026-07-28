@@ -516,7 +516,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
           </div>
         </label>
         <label class="ob-gen-opt">
-          <input type="checkbox" value="descriptions" checked>
+          <input type="checkbox" value="descriptions">
           <div>
             <div style="font-size:14px;font-weight:600;color:#fff">Descriptions</div>
             <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Appetizing descriptions for items missing one</div>
@@ -1008,19 +1008,6 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
           <div class="field-block"><label>Google Maps URL (optional)</label><input id="orgMapsUrl" placeholder="https://maps.google.com/..." oninput="debounceSaveOrg()"/></div>
           <div style="font-size:10px;color:#94a3b8;margin-top:-4px;margin-bottom:8px">Customers will use this for navigation and reviews</div>
           
-          <!-- Google Insights -->
-          <div id="googleInsightsCard" style="background:linear-gradient(135deg,#fef3c7 0%,#fef9e7 100%);border:1px solid #fcd34d;border-radius:12px;padding:12px;margin-top:10px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/></svg>
-              <div style="font-size:13px;font-weight:700;color:#78350f">Google Reviews Insights</div>
-            </div>
-            <div style="font-size:11px;color:#92400e;line-height:1.5;margin-bottom:10px">We use Gemini AI to analyze your Google reviews and find your most loved dishes. This data feeds the AI Menu Helper to give smarter recommendations.</div>
-            <div id="googleInsightsContent" style="font-size:11.5px;color:#78350f">Loading...</div>
-            <button onclick="refreshGoogleInsights()" id="refreshInsightsBtn" style="margin-top:10px;padding:8px 14px;background:#f59e0b;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px">
-              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6a4 4 0 017-2.5L10 4M10 2v2H8M10 6a4 4 0 01-7 2.5L2 8M2 10V8h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span id="refreshInsightsLabel">Refresh now</span>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -1337,6 +1324,7 @@ let obFetchedInfo = null; // Gemini'den gelen bilgi
 function showOnboarding(){
   document.getElementById('onboardingScreen').style.display='block';
   obCurrentStep = 1;
+  obSettingsPopulated = false;
   obSetStep(1);
 }
 
@@ -1452,27 +1440,31 @@ async function obSaveInfoAndNext(){
 }
 
 /* STEP 3: Settings */
+let obSettingsPopulated = false;
 function obPopulateSettings(){
   const langEl = document.getElementById('obLanguage');
   const currEl = document.getElementById('obCurrency');
-  
+
   if(langEl.options.length <= 1){
     langEl.innerHTML = LANGUAGES.map(l=>`<option value="${l.code}">${l.name}</option>`).join('');
   }
   if(currEl.options.length <= 1){
     currEl.innerHTML = CURRENCIES.map(c=>`<option value="${c.code}">${c.code} (${c.symbol}) — ${c.name}</option>`).join('');
   }
-  
-  // Gemini'den gelen önerilerle default değer set et
-  if(obFetchedInfo?.suggestedLanguage){
-    langEl.value = obFetchedInfo.suggestedLanguage;
-  } else {
-    langEl.value = navigator.language?.split('-')[0] || 'en';
-  }
-  if(obFetchedInfo?.suggestedCurrency){
-    currEl.value = obFetchedInfo.suggestedCurrency;
-  } else {
-    currEl.value = org.currency || 'USD';
+
+  // Only set defaults on first visit, don't override user's selection on back-navigation
+  if(!obSettingsPopulated){
+    obSettingsPopulated = true;
+    if(obFetchedInfo?.suggestedLanguage){
+      langEl.value = obFetchedInfo.suggestedLanguage;
+    } else {
+      langEl.value = org.defaultLanguage || navigator.language?.split('-')[0] || 'en';
+    }
+    if(obFetchedInfo?.suggestedCurrency){
+      currEl.value = obFetchedInfo.suggestedCurrency;
+    } else {
+      currEl.value = org.currency || 'USD';
+    }
   }
   
   // Translation grid
@@ -1508,11 +1500,6 @@ async function obSaveSettingsAndNext(){
     });
     org = {...org, ...updated};
     localStorage.setItem('ms_org', JSON.stringify(org));
-    
-    // Google insights da arka planda fetch et (varsa)
-    if(org.googleMapsUrl){
-      api('POST','/api/google-insights/refresh').catch(()=>{});
-    }
     
     obNextStep();
   }catch(e){ toast('Failed to save: '+e.message); }
@@ -1971,7 +1958,7 @@ function go(id,el){
   document.getElementById('topActs').style.display=id==='menu'?'flex':'none';
   document.getElementById('backBtn').style.display='none';
   if(id==='analytics')loadAnalytics();
-  if(id==='profile'){loadBranches();loadGoogleInsights();}
+  if(id==='profile'){loadBranches();}
   if(id==='tables'){loadTables();buildQrBranchSelector();qrGenerate();}
   // hash güncelle
   if(history.replaceState)history.replaceState(null,'','#'+id);
@@ -3572,74 +3559,6 @@ function deleteTable(id){
 }
 
 /* ANALYTICS */
-/* GOOGLE INSIGHTS */
-async function loadGoogleInsights(){
-  try {
-    const data = await api('GET','/api/google-insights');
-    renderGoogleInsightsCard(data);
-  } catch(e) {
-    document.getElementById('googleInsightsContent').textContent = 'Could not load';
-  }
-}
-
-function renderGoogleInsightsCard(data){
-  const content = document.getElementById('googleInsightsContent');
-  if(!content) return;
-  if(!data.insights){
-    if(!data.hasGoogleUrl){
-      content.innerHTML = '<em>Add your Google Maps URL above first, then click Refresh.</em>';
-    } else {
-      content.innerHTML = '<em>No data yet. Click Refresh to fetch insights from Google.</em>';
-    }
-    return;
-  }
-  const ins = data.insights;
-  if(!ins.popularDishes || ins.popularDishes.length === 0){
-    content.innerHTML = '<em>'+escapeHtml(ins.notes || 'No popular dishes found yet.')+'</em>';
-    return;
-  }
-  const fetched = ins.fetchedAt ? new Date(ins.fetchedAt) : null;
-  const ago = fetched ? timeAgoSimple(fetched) : '';
-  
-  let html = '<div style="font-weight:600;margin-bottom:6px">Popular dishes from Google reviews:</div><ul style="margin:0;padding-left:18px;line-height:1.6">';
-  for(const d of ins.popularDishes.slice(0,5)){
-    html += '<li><strong>'+escapeHtml(d.name)+'</strong> <span style="opacity:0.7">('+d.mentions+' mentions)</span></li>';
-  }
-  html += '</ul>';
-  if(ago) html += '<div style="font-size:10px;opacity:0.7;margin-top:8px">Updated '+ago+'</div>';
-  content.innerHTML = html;
-}
-
-function timeAgoSimple(d){
-  const diff = (Date.now() - d.getTime()) / 1000;
-  if(diff < 60) return 'just now';
-  if(diff < 3600) return Math.floor(diff/60)+' min ago';
-  if(diff < 86400) return Math.floor(diff/3600)+' hours ago';
-  if(diff < 86400*7) return Math.floor(diff/86400)+' days ago';
-  return Math.floor(diff/(86400*7))+' weeks ago';
-}
-
-async function refreshGoogleInsights(){
-  const btn = document.getElementById('refreshInsightsBtn');
-  const lbl = document.getElementById('refreshInsightsLabel');
-  if(btn) btn.disabled = true;
-  if(lbl) lbl.textContent = 'Fetching...';
-  try {
-    const data = await api('POST','/api/google-insights/refresh');
-    renderGoogleInsightsCard({ insights: data.insights, hasGoogleUrl: true });
-    if(data.notFound){
-      toast('⚠ ' + (data.message || 'Restaurant not found on Google. Try updating the restaurant name in Profile.'));
-    } else {
-      toast('✓ ' + (data.message || 'Insights updated'));
-    }
-  } catch(e) {
-    toast('Failed: '+e.message);
-  } finally {
-    if(btn) btn.disabled = false;
-    if(lbl) lbl.textContent = 'Refresh now';
-  }
-}
-
 /* ANALYTICS V2 */
 let _anPeriod = 'today';
 let _anData = null;

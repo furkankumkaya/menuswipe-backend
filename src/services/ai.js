@@ -670,25 +670,24 @@ async function generateUpsellCombos(items, categories, language = "en") {
     max_tokens: 6000,
     messages: [{
       role: "user",
-      content: `You are a restaurant upselling expert. Create smart upsell combinations for these menu items (in ${langName}).
+      content: `You are a restaurant cross-selling expert. Create smart cross-sell combinations for these menu items (in ${langName}).
 
-Menu items with their groups:
+Menu items:
 ${JSON.stringify(itemList)}
 
-Create upsell suggestions. For each item, suggest 1-3 complementary items from DIFFERENT groups:
-- Food items -> suggest drinks, sides, or desserts
-- Drink items -> suggest food or desserts
-- Dessert items -> suggest drinks or coffee
+Create cross-sell suggestions. For each item, suggest 1-3 complementary items that pair well together.
 
-Rules:
-- Only suggest items that naturally pair well together
-- A burger pairs well with a drink and fries. A steak pairs with wine. Dessert pairs with coffee/tea.
-- Each suggestion must use an actual item ID from the list
+Guidelines:
+- Prefer items from different categories when possible (e.g., food with drinks, main course with dessert)
+- But also consider same-category pairings that make sense (e.g., appetizer with main, side dish with entree)
+- A burger pairs well with fries and a drink. A steak pairs with wine. Dessert pairs with coffee/tea. Pizza with salad.
+- Each suggestion must use an actual item ID from the list above
 - An item cannot suggest itself
-- Focus on the most natural pairings, not random combinations
-- Not every item needs upsells. Skip items with no good matches.
+- Focus on the most natural, appetizing pairings
+- Not every item needs cross-sells. Skip items with no good matches.
+- Try to create suggestions for at least half the menu items.
 
-Respond with ONLY JSON array:
+Respond with ONLY a JSON array, no other text:
 [{"id":"item_id","crossSellItemIds":["suggested_id_1","suggested_id_2"]}]`,
     }],
   });
