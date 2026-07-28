@@ -741,8 +741,9 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
   transform:translateY(-120%);opacity:0;
   transition:transform .35s cubic-bezier(.25,.46,.45,.94),opacity .25s;
   touch-action:pan-x;
+  pointer-events:none;
 }
-.cross-sell-card.visible{transform:translateY(0);opacity:1}
+.cross-sell-card.visible{transform:translateY(0);opacity:1;pointer-events:auto}
 .cs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cs-title{font-size:11px;font-weight:700;color:#D84040;letter-spacing:.4px;text-transform:uppercase}
 .cs-close{width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.5);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
