@@ -57,15 +57,21 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 }
 .cat-sub-bar::-webkit-scrollbar{display:none}
 .cat-sub-chip{
-  flex-shrink:0;padding:5px 12px;border-radius:100px;border:none;
-  font-size:11px;font-weight:500;cursor:pointer;
-  background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);
+  flex-shrink:0;padding:8px 16px;border-radius:100px;border:none;
+  font-size:13px;font-weight:500;cursor:pointer;
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  white-space:nowrap;display:flex;align-items:center;gap:4px;
+  white-space:nowrap;display:flex;align-items:center;gap:5px;
   transition:all 0.15s;
 }
-.cat-sub-chip.on{background:rgba(255,255,255,.2);color:#fff;font-weight:600}
-.cat-sub-count{opacity:.45;font-size:10px}
+.cat-sub-chip.on{font-weight:600}
+.cat-sub-chip.g-food{background:rgba(142,22,22,.25);color:rgba(255,255,255,.6)}
+.cat-sub-chip.g-food.on{background:rgba(142,22,22,.7);color:#fff}
+.cat-sub-chip.g-drinks{background:rgba(24,95,165,.25);color:rgba(255,255,255,.6)}
+.cat-sub-chip.g-drinks.on{background:rgba(24,95,165,.7);color:#fff}
+.cat-sub-chip.g-dessert{background:rgba(83,74,183,.25);color:rgba(255,255,255,.6)}
+.cat-sub-chip.g-dessert.on{background:rgba(83,74,183,.7);color:#fff}
+.cat-sub-count{opacity:.5;font-size:11px}
 .profile-btn{
   width:42px;height:42px;border-radius:50%;
   background:rgba(255,255,255,.12);
@@ -1118,7 +1124,7 @@ let qrSessionTableId = null;
 const CURRENCIES_SYM={USD:'$',EUR:'€',GBP:'£',TRY:'₺',JPY:'¥',CNY:'¥',AED:'د.إ',SAR:'﷼',CAD:'$',AUD:'$',CHF:'Fr',INR:'₹',BRL:'R$',MXN:'$',KRW:'₩',SGD:'$',HKD:'$',NOK:'kr',SEK:'kr',DKK:'kr',PLN:'zł',RUB:'₽',ZAR:'R',THB:'฿',IDR:'Rp',MYR:'RM',PHP:'₱',VND:'₫',EGP:'£',ILS:'₪',NZD:'$',ARS:'$',CLP:'$',COP:'$',CZK:'Kč',HUF:'Ft',RON:'lei',PKR:'₨',BDT:'৳',NGN:'₦',KES:'KSh',GHS:'GH₵',MAD:'د.م.',QAR:'ر.ق'};
 
 const TAG_LABELS_BY_LANG = {
-  en: {NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',LIMITED:'LIMITED',SEASONAL:'SEASONAL',LOCAL_FOOD:'LOCAL FOOD',SOLD_OUT:'SOLD OUT',SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'},
+  en: {NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',LIMITED:'LIMITED',SEASONAL:'SEASONAL',LOCAL_FOOD:'LOCAL',SOLD_OUT:'SOLD OUT',SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'},
   tr: {NEW:'YENİ',BESTSELLER:'FAVORİ',OFFER:'İNDİRİM',LIMITED:'SINIRLI',SEASONAL:'MEVSİMLİK',LOCAL_FOOD:'YEREL ÜRÜN',SOLD_OUT:'TÜKENDİ',SPICY:'ACILI',VEGAN:'VEGAN',GLUTEN_FREE:'GLÜTENSİZ',HALAL:'HELAL',DAIRY_FREE:'SÜTSİZ',PROTEIN_PLUS:'PROTEİN+'},
   de: {NEW:'NEU',BESTSELLER:'BESTSELLER',OFFER:'ANGEBOT',LIMITED:'BEGRENZT',SEASONAL:'SAISONAL',LOCAL_FOOD:'REGIONAL',SOLD_OUT:'AUSVERKAUFT',SPICY:'SCHARF',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTENFREI',HALAL:'HALAL',DAIRY_FREE:'LAKTOSEFREI',PROTEIN_PLUS:'PROTEIN+'},
   fr: {NEW:'NOUVEAU',BESTSELLER:'BESTSELLER',OFFER:'OFFRE',LIMITED:'LIMITÉ',SEASONAL:'SAISONNIER',LOCAL_FOOD:'LOCAL',SOLD_OUT:'ÉPUISÉ',SPICY:'ÉPICÉ',VEGAN:'VÉGANE',GLUTEN_FREE:'SANS GLUTEN',HALAL:'HALAL',DAIRY_FREE:'SANS LAIT',PROTEIN_PLUS:'PROTÉINE+'},
@@ -2635,8 +2641,10 @@ function buildCatGroups(){
     }
   });
 
-  // If only 1 group, just show all as a flat sub-bar with no group tabs
-  if(catGroups.length <= 1){
+  // If only 1 group, select that group (still show it in bar)
+  if(catGroups.length === 1){
+    currentGroup = catGroups[0].key;
+  } else if(catGroups.length === 0){
     currentGroup = 'all';
   } else if(!catGroups.find(g => g.key === currentGroup)){
     currentGroup = catGroups[0]?.key || 'all';
@@ -2647,8 +2655,8 @@ function buildGroupBar(){
   const bar = document.getElementById('catGroupBar');
   if(!bar) return;
 
-  // If only 1 group or no groups, hide group bar
-  if(catGroups.length <= 1){
+  // If no groups, hide group bar
+  if(catGroups.length === 0){
     bar.style.display = 'none';
     buildSubBar();
     return;
@@ -2666,8 +2674,7 @@ function buildSubBar(){
   if(!bar) return;
 
   let cats;
-  if(currentGroup === 'all' || catGroups.length <= 1){
-    // Show all categories
+  if(currentGroup === 'all'){
     const usedCats = new Set(allItems.map(i=>i.category||'MAIN'));
     cats = [...categoriesMeta].filter(c => usedCats.has(c.code));
   } else {
@@ -2684,7 +2691,8 @@ function buildSubBar(){
   bar.innerHTML = cats.map(c => {
     const count = allItems.filter(i => (i.category||'MAIN') === c.code).length;
     const active = currentSubCat === c.code;
-    return `<button class="cat-sub-chip${active?' on':''}" onclick="selectSubCat('${c.code}')">${c.label} <span class="cat-sub-count">${count}</span></button>`;
+    const grp = catGroupMap[c.code] || 'food';
+    return `<button class="cat-sub-chip g-${grp}${active?' on':''}" onclick="selectSubCat('${c.code}')">${c.label} <span class="cat-sub-count">${count}</span></button>`;
   }).join('');
 }
 
