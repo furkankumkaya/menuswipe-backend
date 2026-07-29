@@ -106,6 +106,9 @@ input:focus{border-color:#8E1616;box-shadow:0 0 0 3px rgba(142,22,22,.08)}
     <label>Password</label>
     <input type="password" id="claimPassword" placeholder="At least 6 characters" autocomplete="new-password"/>
 
+    <label>Confirm password</label>
+    <input type="password" id="claimPasswordConfirm" placeholder="Repeat your password" autocomplete="new-password"/>
+
     <div class="err" id="claimErr"></div>
 
     <button class="btn" id="claimBtn" onclick="doClaim()">Claim my menu — Start free trial</button>
@@ -165,6 +168,8 @@ async function doClaim(){
   if(!name){err.textContent='Please enter your name';err.style.display='block';return;}
   if(!email||!email.includes('@')){err.textContent='Please enter a valid email';err.style.display='block';return;}
   if(password.length < 6){err.textContent='Password must be at least 6 characters';err.style.display='block';return;}
+  const passwordConfirm = document.getElementById('claimPasswordConfirm').value;
+  if(password !== passwordConfirm){err.textContent='Passwords do not match';err.style.display='block';return;}
 
   btn.textContent = 'Creating account...';
   btn.disabled = true;

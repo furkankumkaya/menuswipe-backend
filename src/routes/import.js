@@ -6,6 +6,16 @@ const { extractMenuFromFiles } = require("../services/ai");
 
 const prisma = new PrismaClient();
 
+const DRINK_KW = ['drink','beer','wine','cocktail','coffee','tea','juice','soda','water','smoothie','shake','lemonade','icecek','bira','sarap','kahve','cay','su','mocktail','spirits','beverage'];
+const DESSERT_KW = ['dessert','sweet','cake','ice cream','pastry','chocolate','cookie','brownie','tiramisu','cheesecake','tatli','dondurma','baklava','kunefe','sorbet','gelato','macaron','waffle','pancake','crepe','sufle','souffle','profiterol'];
+
+function autoClassifyGroup(label) {
+  const text = label.toLowerCase();
+  if (DRINK_KW.some(k => text.includes(k))) return 'drinks';
+  if (DESSERT_KW.some(k => text.includes(k))) return 'dessert';
+  return 'food';
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 25 * 1024 * 1024, files: 30 },
@@ -148,6 +158,7 @@ router.post("/job/:id/apply", requireAuth, async (req, res, next) => {
             color: newCat.color || "#8E1616",
             visible: true,
             sortOrder: nextSort++,
+            group: autoClassifyGroup(lbl),
           },
         });
         codeByLabel[lbl.toLowerCase()] = created.code;
