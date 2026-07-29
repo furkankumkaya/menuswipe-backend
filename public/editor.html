@@ -251,6 +251,29 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .bar-val{font-size:11px;color:#64748b;font-weight:600;min-width:32px;text-align:right}
 
 /* OVERLAYS */
+/* ADD ITEM WIZARD */
+.wiz-steps{display:flex;gap:4px;margin-bottom:20px}
+.wiz-dot{flex:1;height:4px;border-radius:2px;background:#e2e8f0;transition:.2s}
+.wiz-dot.done{background:var(--accent)}
+.wiz-dot.active{background:var(--accent);opacity:.6}
+.wiz-page{display:none}
+.wiz-page.active{display:block}
+.wiz-label{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;margin-top:14px}
+.wiz-label:first-child{margin-top:0}
+.wiz-inp{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#1e293b;outline:none;transition:.15s}
+.wiz-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(142,22,22,.06)}
+.wiz-textarea{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#1e293b;outline:none;resize:vertical;min-height:70px;font-family:inherit;transition:.15s}
+.wiz-textarea:focus{border-color:var(--accent)}
+.wiz-sel{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#1e293b;outline:none;background:#fff;cursor:pointer}
+.wiz-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.wiz-chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e2e8f0;background:#fff;color:#475569;transition:.15s}
+.wiz-chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.wiz-chip:hover:not(.on){background:#f8fafc}
+.wiz-summary{background:#f8fafc;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.wiz-summary-row{display:flex;justify-content:space-between;font-size:13px}
+.wiz-summary-row .lbl{color:#64748b}
+.wiz-summary-row .val{font-weight:600;color:#1e293b}
+
 .overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:90;align-items:flex-end;justify-content:center}
 .overlay.open{display:flex}
 .modal{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
@@ -330,6 +353,27 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);background:#1D1616;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
 .toast.show{opacity:1}
 .loading-msg{text-align:center;padding:32px;color:#94a3b8;font-size:13px}
+
+/* MOBILE RESPONSIVE */
+@media(max-width:480px){
+  .topbar{padding:10px 12px;gap:6px}
+  .tbtitle{font-size:13px}
+  .top-acts{gap:4px}
+  .top-acts .btn-dk,.top-acts .btn-gh{font-size:10px;padding:6px 10px}
+  .panel{padding:10px}
+  .itable{min-width:520px}
+  .irow-main{grid-template-columns:60px 60px 44px minmax(90px,1fr) minmax(60px,auto) minmax(55px,auto) 56px 44px}
+  .icell{padding:8px 4px;min-height:44px}
+  .tag-cell{padding:6px 4px;min-height:44px}
+  .tag-select{font-size:9px;padding:4px 3px}
+  .irow.hdr span{font-size:8px;padding:8px 4px}
+  .modal{padding:14px;max-height:85vh}
+  .m-title{font-size:14px}
+  .add-row .add-inp{font-size:12px;padding:6px 8px}
+  .toast{font-size:11px;padding:8px 14px}
+  .card{padding:12px}
+  .link-box{font-size:11px;padding:8px 10px}
+}
 </style>
 </head>
 <body>
@@ -667,6 +711,11 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
 <!-- APP -->
 <div id="appScreen">
+  <!-- Sales partner return banner -->
+  <div id="salesReturnBanner" style="display:none;background:#1e3a5f;padding:10px 16px;text-align:center;font-size:13px;color:#93c5fd;border-bottom:1px solid #2563eb">
+    You're editing a demo menu.
+    <a href="/sales-panel.html" onclick="localStorage.removeItem('ms_sales_return')" style="color:#60a5fa;font-weight:700;margin-left:8px;text-decoration:underline">Back to Sales Panel</a>
+  </div>
   <div class="topbar">
     <div class="tbtitle">
       <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">
@@ -683,7 +732,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
         AI Generate
       </button>
-      <button class="btn-dk" onclick="showAddRow()">+ Add</button>
+      <button class="btn-dk" onclick="openWizard()">+ Add</button>
     </div>
   </div>
 
@@ -711,6 +760,73 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         <div class="photo-slots" id="photoSlots"></div>
         <input type="file" id="photoInp" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"/>
         <div class="m-row"><button class="btn-dk" onclick="closePhotoOverlay()">Done</button></div>
+      </div>
+    </div>
+
+    <!-- ADD ITEM WIZARD -->
+    <div class="overlay" id="wizOverlay">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="m-title">Add new item</div>
+        <div class="wiz-steps">
+          <div class="wiz-dot done" id="wizDot0"></div>
+          <div class="wiz-dot" id="wizDot1"></div>
+          <div class="wiz-dot" id="wizDot2"></div>
+          <div class="wiz-dot" id="wizDot3"></div>
+        </div>
+
+        <!-- Step 1: Name & Category -->
+        <div class="wiz-page active" id="wizPage0">
+          <div class="m-sub">What's the item called?</div>
+          <div class="wiz-label">Item name</div>
+          <input class="wiz-inp" id="wizName" placeholder="e.g. Margherita Pizza" autocomplete="off"/>
+          <div class="wiz-label">Category</div>
+          <select class="wiz-sel" id="wizCat"></select>
+        </div>
+
+        <!-- Step 2: Price & Description -->
+        <div class="wiz-page" id="wizPage1">
+          <div class="m-sub">Set the price and add a description.</div>
+          <div class="wiz-label">Price</div>
+          <input class="wiz-inp" id="wizPrice" type="number" step="0.01" min="0" placeholder="0.00"/>
+          <div class="wiz-label">Description (optional)</div>
+          <textarea class="wiz-textarea" id="wizDesc" placeholder="Ingredients, details, etc."></textarea>
+        </div>
+
+        <!-- Step 3: Tags -->
+        <div class="wiz-page" id="wizPage2">
+          <div class="m-sub">Add tags so customers can filter.</div>
+          <div class="wiz-label">Marketing tag</div>
+          <div class="wiz-chips" id="wizMarketing">
+            <div class="wiz-chip" data-val="NEW">New</div>
+            <div class="wiz-chip" data-val="BESTSELLER">Bestseller</div>
+            <div class="wiz-chip" data-val="OFFER">Offer</div>
+            <div class="wiz-chip" data-val="LIMITED">Limited</div>
+            <div class="wiz-chip" data-val="SEASONAL">Seasonal</div>
+            <div class="wiz-chip" data-val="LOCAL_FOOD">Local</div>
+          </div>
+          <div class="wiz-label">Dietary tag</div>
+          <div class="wiz-chips" id="wizDietary">
+            <div class="wiz-chip" data-val="VEGAN">Vegan</div>
+            <div class="wiz-chip" data-val="GLUTEN_FREE">Gluten-free</div>
+            <div class="wiz-chip" data-val="HALAL">Halal</div>
+            <div class="wiz-chip" data-val="DAIRY_FREE">Dairy-free</div>
+            <div class="wiz-chip" data-val="SPICY">Spicy</div>
+            <div class="wiz-chip" data-val="PROTEIN_PLUS">Protein+</div>
+          </div>
+        </div>
+
+        <!-- Step 4: Confirm -->
+        <div class="wiz-page" id="wizPage3">
+          <div class="m-sub">Review and confirm your new item.</div>
+          <div class="wiz-summary" id="wizSummary"></div>
+        </div>
+
+        <div class="m-row" style="margin-top:16px">
+          <button class="btn-gh" id="wizBackBtn" onclick="wizBack()" style="display:none">Back</button>
+          <button class="btn-gh" onclick="closeWizard()">Cancel</button>
+          <button class="btn-dk" id="wizNextBtn" onclick="wizNext()">Next</button>
+        </div>
       </div>
     </div>
 
@@ -1918,6 +2034,10 @@ async function startApp(){
   }
   
   document.getElementById('appScreen').classList.add('visible');
+  // Sales partner banner
+  if(localStorage.getItem('ms_sales_return')){
+    document.getElementById('salesReturnBanner').style.display = 'block';
+  }
   populateCurrencies();
   loadProfile();
   buildHoursGrid();
@@ -3145,6 +3265,88 @@ async function confirmAdd(){
   if(!name)return;
   try{const item=await api('POST','/api/menu',{name,price,category});item.photos=item.photos||[];items.push(item);hideAddRow();renderItems();toast('Item added');}
   catch(e){toast('Failed: '+e.message);}
+}
+
+/* ADD ITEM WIZARD */
+let wizStep=0;
+function openWizard(){
+  wizStep=0;
+  document.getElementById('wizName').value='';
+  document.getElementById('wizPrice').value='';
+  document.getElementById('wizDesc').value='';
+  // Populate categories
+  document.getElementById('wizCat').innerHTML=cats.map(c=>`<option value="${c.code}">${c.label}</option>`).join('');
+  // Reset chips
+  document.querySelectorAll('#wizMarketing .wiz-chip, #wizDietary .wiz-chip').forEach(c=>c.classList.remove('on'));
+  // Set up chip click handlers
+  document.querySelectorAll('#wizMarketing .wiz-chip').forEach(c=>{
+    c.onclick=()=>{document.querySelectorAll('#wizMarketing .wiz-chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');};
+  });
+  document.querySelectorAll('#wizDietary .wiz-chip').forEach(c=>{
+    c.onclick=()=>{document.querySelectorAll('#wizDietary .wiz-chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');};
+  });
+  updateWizUI();
+  document.getElementById('wizOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('wizName').focus(),200);
+}
+function closeWizard(){document.getElementById('wizOverlay').classList.remove('open');}
+function updateWizUI(){
+  for(let i=0;i<4;i++){
+    document.getElementById('wizDot'+i).className='wiz-dot'+(i<wizStep?' done':'')+(i===wizStep?' active done':'');
+    document.getElementById('wizPage'+i).className='wiz-page'+(i===wizStep?' active':'');
+  }
+  document.getElementById('wizBackBtn').style.display=wizStep>0?'':'none';
+  const btn=document.getElementById('wizNextBtn');
+  btn.textContent=wizStep===3?'Add item':'Next';
+
+  if(wizStep===3){
+    const name=document.getElementById('wizName').value.trim();
+    const cat=document.getElementById('wizCat');
+    const catLabel=cat.options[cat.selectedIndex]?.text||'';
+    const price=document.getElementById('wizPrice').value||'0';
+    const desc=document.getElementById('wizDesc').value.trim();
+    const mTag=document.querySelector('#wizMarketing .wiz-chip.on');
+    const dTag=document.querySelector('#wizDietary .wiz-chip.on');
+    const currency=org?.currency||'USD';
+    const sym={USD:'$',EUR:'€',GBP:'£',TRY:'₺'}[currency]||currency+' ';
+    document.getElementById('wizSummary').innerHTML=`
+      <div class="wiz-summary-row"><span class="lbl">Name</span><span class="val">${name||'(empty)'}</span></div>
+      <div class="wiz-summary-row"><span class="lbl">Category</span><span class="val">${catLabel}</span></div>
+      <div class="wiz-summary-row"><span class="lbl">Price</span><span class="val">${sym}${parseFloat(price).toFixed(2)}</span></div>
+      ${desc?`<div class="wiz-summary-row"><span class="lbl">Description</span><span class="val" style="max-width:200px;text-align:right">${desc.slice(0,80)}${desc.length>80?'...':''}</span></div>`:''}
+      <div class="wiz-summary-row"><span class="lbl">Marketing</span><span class="val">${mTag?mTag.textContent:'None'}</span></div>
+      <div class="wiz-summary-row"><span class="lbl">Dietary</span><span class="val">${dTag?dTag.textContent:'None'}</span></div>
+    `;
+  }
+}
+function wizBack(){if(wizStep>0){wizStep--;updateWizUI();}}
+async function wizNext(){
+  if(wizStep===0){
+    const name=document.getElementById('wizName').value.trim();
+    if(!name){toast('Please enter a name');document.getElementById('wizName').focus();return;}
+    wizStep++;updateWizUI();document.getElementById('wizPrice').focus();
+  } else if(wizStep===1){
+    wizStep++;updateWizUI();
+  } else if(wizStep===2){
+    wizStep++;updateWizUI();
+  } else if(wizStep===3){
+    // Submit
+    const name=document.getElementById('wizName').value.trim();
+    const category=document.getElementById('wizCat').value;
+    const price=parseFloat(document.getElementById('wizPrice').value)||0;
+    const description=document.getElementById('wizDesc').value.trim()||undefined;
+    const mTag=document.querySelector('#wizMarketing .wiz-chip.on');
+    const dTag=document.querySelector('#wizDietary .wiz-chip.on');
+    const tagMarketing=mTag?mTag.dataset.val:undefined;
+    const tagDietary=dTag?dTag.dataset.val:undefined;
+    const btn=document.getElementById('wizNextBtn');
+    btn.textContent='Adding...';btn.disabled=true;
+    try{
+      const item=await api('POST','/api/menu',{name,price,category,description,tagMarketing,tagDietary});
+      item.photos=item.photos||[];items.push(item);closeWizard();renderItems();toast('Item added!');
+    }catch(e){toast('Failed: '+e.message);}
+    btn.textContent='Add item';btn.disabled=false;
+  }
 }
 
 /* PHOTOS */
