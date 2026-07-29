@@ -185,10 +185,7 @@ body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">You'll be taken to the menu editor to set up the restaurant. Add their Google Maps link, menu items, tables, everything. When you're done, come back here to send the claim link.</div>
-
-    <div class="modal-label">Restaurant name (optional, can set later)</div>
-    <input class="modal-input" id="demoName" placeholder="e.g. Lololy Cafe"/>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">You'll be taken to the menu editor. Set up the restaurant's menu, tables, and details. When you're done, come back here to send the claim link.</div>
 
     <div class="modal-err" id="demoErr"></div>
 
@@ -312,15 +309,14 @@ async function loadCommissions() {
 }
 
 function openCreateDemo() {
-  document.getElementById('demoName').value = '';
   document.getElementById('demoErr').style.display = 'none';
-  document.getElementById('demoCrtBtn').textContent = 'Create and start editing';
+  document.getElementById('demoCrtBtn').textContent = 'Start setup';
   document.getElementById('demoCrtBtn').disabled = false;
   document.getElementById('createModal').style.display = 'flex';
 }
 
 async function doCreateDemo() {
-  const name = document.getElementById('demoName').value.trim();
+  const name = '';
   const err = document.getElementById('demoErr');
   const btn = document.getElementById('demoCrtBtn');
   err.style.display = 'none';
