@@ -390,13 +390,19 @@ router.post("/generate", requireAuth, async (req, res, next) => {
       const categories = await prisma.category.findMany({
         where: { organizationId: req.org.id },
       });
+      const validIds = new Set(items.map(i => i.id));
       const results = await ai.generateUpsellCombos(items, categories, lang);
       for (const r of results) {
-        await prisma.menuItem.update({
-          where: { id: r.id },
-          data: { crossSellItemIds: r.crossSellItemIds },
-        });
-        count++;
+        if (!validIds.has(r.id)) continue;
+        const validCross = (r.crossSellItemIds || []).filter(sid => validIds.has(sid) && sid !== r.id);
+        if (validCross.length === 0) continue;
+        try {
+          await prisma.menuItem.update({
+            where: { id: r.id },
+            data: { crossSellItemIds: validCross, crossSellItemId: validCross[0] },
+          });
+          count++;
+        } catch(e) { console.error('Cross-sell update failed for', r.id, e.message); }
       }
     }
 
