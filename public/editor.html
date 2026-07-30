@@ -315,13 +315,15 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 @media(min-width:600px){.qr-grid{grid-template-columns:1fr 1fr}}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px}
 .card-t{font-size:11px;font-weight:700;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
-.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center}
-.link-row{display:flex;gap:8px;align-items:center;width:100%}
-.link-box{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f8fafc;font-weight:600}
+.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;max-width:100%;overflow:hidden}
+.qr-frame canvas{max-width:100%;height:auto!important}
+.link-row{display:flex;gap:8px;align-items:center;width:100%;min-width:0}
+.link-box{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f8fafc;font-weight:600;min-width:0}
 .copy-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600}
 .dl-btn{width:100%;padding:11px;border-radius:10px;border:none;background:#1D1616;color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;display:block}
 .dl-btn:last-child{margin-bottom:0;background:#475569}
 
+.qr-mode-toggle,.qr-bulk-btns{display:flex;gap:8px;margin-bottom:8px}
 .qr-branch-selector{margin-bottom:14px}
 .qr-branch-selector select{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;outline:none}
 
@@ -371,8 +373,16 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
   .m-title{font-size:14px}
   .add-row .add-inp{font-size:12px;padding:6px 8px}
   .toast{font-size:11px;padding:8px 14px}
-  .card{padding:12px}
-  .link-box{font-size:11px;padding:8px 10px}
+  .card{padding:12px;overflow:hidden}
+  .link-box{font-size:10px;padding:8px 10px;word-break:break-all;white-space:normal;line-height:1.4}
+  .link-row{flex-wrap:wrap}
+  .copy-btn{width:100%}
+  .qr-frame{padding:10px}
+  .dl-btn{font-size:11px;padding:10px}
+  .qr-mode-toggle{flex-direction:column;gap:6px}
+  .qr-bulk-btns{flex-direction:column;gap:6px}
+  #p-tables .card{max-width:100%}
+  #p-tables{overflow-x:hidden}
 }
 </style>
 </head>
@@ -995,7 +1005,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         <!-- QR Mode Toggle -->
         <div class="card" style="margin-bottom:16px">
           <div class="card-t">QR Code Mode</div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div class="qr-mode-toggle">
             <button class="dl-btn" id="qrModeSingle" onclick="setQrMode('single')" style="flex:1;font-weight:600">Single QR (All tables)</button>
             <button class="dl-btn" id="qrModePerTable" onclick="setQrMode('perTable')" style="flex:1;font-weight:600">Per-table QR</button>
           </div>
@@ -1007,7 +1017,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
           <div>
             <div class="card" style="margin-bottom:12px">
               <div class="card-t">Menu link</div>
-              <div style="background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:var(--accent);font-weight:600;word-break:break-all;margin-bottom:10px" id="qrUrlDisplay"></div>
+              <div style="background:#fef2f2;border-radius:10px;padding:10px;font-size:11px;color:var(--accent);font-weight:600;word-break:break-all;overflow-wrap:anywhere;margin-bottom:10px" id="qrUrlDisplay"></div>
               <div style="font-size:11px;color:#94a3b8">This link contains a security token. Only QR scans can place orders.</div>
             </div>
             <div class="card">
@@ -1034,7 +1044,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
             <div class="card-t">Per-table QR Codes</div>
             <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.5">Each table gets its own QR code. When a customer scans it, their table is automatically assigned. No table picker needed.</div>
             <div id="qrTableList" style="display:flex;flex-direction:column;gap:8px"></div>
-            <div style="margin-top:16px;display:flex;gap:8px">
+            <div class="qr-bulk-btns" style="margin-top:16px">
               <button class="dl-btn" onclick="qrBulkDownloadPNG()" style="flex:1">Download All PNGs (ZIP)</button>
               <button class="dl-btn" onclick="qrBulkDownloadSVG()" style="flex:1">Download All SVGs (ZIP)</button>
             </div>
