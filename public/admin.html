@@ -249,7 +249,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
   <div class="tabs-bar">
     <div class="tab on" data-status="active" onclick="selectTab('active')">Active <span class="tab-badge" id="badgeActive">0</span></div>
     <div class="tab" data-status="completed" onclick="selectTab('completed')">Completed</div>
-    <div class="tab" data-status="all" onclick="selectTab('all')">All today</div>
   </div>
 
   <div class="main" id="mainContent"></div>
@@ -404,7 +403,7 @@ function renderOrders(){
   else if(currentTab==='completed')filtered=allOrders.filter(o=>o.status==='completed');
   
   if(filtered.length===0){
-    const msg={active:'No active orders',completed:'No completed orders today',all:'No orders today yet'}[currentTab]||'No orders';
+    const msg={active:'No active orders',completed:'No completed orders today'}[currentTab]||'No orders';
     main.innerHTML=`<div class="empty-state">
       <div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="2"/></svg></div>
       <div class="empty-state-title">${msg}</div>
@@ -440,14 +439,11 @@ function renderOrderCard(o){
   let actionBtns='';
   if(o.status==='pending'){
     actionBtns=`<button class="order-action order-cancel" onclick="updateOrderStatus('${o.id}','cancelled')">Reject</button>
-      <button class="order-action order-accept" onclick="updateOrderStatus('${o.id}','accepted')">Accept</button>`;
-  }else if(o.status==='accepted'){
+      <button class="order-action order-accept" onclick="updateOrderStatus('${o.id}','accepted')">Accept</button>
+      <button class="order-action order-complete" onclick="updateOrderStatus('${o.id}','completed')">Done</button>`;
+  }else if(o.status==='accepted'||o.status==='preparing'||o.status==='ready'){
     actionBtns=`<button class="order-action order-cancel" onclick="updateOrderStatus('${o.id}','cancelled')">Cancel</button>
-      <button class="order-action order-next" onclick="updateOrderStatus('${o.id}','preparing')">Start preparing</button>`;
-  }else if(o.status==='preparing'){
-    actionBtns=`<button class="order-action order-complete" onclick="updateOrderStatus('${o.id}','ready')">Mark ready</button>`;
-  }else if(o.status==='ready'){
-    actionBtns=`<button class="order-action order-complete" onclick="updateOrderStatus('${o.id}','completed')">Mark served</button>`;
+      <button class="order-action order-complete" onclick="updateOrderStatus('${o.id}','completed')">Done</button>`;
   }
   
   return `<div class="order-card ${o.status}">
