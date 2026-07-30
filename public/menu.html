@@ -53,16 +53,19 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 /* Sub-category chips */
 .cat-sub-bar{
   display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;
-  -webkit-overflow-scrolling:touch;padding:0 1px;
+  -webkit-overflow-scrolling:touch;padding:4px 1px;
+  touch-action:pan-x;
 }
 .cat-sub-bar::-webkit-scrollbar{display:none}
 .cat-sub-chip{
-  flex-shrink:0;padding:8px 16px;border-radius:100px;border:none;
+  flex-shrink:0;padding:0 16px;border-radius:100px;border:none;
+  min-height:44px;
   font-size:13px;font-weight:500;cursor:pointer;
   background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   white-space:nowrap;display:flex;align-items:center;gap:5px;
   transition:all 0.15s;
+  touch-action:pan-x;
 }
 .cat-sub-chip.on{font-weight:600}
 .cat-sub-chip.g-food{background:rgba(142,22,22,.25);color:rgba(255,255,255,.6)}
@@ -94,7 +97,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:system-ui,-app
 
 /* RIGHT ACTION COLUMN — Instagram-style */
 .action-col{
-  position:absolute;right:14px;top:38%;transform:translateY(-50%);
+  position:absolute;right:14px;top:42%;transform:translateY(-50%);
   display:flex;flex-direction:column;gap:14px;align-items:center;
   z-index:6;
   pointer-events:none;
