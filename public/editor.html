@@ -310,22 +310,82 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .tog-th{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .tog input:checked~.tog-th{transform:translateX(20px)}
 
-/* QR */
-.qr-grid{display:grid;grid-template-columns:1fr;gap:14px}
-@media(min-width:600px){.qr-grid{grid-template-columns:1fr 1fr}}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px}
-.card-t{font-size:11px;font-weight:700;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
-.qr-frame{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;max-width:100%;overflow:hidden}
-.qr-frame canvas{max-width:100%;height:auto!important}
+/* QR STUDIO */
+.qr-studio{padding:14px}
+.qr-studio-top,.qr-studio-mid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.qr-sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.qr-sec-lbl{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
+.qr-sec-meta{font-size:11px;color:#94a3b8}
+.tmpl-list{display:flex;flex-direction:column;gap:8px}
+.tmpl-item{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:.15s;background:#fff}
+.tmpl-item:hover{border-color:#cbd5e1}
+.tmpl-item.on{border-color:var(--accent);background:rgba(142,22,22,.06)}
+.tmpl-thumb{width:44px;height:62px;border-radius:5px;flex-shrink:0;overflow:hidden;border:1px solid #e2e8f0}
+.tmpl-name{font-size:13px;font-weight:700;color:#1e293b}
+.tmpl-desc{font-size:11px;color:#94a3b8}
+.tmpl-radio{width:18px;height:18px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tmpl-item.on .tmpl-radio{border-color:var(--accent)}
+.tmpl-item.on .tmpl-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.qr-preview-wrap{background:#f1f0ee;border-radius:14px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:360px}
+.qr-card-preview{width:220px;border-radius:3px;box-shadow:0 2px 16px rgba(0,0,0,.12);overflow:hidden}
+.ft-toggles{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.ft-toggle{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(142,22,22,.06);border-radius:10px;cursor:pointer;transition:.15s}
+.ft-toggle:hover{background:rgba(142,22,22,.1)}
+.ft-info{flex:1;min-width:0}
+.ft-title{font-size:13px;font-weight:700;color:#1e293b}
+.ft-desc{font-size:11px;color:#94a3b8;line-height:1.4}
+.ft-toggle input{display:none}
+.ft-sw{width:40px;height:24px;border-radius:12px;background:#cbd5e1;position:relative;flex-shrink:0;transition:.2s}
+.ft-sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ft-toggle input:checked~.ft-sw{background:var(--accent)}
+.ft-toggle input:checked~.ft-sw::after{transform:translateX(16px)}
+.tno-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}
+.tno-row input{width:60px;padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:700;text-align:center;outline:none;background:#fff}
+.tno-row input:focus{border-color:var(--accent)}
+.ml-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:12px}
 .link-row{display:flex;gap:8px;align-items:center;width:100%;min-width:0}
 .link-box{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f8fafc;font-weight:600;min-width:0}
 .copy-btn{padding:10px 14px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600}
-.dl-btn{width:100%;padding:11px;border-radius:10px;border:none;background:#1D1616;color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;display:block}
-.dl-btn:last-child{margin-bottom:0;background:#475569}
-
-.qr-mode-toggle,.qr-bulk-btns{display:flex;gap:8px;margin-bottom:8px}
-.qr-branch-selector{margin-bottom:14px}
+.qr-branch-selector{margin-bottom:12px}
 .qr-branch-selector select{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;background:#fff;outline:none}
+.print-sec{background:#1D1616;border-radius:14px;padding:16px;color:#fff}
+.print-desc{font-size:13px;color:rgba(255,255,255,.7);line-height:1.6;margin:10px 0 16px}
+.print-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;display:block;text-align:center}
+.print-btn:last-child{margin-bottom:0}
+.print-btn-red{background:#dc2626;color:#fff}
+.print-btn-red:hover{background:#b91c1c}
+.print-btn-dark{background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.2)}
+.print-btn-dark:hover{background:rgba(255,255,255,.18)}
+.dl-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;display:flex;align-items:center;justify-content:center}
+.dl-dialog{background:#fff;border-radius:16px;padding:24px;width:min(380px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.dl-dialog h3{font-size:16px;font-weight:700;margin-bottom:16px;color:#1e293b}
+.dl-step-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px}
+.dl-opt{display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:6px;transition:.15s}
+.dl-opt:hover{border-color:#cbd5e1;background:#f8fafc}
+.dl-opt.on{border-color:var(--accent);background:rgba(142,22,22,.06)}
+.dl-opt-radio{width:16px;height:16px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.dl-opt.on .dl-opt-radio{border-color:var(--accent)}
+.dl-opt.on .dl-opt-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.dl-opt-txt{font-size:13px;font-weight:600;color:#1e293b}
+.dl-opt-sub{font-size:11px;color:#94a3b8}
+.dl-btns{display:flex;gap:8px;margin-top:20px}
+.dl-btns button{flex:1;padding:12px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none}
+.dl-cancel{background:#f1f5f9;color:#475569}
+.dl-go{background:var(--accent);color:#fff}
+.dl-go:disabled{opacity:.4;cursor:not-allowed}
+.tables-sec{padding:0 14px 14px}
+.tables-sec .qr-sec-hd{padding-top:14px;border-top:1px solid #e2e8f0}
+.tbl-compact{display:flex;flex-direction:column;gap:4px}
+.tbl-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border-radius:8px;transition:.15s}
+.tbl-row:hover{background:#f1f5f9}
+.tbl-lbl{flex:1;font-size:13px;font-weight:600;color:#1e293b;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl-status{font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:3px 8px;border-radius:6px}
+.tbl-status.on{color:#16a34a;background:rgba(22,163,106,.1)}
+.tbl-status.off{color:#94a3b8;background:#f1f5f9}
+.tbl-acts{display:flex;gap:3px}
+.tbl-acts button{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tbl-edit{background:#f1f5f9;color:#475569}
+.tbl-del{background:#fef2f2;color:#dc2626}
 
 /* PREVIEW */
 .preview-outer{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
@@ -373,15 +433,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
   .m-title{font-size:14px}
   .add-row .add-inp{font-size:12px;padding:6px 8px}
   .toast{font-size:11px;padding:8px 14px}
-  .card{padding:12px;overflow:hidden}
-  .link-box{font-size:10px;padding:8px 10px;word-break:break-all;white-space:normal;line-height:1.4}
+  .qr-studio-top,.qr-studio-mid{grid-template-columns:1fr}
+  .qr-preview-wrap{min-height:260px;padding:16px}
+  .qr-card-preview{width:180px}
+  .link-box{font-size:10px;word-break:break-all;white-space:normal;line-height:1.4}
   .link-row{flex-wrap:wrap}
   .copy-btn{width:100%}
-  .qr-frame{padding:10px}
-  .dl-btn{font-size:11px;padding:10px}
-  .qr-mode-toggle{flex-direction:column;gap:6px}
-  .qr-bulk-btns{flex-direction:column;gap:6px}
-  #p-tables .card{max-width:100%}
+  .print-sec{margin-top:12px}
   #p-tables{overflow-x:hidden}
 }
 </style>
@@ -981,76 +1039,73 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
     <!-- TABLES & QR PANEL -->
     <div class="panel" id="p-tables">
-      <div style="padding:14px">
-        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.5">
-          <strong>Tables let customers order to a specific table.</strong> Add your tables here. Customers will pick from this list when sending an order.
+      <div class="qr-studio">
+        <!-- Top row: Template selector + Preview -->
+        <div class="qr-studio-top">
+          <div>
+            <div class="qr-sec-hd">
+              <span class="qr-sec-lbl">Template</span>
+              <span class="qr-sec-meta">5 templates · 100 x 150 mm</span>
+            </div>
+            <div class="tmpl-list" id="tmplList"></div>
+          </div>
+          <div>
+            <div class="qr-sec-hd">
+              <span class="qr-sec-lbl">Preview</span>
+              <span class="qr-sec-meta" id="previewMeta">Bone · 100 x 150 mm</span>
+            </div>
+            <div class="qr-preview-wrap">
+              <div class="qr-card-preview" id="qrPreviewCard"></div>
+              <div style="font-size:11px;color:#94a3b8;text-align:center">3 mm bleed · fold line in the middle of the sheet</div>
+            </div>
+          </div>
         </div>
-
-        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <button class="btn-pr" onclick="openAddTableSingle()" style="flex:1;min-width:140px">+ Add table</button>
-          <button class="btn-gh" onclick="openAddTablesBulk()" style="flex:1;min-width:140px">Generate multiple</button>
+        <!-- Mid row: Feature toggles + Menu link & Print -->
+        <div class="qr-studio-mid">
+          <div>
+            <div class="qr-sec-hd"><span class="qr-sec-lbl">Shown on the card</span></div>
+            <div class="ft-toggles">
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">29 languages</div><div class="ft-desc">Menu opens in the guest's phone language</div></div><input type="checkbox" id="toggleLang" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">AI Helper</div><div class="ft-desc">Suggests a dish when they can't decide</div></div><input type="checkbox" id="toggleAI" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">Allergen & diet filters</div><div class="ft-desc">Vegan, gluten-free, lactose-free</div></div><input type="checkbox" id="toggleAllergen" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">Swipe hint</div><div class="ft-desc">Prints "swipe up · 3 photos" on the card</div></div><input type="checkbox" id="toggleSwipe" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+            </div>
+            <div class="tno-row">
+              <span class="qr-sec-lbl">Table No</span>
+              <input type="text" id="cardTableNo" value="" placeholder="12" oninput="updateQrPreview()">
+              <span class="ft-desc">Used by the Table No template.</span>
+            </div>
+          </div>
+          <div>
+            <div class="qr-sec-hd"><span class="qr-sec-lbl">Menu Link</span></div>
+            <div class="ml-card">
+              <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
+              <div class="ft-desc" style="margin-top:8px">The QR encodes this link. It stays the same on every card.</div>
+            </div>
+            <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
+              <select id="qrBranchSelect" onchange="qrGenerate()"></select>
+            </div>
+            <div class="print-sec">
+              <span class="qr-sec-lbl" style="color:rgba(255,255,255,.6)">Print</span>
+              <div class="print-desc">One 100 x 300 mm sheet: both faces, folded in the middle, stands on the table by itself. 300 gsm matte stock recommended.</div>
+              <button class="print-btn print-btn-red" onclick="openDownloadDialog('single')">Download Single QR</button>
+              <button class="print-btn print-btn-dark" onclick="openDownloadDialog('perTable')">Download Per-Table</button>
+            </div>
+          </div>
         </div>
-
+      </div>
+      <!-- Tables List -->
+      <div class="tables-sec">
+        <div class="qr-sec-hd">
+          <span class="qr-sec-lbl">Tables</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn-gh" onclick="openAddTableSingle()" style="font-size:11px">+ Add</button>
+            <button class="btn-gh" onclick="openAddTablesBulk()" style="font-size:11px">Generate</button>
+          </div>
+        </div>
         <div id="tablesList"></div>
       </div>
-
-      <div style="padding:0 14px 14px">
-        <div style="height:1px;background:#e2e8f0;margin-bottom:18px"></div>
-
-        <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
-          <div class="profile-lbl" style="margin-bottom:6px">Select branch for QR code</div>
-          <select id="qrBranchSelect" onchange="qrGenerate()"></select>
-        </div>
-
-        <!-- QR Mode Toggle -->
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-t">QR Code Mode</div>
-          <div class="qr-mode-toggle">
-            <button class="dl-btn" id="qrModeSingle" onclick="setQrMode('single')" style="flex:1;font-weight:600">Single QR (All tables)</button>
-            <button class="dl-btn" id="qrModePerTable" onclick="setQrMode('perTable')" style="flex:1;font-weight:600">Per-table QR</button>
-          </div>
-          <div style="font-size:11px;color:#94a3b8" id="qrModeHint">One QR code for all tables. Customers pick their table when ordering.</div>
-        </div>
-
-        <!-- Single QR View -->
-        <div id="qrSingleView" class="qr-grid">
-          <div>
-            <div class="card" style="margin-bottom:12px">
-              <div class="card-t">Menu link</div>
-              <div style="background:#fef2f2;border-radius:10px;padding:10px;font-size:11px;color:var(--accent);font-weight:600;word-break:break-all;overflow-wrap:anywhere;margin-bottom:10px" id="qrUrlDisplay"></div>
-              <div style="font-size:11px;color:#94a3b8">This link contains a security token. Only QR scans can place orders.</div>
-            </div>
-            <div class="card">
-              <div class="card-t">Download</div>
-              <button class="dl-btn" onclick="qrDlPNG()">Download PNG (Print)</button>
-              <button class="dl-btn" onclick="qrDlSVG()">Download SVG (Vector)</button>
-            </div>
-          </div>
-          <div>
-            <div class="card" style="margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:12px">
-              <div class="qr-frame" id="qrFrame"><canvas id="qrCanvas" style="display:block"></canvas></div>
-              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#10b981;font-weight:600"><div style="width:7px;height:7px;border-radius:50%;background:#10b981"></div>Secure QR ready</div>
-            </div>
-            <div class="card">
-              <div class="card-t">Share</div>
-              <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Per-Table QR View -->
-        <div id="qrPerTableView" style="display:none">
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-t">Per-table QR Codes</div>
-            <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.5">Each table gets its own QR code. When a customer scans it, their table is automatically assigned. No table picker needed.</div>
-            <div id="qrTableList" style="display:flex;flex-direction:column;gap:8px"></div>
-            <div class="qr-bulk-btns" style="margin-top:16px">
-              <button class="dl-btn" onclick="qrBulkDownloadPNG()" style="flex:1">Download All PNGs (ZIP)</button>
-              <button class="dl-btn" onclick="qrBulkDownloadSVG()" style="flex:1">Download All SVGs (ZIP)</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <canvas id="qrCanvas" style="display:none"></canvas>
     </div>
 
     <!-- ANALYTICS PANEL -->
@@ -1262,6 +1317,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 const API='';
 let token=localStorage.getItem('ms_token')||'';
@@ -3532,30 +3588,27 @@ function pnext(){const f=(pCat==='all'?items:items.filter(i=>i.category===pCat))
 function pprev(){if(pCur>0){pCur--;buildPreview();}}
 
 /* QR */
+/* ========= QR STUDIO ========= */
+const QR_TEMPLATES = [
+  {id:'bone',name:'Bone',desc:'Light card, red QR frame',bg:'#ffffff',frame:'#8E1616',text:'#1e293b',btn:'#8E1616',btnText:'#fff',qrDark:'#000000',qrLight:'#ffffff',logoBg:'#8E1616',logoStroke:'#fff'},
+  {id:'oxblood',name:'Oxblood',desc:'Dark card, cream QR panel',bg:'#8E1616',frame:'#f5f0e8',text:'#ffffff',btn:'#f5f0e8',btnText:'#8E1616',qrDark:'#000000',qrLight:'#f5f0e8',logoBg:'#8E1616',logoStroke:'#fff'},
+  {id:'tableno',name:'Table No',desc:'Table number up front, plain',bg:'#ffffff',frame:'#1e293b',text:'#1e293b',btn:'#1e293b',btnText:'#fff',qrDark:'#000000',qrLight:'#ffffff',logoBg:'#1e293b',logoStroke:'#fff',showTableNo:true},
+  {id:'signal',name:'Signal',desc:'Full red, reversed-out QR',bg:'#8E1616',frame:'#8E1616',text:'#ffffff',btn:'#ffffff',btnText:'#8E1616',qrDark:'#ffffff',qrLight:'#8E1616',logoBg:'#fff',logoStroke:'#8E1616'},
+  {id:'poster',name:'Poster',desc:'Big type, framed QR',bg:'#ffffff',frame:'#e2e8f0',text:'#1e293b',btn:'#1e293b',btnText:'#fff',qrDark:'#000000',qrLight:'#ffffff',logoBg:'#1e293b',logoStroke:'#fff',bigType:true},
+];
+let _selectedTemplate = 'bone';
+let _qrSignatures = null;
+let _currentQrUrl = '';
+let _dlState = {type:'single',face:'single',format:'pdf'};
+
 function buildQrBranchSelector(){
   const sel=document.getElementById('qrBranchSelect');
   if(branches.length>1){
     document.getElementById('qrBranchSelectorWrap').style.display='block';
-    sel.innerHTML='<option value="">Main menu (all branches)</option>'+branches.map(b=>`<option value="${b.slug}">${b.name}${b.city?' — '+b.city:''}</option>`).join('');
+    sel.innerHTML='<option value="">Main menu (all branches)</option>'+branches.map(b=>`<option value="${b.slug}">${b.name}${b.city?' - '+b.city:''}</option>`).join('');
   } else {
     document.getElementById('qrBranchSelectorWrap').style.display='none';
   }
-}
-let _qrMode = 'single'; // 'single' or 'perTable'
-let _qrSignatures = null; // cached from API
-
-function setQrMode(mode){
-  _qrMode = mode;
-  document.getElementById('qrModeSingle').style.background = mode==='single' ? 'var(--accent)' : '';
-  document.getElementById('qrModeSingle').style.color = mode==='single' ? '#fff' : '';
-  document.getElementById('qrModePerTable').style.background = mode==='perTable' ? 'var(--accent)' : '';
-  document.getElementById('qrModePerTable').style.color = mode==='perTable' ? '#fff' : '';
-  document.getElementById('qrSingleView').style.display = mode==='single' ? '' : 'none';
-  document.getElementById('qrPerTableView').style.display = mode==='perTable' ? '' : 'none';
-  document.getElementById('qrModeHint').textContent = mode==='single'
-    ? 'One QR code for all tables. Customers pick their table when ordering.'
-    : 'Each table gets its own QR. Table is auto-assigned on scan.';
-  if(mode==='perTable') renderPerTableQrs();
 }
 
 async function loadQrSignatures(){
@@ -3578,176 +3631,454 @@ function getQrUrl(tableId){
   return base+'?s='+(_qrSignatures.allTablesSignature||'');
 }
 
+function renderTemplateList(){
+  const list = document.getElementById('tmplList');
+  if(!list) return;
+  list.innerHTML = QR_TEMPLATES.map(t => {
+    const on = t.id === _selectedTemplate;
+    const thumbBg = t.bg;
+    const thumbFrame = t.frame;
+    const thumbBtn = t.btn;
+    return `<div class="tmpl-item${on?' on':''}" onclick="selectTemplate('${t.id}')">
+      <div class="tmpl-thumb">
+        <svg viewBox="0 0 44 62" xmlns="http://www.w3.org/2000/svg">
+          <rect width="44" height="62" fill="${thumbBg}"/>
+          <rect x="4" y="12" width="10" height="2" rx="1" fill="${t.text}" opacity=".3"/>
+          <rect x="8" y="18" width="28" height="28" rx="2" stroke="${thumbFrame}" stroke-width="2" fill="${t.qrLight}"/>
+          <rect x="14" y="24" width="4" height="4" fill="${t.qrDark}"/><rect x="20" y="24" width="4" height="4" fill="${t.qrDark}"/><rect x="26" y="24" width="4" height="4" fill="${t.qrDark}"/>
+          <rect x="14" y="30" width="4" height="4" fill="${t.qrDark}"/><rect x="26" y="30" width="4" height="4" fill="${t.qrDark}"/>
+          <rect x="14" y="36" width="4" height="4" fill="${t.qrDark}"/><rect x="20" y="36" width="4" height="4" fill="${t.qrDark}"/><rect x="26" y="36" width="4" height="4" fill="${t.qrDark}"/>
+          <rect x="10" y="50" width="24" height="6" rx="3" fill="${thumbBtn}"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0"><div class="tmpl-name">${t.name}</div><div class="tmpl-desc">${t.desc}</div></div>
+      <div class="tmpl-radio"></div>
+    </div>`;
+  }).join('');
+}
+
+function selectTemplate(id){
+  _selectedTemplate = id;
+  renderTemplateList();
+  updateQrPreview();
+  const tmpl = QR_TEMPLATES.find(t=>t.id===id);
+  document.getElementById('previewMeta').textContent = (tmpl?tmpl.name:'') + ' · 100 x 150 mm';
+}
+
 async function qrGenerate(){
   if(!org) return;
   await loadQrSignatures();
-  const url = getQrUrl();
-  document.getElementById('qrUrlDisplay').textContent = url;
-  document.getElementById('qrLinkBox').textContent = url;
-  const canvas = document.getElementById('qrCanvas');
-  if(typeof QRCode==='undefined'||!canvas) return;
-  QRCode.toCanvas(canvas,url,{width:200,margin:2,color:{dark:'#1D1616',light:'#ffffff'},errorCorrectionLevel:'H'},()=>{});
-  setQrMode(_qrMode);
+  _currentQrUrl = getQrUrl();
+  const lb = document.getElementById('qrLinkBox');
+  if(lb) lb.textContent = _currentQrUrl;
+  renderTemplateList();
+  updateQrPreview();
 }
 
-function qrDlPNG(){
-  const url=getQrUrl();
-  const tmp=document.createElement('canvas');
-  QRCode.toCanvas(tmp,url,{width:1000,margin:2,errorCorrectionLevel:'H'},()=>{
-    const a=document.createElement('a');a.download='qr-'+org.slug+'.png';a.href=tmp.toDataURL('image/png');
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-  });
+async function updateQrPreview(){
+  const tmpl = QR_TEMPLATES.find(t=>t.id===_selectedTemplate) || QR_TEMPLATES[0];
+  const card = document.getElementById('qrPreviewCard');
+  if(!card) return;
+  const url = _currentQrUrl || getQrUrl();
+  const name = (org && org.name) || 'Your Restaurant';
+  const showLang = document.getElementById('toggleLang')?.checked !== false;
+  const showAI = document.getElementById('toggleAI')?.checked !== false;
+  const showAllergen = document.getElementById('toggleAllergen')?.checked !== false;
+  const showSwipe = document.getElementById('toggleSwipe')?.checked !== false;
+  const tableNo = document.getElementById('cardTableNo')?.value || '';
+  const isDark = tmpl.id==='oxblood'||tmpl.id==='signal';
+  const badgeColor = isDark ? 'rgba(255,255,255,.5)' : '#94a3b8';
+  const divider = isDark ? 'rgba(255,255,255,.15)' : '#eee';
+
+  // Generate QR as data URL with template colors
+  let qrSrc = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  if(url && typeof QRCode !== 'undefined'){
+    const c = document.createElement('canvas');
+    try{
+      await new Promise((resolve,reject)=>{
+        QRCode.toCanvas(c,url,{width:400,margin:2,color:{dark:tmpl.qrDark,light:tmpl.qrLight},errorCorrectionLevel:'H'},(err)=>{if(err)reject(err);else resolve();});
+      });
+      qrSrc = c.toDataURL('image/png');
+    }catch(e){console.warn('QR gen failed',e);}
+  }
+
+  const badges = [];
+  if(showLang) badges.push('29 LANGUAGES');
+  if(showAI) badges.push('AI HELPER');
+  if(showAllergen) badges.push('ALLERGEN FILTERS');
+  const badgesHtml = badges.length ? `<div style="font-size:7px;font-weight:600;color:${badgeColor};letter-spacing:.8px;text-align:center">${badges.join(' &middot; ')}</div>` : '';
+  const swipeHtml = showSwipe ? `<div style="font-size:8px;font-weight:600;color:${badgeColor};letter-spacing:.6px;text-align:center;margin-top:3px">SWIPE UP &middot; 3 PHOTOS</div>` : '';
+  const tableNoHtml = (tmpl.showTableNo && tableNo) ? `<div style="font-size:20px;font-weight:900;color:${tmpl.text};margin-bottom:4px">${escapeHtml(tableNo)}</div>` : '';
+  const nameSize = tmpl.bigType ? '16px' : '14px';
+  const logoColor1 = isDark ? '#fff' : '#1e293b';
+  const logoColor2 = isDark ? 'rgba(255,255,255,.7)' : '#8E1616';
+
+  let frameStyle = '';
+  if(tmpl.id==='bone') frameStyle='border:3px solid '+tmpl.frame+';border-radius:4px;padding:8px;';
+  else if(tmpl.id==='oxblood') frameStyle='background:'+tmpl.frame+';border-radius:6px;padding:10px;';
+  else if(tmpl.id==='signal') frameStyle='padding:8px;';
+  else if(tmpl.id==='poster') frameStyle='border:2px solid '+tmpl.frame+';border-radius:4px;padding:10px;';
+  else frameStyle='border:1px solid #e2e8f0;border-radius:4px;padding:8px;';
+
+  card.innerHTML = `<div style="background:${tmpl.bg};padding:20px 16px 14px;text-align:center">
+    <div style="font-size:${nameSize};font-weight:800;color:${tmpl.text};margin-bottom:${tableNoHtml?'4px':'12px'}">${escapeHtml(name)}</div>
+    ${tableNoHtml}
+    <div style="${frameStyle}display:inline-block;margin-bottom:10px;position:relative">
+      <img src="${qrSrc}" style="display:block;width:130px;height:130px" alt="QR">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:28px;height:28px;background:${tmpl.logoBg};border-radius:6px;display:flex;align-items:center;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 80 100"><path d="M10 90 L10 10 L40 50 L70 10 L70 90" stroke="${tmpl.logoStroke}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </div>
+    </div>
+    <div style="margin-bottom:5px"><span style="background:${tmpl.btn};color:${tmpl.btnText};padding:5px 18px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.5px;display:inline-block">SCAN FOR MENU</span></div>
+    ${swipeHtml}
+    <div style="border-top:1px solid ${divider};margin-top:8px;padding-top:6px">
+      ${badgesHtml}
+      <div style="font-size:9px;font-weight:700;margin-top:4px;text-align:center"><span style="color:${logoColor1}">Menu</span><span style="color:${logoColor2}">Swipe</span></div>
+    </div>
+  </div>`;
 }
-function qrDlSVG(){
-  const url=getQrUrl();
-  QRCode.toString(url,{type:'svg',width:500,margin:2,errorCorrectionLevel:'H'},(err,svgStr)=>{
-    if(err)return;
-    const blob=new Blob([svgStr],{type:'image/svg+xml'});const burl=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=burl;a.download='qr-'+org.slug+'.svg';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(burl),1000);
-  });
-}
+
 function qrCopy(){
   const url=getQrUrl();const btn=document.getElementById('qrCopyBtn');
   navigator.clipboard.writeText(url).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);});
 }
 
-function renderPerTableQrs(){
-  const list = document.getElementById('qrTableList');
-  if(!_qrSignatures || !_qrSignatures.perTable || _qrSignatures.perTable.length===0){
-    list.innerHTML='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px">No tables defined yet. Add tables in the Tables section first.</div>';
+/* Download dialog */
+function openDownloadDialog(type){
+  _dlState.type = type;
+  _dlState.face = 'single';
+  _dlState.format = 'pdf';
+  if(type==='perTable' && (!_qrSignatures || !_qrSignatures.perTable || _qrSignatures.perTable.length===0)){
+    toast('No tables defined. Add tables first.');
     return;
   }
-  list.innerHTML = _qrSignatures.perTable.map(t => {
-    const url = getQrUrl(t.tableId);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8fafc;border-radius:10px">
-      <div style="min-width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:8px;font-weight:700;font-size:14px">${escapeHtml(t.label)}</div>
-      <div style="flex:1;font-size:11px;color:#64748b;word-break:break-all;line-height:1.4">${escapeHtml(url)}</div>
-      <button onclick="qrDlTablePNG('${t.tableId}','${escapeHtml(t.label)}')" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;font-size:11px;cursor:pointer;white-space:nowrap">PNG</button>
-    </div>`;
-  }).join('');
+  const title = type==='single' ? 'Download Single QR' : 'Download Per-Table QR';
+  const overlay = document.createElement('div');
+  overlay.className = 'dl-overlay';
+  overlay.id = 'dlOverlay';
+  overlay.onclick = (e)=>{ if(e.target===overlay) closeDownloadDialog(); };
+  overlay.innerHTML = `<div class="dl-dialog">
+    <h3>${title}</h3>
+    <div style="margin-bottom:16px">
+      <div class="dl-step-lbl">Layout</div>
+      <div class="dl-opt on" onclick="selectDlFace('single',this)"><div class="dl-opt-radio"></div><div><div class="dl-opt-txt">Single page</div><div class="dl-opt-sub">One side only (100 x 150 mm)</div></div></div>
+      <div class="dl-opt" onclick="selectDlFace('both',this)"><div class="dl-opt-radio"></div><div><div class="dl-opt-txt">Both faces (tent card)</div><div class="dl-opt-sub">Folded card, stands on table (100 x 300 mm)</div></div></div>
+    </div>
+    <div>
+      <div class="dl-step-lbl">Format</div>
+      <div class="dl-opt on" onclick="selectDlFormat('pdf',this)"><div class="dl-opt-radio"></div><div><div class="dl-opt-txt">PDF</div><div class="dl-opt-sub">Print quality, vector text</div></div></div>
+      <div class="dl-opt" onclick="selectDlFormat('png',this)"><div class="dl-opt-radio"></div><div><div class="dl-opt-txt">PNG</div><div class="dl-opt-sub">High-res image (2000 px)</div></div></div>
+      <div class="dl-opt" onclick="selectDlFormat('svg',this)"><div class="dl-opt-radio"></div><div><div class="dl-opt-txt">SVG</div><div class="dl-opt-sub">Scalable vector graphic</div></div></div>
+    </div>
+    <div class="dl-btns">
+      <button class="dl-cancel" onclick="closeDownloadDialog()">Cancel</button>
+      <button class="dl-go" onclick="executeDownload()">Download</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
 }
 
-function buildTableQrCanvas(url, label, restaurantName){
-  return new Promise(resolve => {
-    const qrCanvas = document.createElement('canvas');
-    QRCode.toCanvas(qrCanvas, url, {width:800, margin:2, errorCorrectionLevel:'H'}, ()=>{
-      const W = 1000, pad = 100, qrSize = 800;
-      const headerH = 160, footerH = 80, totalH = headerH + qrSize + footerH;
-      const out = document.createElement('canvas');
-      out.width = W; out.height = totalH;
-      const ctx = out.getContext('2d');
-
-      // Background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, W, totalH);
-
-      // Header background
-      const accent = (org && org.accentColor) || '#8E1616';
-      ctx.fillStyle = accent;
-      ctx.fillRect(0, 0, W, headerH);
-
-      // Table icon (simple plate/circle)
-      const iconX = W/2, iconY = 50;
-      ctx.beginPath();
-      ctx.arc(iconX, iconY, 24, 0, Math.PI*2);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      // Fork-knife inside
-      ctx.beginPath();
-      ctx.moveTo(iconX-8, iconY-12); ctx.lineTo(iconX-8, iconY+12);
-      ctx.moveTo(iconX+8, iconY-12); ctx.lineTo(iconX+8, iconY+12);
-      ctx.moveTo(iconX+8, iconY-6); ctx.lineTo(iconX+8, iconY-12);
-      ctx.arc(iconX+8, iconY-6, 4, -Math.PI/2, Math.PI/2, true);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      // Table label
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 52px -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, W/2, iconY + 52);
-
-      // QR code
-      ctx.drawImage(qrCanvas, pad, headerH, qrSize, qrSize);
-
-      // Footer: restaurant name
-      ctx.fillStyle = '#666666';
-      ctx.font = '28px -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const rName = restaurantName || (org && org.name) || '';
-      ctx.fillText(rName, W/2, headerH + qrSize + footerH/2);
-
-      // Subtle border
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(1, 1, W-2, totalH-2);
-
-      resolve(out);
-    });
-  });
+function closeDownloadDialog(){
+  const o = document.getElementById('dlOverlay');
+  if(o) o.remove();
 }
 
-function qrDlTablePNG(tableId, label){
-  const url = getQrUrl(tableId);
-  buildTableQrCanvas(url, label).then(out => {
-    const a=document.createElement('a');a.download='qr-'+org.slug+'-table-'+label+'.png';a.href=out.toDataURL('image/png');
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-  });
+function selectDlFace(face, el){
+  _dlState.face = face;
+  el.parentElement.querySelectorAll('.dl-opt').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on');
 }
 
-async function qrBulkDownloadPNG(){
-  if(!_qrSignatures || !_qrSignatures.perTable) return;
-  const JSZip = window.JSZip;
-  if(!JSZip){
-    alert('Loading ZIP library...');
-    return;
+function selectDlFormat(fmt, el){
+  _dlState.format = fmt;
+  el.parentElement.querySelectorAll('.dl-opt').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on');
+}
+
+async function executeDownload(){
+  const btn = document.querySelector('.dl-go');
+  if(btn){ btn.textContent='Generating...'; btn.disabled=true; }
+  try{
+    if(_dlState.type==='single'){
+      await downloadSingleQr();
+    } else {
+      await downloadPerTableQr();
+    }
+    closeDownloadDialog();
+    toast('Download started');
+  }catch(e){
+    console.error('Download failed:',e);
+    toast('Download failed: '+e.message);
+    if(btn){ btn.textContent='Download'; btn.disabled=false; }
   }
-  const zip = new JSZip();
+}
+
+async function downloadSingleQr(){
+  const url = getQrUrl();
+  const tmpl = QR_TEMPLATES.find(t=>t.id===_selectedTemplate)||QR_TEMPLATES[0];
+  const opts = getCardOpts(tmpl, url);
+  if(_dlState.format==='png'){
+    const canvas = await renderQrCardCanvas(opts, _dlState.face==='both');
+    dlLink(canvas.toDataURL('image/png'),'qr-'+org.slug+'.png');
+  } else if(_dlState.format==='svg'){
+    const svg = renderQrCardSVG(opts, _dlState.face==='both');
+    const blob = new Blob([svg],{type:'image/svg+xml'});
+    dlLink(URL.createObjectURL(blob),'qr-'+org.slug+'.svg');
+  } else {
+    const canvas = await renderQrCardCanvas(opts, _dlState.face==='both');
+    downloadCardPDF(canvas, _dlState.face==='both', 'qr-'+org.slug+'.pdf');
+  }
+}
+
+async function downloadPerTableQr(){
+  if(!_qrSignatures||!_qrSignatures.perTable) return;
+  const tmpl = QR_TEMPLATES.find(t=>t.id===_selectedTemplate)||QR_TEMPLATES[0];
   const tables = _qrSignatures.perTable;
-
+  const zip = new JSZip();
   for(const t of tables){
     const url = getQrUrl(t.tableId);
-    const out = await buildTableQrCanvas(url, t.label);
-    const dataUrl = out.toDataURL('image/png');
-    const base64 = dataUrl.split(',')[1];
-    zip.file('qr-table-'+t.label+'.png', base64, {base64:true});
+    const opts = getCardOpts(tmpl, url, t.label);
+    if(_dlState.format==='png'){
+      const canvas = await renderQrCardCanvas(opts, _dlState.face==='both');
+      zip.file('qr-table-'+t.label+'.png', canvas.toDataURL('image/png').split(',')[1], {base64:true});
+    } else if(_dlState.format==='svg'){
+      zip.file('qr-table-'+t.label+'.svg', renderQrCardSVG(opts, _dlState.face==='both'));
+    } else {
+      const canvas = await renderQrCardCanvas(opts, _dlState.face==='both');
+      const pdfBlob = getCardPDFBlob(canvas, _dlState.face==='both');
+      zip.file('qr-table-'+t.label+'.pdf', pdfBlob);
+    }
   }
-
   const blob = await zip.generateAsync({type:'blob'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='qr-codes-'+org.slug+'.zip';
+  dlLink(URL.createObjectURL(blob),'qr-tables-'+org.slug+'.zip');
+}
+
+function getCardOpts(tmpl, url, tableLabel){
+  return {
+    tmpl, url,
+    name: (org&&org.name)||'Restaurant',
+    tableLabel: tableLabel||'',
+    showLang: document.getElementById('toggleLang')?.checked!==false,
+    showAI: document.getElementById('toggleAI')?.checked!==false,
+    showAllergen: document.getElementById('toggleAllergen')?.checked!==false,
+    showSwipe: document.getElementById('toggleSwipe')?.checked!==false,
+    tableNo: document.getElementById('cardTableNo')?.value||'',
+  };
+}
+
+function dlLink(href,name){
+  const a=document.createElement('a');a.href=href;a.download=name;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
-async function qrBulkDownloadSVG(){
-  if(!_qrSignatures || !_qrSignatures.perTable) return;
-  const JSZip = window.JSZip;
-  if(!JSZip){
-    alert('Loading ZIP library...');
-    return;
-  }
-  const zip = new JSZip();
-  const tables = _qrSignatures.perTable;
+/* Card canvas rendering for downloads */
+async function renderQrCardCanvas(opts, bothFaces){
+  const W=1181, H=1772; // 100x150mm at 300dpi
+  const tmpl=opts.tmpl;
+  // Generate QR
+  const qrC=document.createElement('canvas');
+  await new Promise(r=>{QRCode.toCanvas(qrC,opts.url,{width:700,margin:2,color:{dark:tmpl.qrDark,light:tmpl.qrLight},errorCorrectionLevel:'H'},r);});
 
-  for(const t of tables){
-    const url = getQrUrl(t.tableId);
-    const svgStr = await new Promise((resolve,reject)=>{
-      QRCode.toString(url,{type:'svg',width:500,margin:2,errorCorrectionLevel:'H'},(err,s)=>{
-        if(err) reject(err); else resolve(s);
-      });
-    });
-    zip.file('qr-table-'+t.label+'.svg', svgStr);
+  const canvas=document.createElement('canvas');
+  canvas.width=W;
+  canvas.height=bothFaces?H*2:H;
+  const ctx=canvas.getContext('2d');
+
+  function drawFace(yOff){
+    ctx.save();
+    ctx.translate(0,yOff);
+
+    // Background
+    ctx.fillStyle=tmpl.bg;
+    ctx.fillRect(0,0,W,H);
+
+    // Restaurant name
+    const fontSize=tmpl.bigType?72:56;
+    ctx.fillStyle=tmpl.text;
+    ctx.font=`800 ${fontSize}px -apple-system,sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    let nameY=140;
+
+    // Table No (if applicable)
+    if(tmpl.showTableNo && opts.tableNo){
+      ctx.fillText(opts.name,W/2,110);
+      ctx.font='900 100px -apple-system,sans-serif';
+      ctx.fillText(opts.tableNo,W/2,230);
+      nameY=110;
+    } else {
+      ctx.fillText(opts.name,W/2,nameY);
+    }
+
+    // QR frame
+    const qrSize=680;
+    const qrX=(W-qrSize)/2;
+    const qrFrameY=tmpl.showTableNo&&opts.tableNo?290:240;
+    const pad=40;
+    if(tmpl.id==='bone'){
+      ctx.strokeStyle=tmpl.frame;ctx.lineWidth=12;
+      ctx.strokeRect(qrX-pad,qrFrameY-pad,qrSize+pad*2,qrSize+pad*2);
+    } else if(tmpl.id==='oxblood'){
+      roundRect(ctx,qrX-pad-10,qrFrameY-pad-10,qrSize+pad*2+20,qrSize+pad*2+20,16);
+      ctx.fillStyle=tmpl.frame;ctx.fill();
+    } else if(tmpl.id==='poster'){
+      ctx.strokeStyle=tmpl.frame;ctx.lineWidth=6;
+      ctx.strokeRect(qrX-pad,qrFrameY-pad,qrSize+pad*2,qrSize+pad*2);
+    }
+    // Draw QR
+    ctx.drawImage(qrC,qrX,qrFrameY,qrSize,qrSize);
+
+    // M logo overlay in center of QR
+    const logoCx=W/2, logoCy=qrFrameY+qrSize/2, logoSize=90;
+    roundRect(ctx,logoCx-logoSize/2,logoCy-logoSize/2,logoSize,logoSize,16);
+    ctx.fillStyle=tmpl.logoBg;ctx.fill();
+    ctx.beginPath();
+    const ls=logoSize*0.35;
+    ctx.moveTo(logoCx-ls,logoCy+ls);ctx.lineTo(logoCx-ls,logoCy-ls);
+    ctx.lineTo(logoCx,logoCy+ls*0.1);ctx.lineTo(logoCx+ls,logoCy-ls);
+    ctx.lineTo(logoCx+ls,logoCy+ls);
+    ctx.strokeStyle=tmpl.logoStroke;ctx.lineWidth=10;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+
+    // SCAN FOR MENU button
+    const btnY=qrFrameY+qrSize+pad+60;
+    const btnW=420,btnH=70,btnR=35;
+    roundRect(ctx,W/2-btnW/2,btnY,btnW,btnH,btnR);
+    ctx.fillStyle=tmpl.btn;ctx.fill();
+    ctx.fillStyle=tmpl.btnText;
+    ctx.font='700 28px -apple-system,sans-serif';
+    ctx.letterSpacing='2px';
+    ctx.fillText('SCAN FOR MENU',W/2,btnY+btnH/2);
+    ctx.letterSpacing='0px';
+
+    // Swipe hint
+    let currentY=btnY+btnH+30;
+    if(opts.showSwipe){
+      ctx.fillStyle=tmpl.id==='oxblood'||tmpl.id==='signal'?'rgba(255,255,255,.5)':'#94a3b8';
+      ctx.font='600 22px -apple-system,sans-serif';
+      ctx.fillText('SWIPE UP · 3 PHOTOS',W/2,currentY);
+      currentY+=40;
+    }
+
+    // Divider
+    ctx.strokeStyle=tmpl.id==='oxblood'||tmpl.id==='signal'?'rgba(255,255,255,.15)':'#eeeeee';
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(W*0.15,currentY);ctx.lineTo(W*0.85,currentY);ctx.stroke();
+    currentY+=30;
+
+    // Feature badges
+    const badges=[];
+    if(opts.showLang) badges.push('29 LANGUAGES');
+    if(opts.showAI) badges.push('AI HELPER');
+    if(opts.showAllergen) badges.push('ALLERGEN FILTERS');
+    if(badges.length>0){
+      ctx.fillStyle=tmpl.id==='oxblood'||tmpl.id==='signal'?'rgba(255,255,255,.5)':'#94a3b8';
+      ctx.font='600 18px -apple-system,sans-serif';
+      ctx.fillText(badges.join('  ·  '),W/2,currentY);
+      currentY+=30;
+    }
+
+    // MenuSwipe branding
+    ctx.font='700 24px -apple-system,sans-serif';
+    const isDk=tmpl.id==='oxblood'||tmpl.id==='signal';
+    const mw=ctx.measureText('Menu').width;
+    const sw=ctx.measureText('Swipe').width;
+    const totalW=mw+sw;
+    ctx.fillStyle=isDk?'#ffffff':'#1e293b';
+    ctx.textAlign='right';
+    ctx.fillText('Menu',W/2+totalW/2-sw,currentY+10);
+    ctx.fillStyle=isDk?'rgba(255,255,255,.7)':'#8E1616';
+    ctx.textAlign='left';
+    ctx.fillText('Swipe',W/2+totalW/2-sw,currentY+10);
+    ctx.textAlign='center';
+
+    ctx.restore();
   }
 
-  const blob = await zip.generateAsync({type:'blob'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='qr-codes-svg-'+org.slug+'.zip';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  if(bothFaces){
+    // Bottom face (right side up)
+    drawFace(H);
+    // Top face (upside down)
+    ctx.save();
+    ctx.translate(W,H);
+    ctx.rotate(Math.PI);
+    drawFace(0);
+    ctx.restore();
+  } else {
+    drawFace(0);
+  }
+  return canvas;
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+function renderQrCardSVG(opts, bothFaces){
+  const W=1181,H=1772;
+  const tmpl=opts.tmpl;
+  const isDk=tmpl.id==='oxblood'||tmpl.id==='signal';
+  const badgeColor=isDk?'rgba(255,255,255,.5)':'#94a3b8';
+  const badges=[];
+  if(opts.showLang) badges.push('29 LANGUAGES');
+  if(opts.showAI) badges.push('AI HELPER');
+  if(opts.showAllergen) badges.push('ALLERGEN FILTERS');
+  const totalH=bothFaces?H*2:H;
+
+  function faceSVG(yOff){
+    const nameY=140+yOff;
+    const qrY=240+yOff;
+    const btnY=qrY+680+100;
+    let parts=`<rect x="0" y="${yOff}" width="${W}" height="${H}" fill="${tmpl.bg}"/>`;
+    parts+=`<text x="${W/2}" y="${nameY}" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="800" font-size="${tmpl.bigType?72:56}" fill="${tmpl.text}">${escapeHtml(opts.name)}</text>`;
+    if(tmpl.id==='bone') parts+=`<rect x="${211}" y="${yOff+200}" width="${760}" height="${760}" rx="0" fill="none" stroke="${tmpl.frame}" stroke-width="12"/>`;
+    parts+=`<rect x="${251}" y="${qrY}" width="680" height="680" fill="${tmpl.qrLight}"/>`;
+    // Logo
+    const cx=W/2,cy=qrY+340;
+    parts+=`<rect x="${cx-45}" y="${cy-45}" width="90" height="90" rx="16" fill="${tmpl.logoBg}"/>`;
+    parts+=`<path d="M${cx-31} ${cy+31} L${cx-31} ${cy-31} L${cx} ${cy+3} L${cx+31} ${cy-31} L${cx+31} ${cy+31}" stroke="${tmpl.logoStroke}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
+    // Button
+    parts+=`<rect x="${W/2-210}" y="${btnY}" width="420" height="70" rx="35" fill="${tmpl.btn}"/>`;
+    parts+=`<text x="${W/2}" y="${btnY+42}" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="700" font-size="28" fill="${tmpl.btnText}" letter-spacing="2">SCAN FOR MENU</text>`;
+    let cy2=btnY+100;
+    if(opts.showSwipe){
+      parts+=`<text x="${W/2}" y="${cy2}" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600" font-size="22" fill="${badgeColor}">SWIPE UP · 3 PHOTOS</text>`;
+      cy2+=40;
+    }
+    parts+=`<line x1="${W*.15}" y1="${cy2}" x2="${W*.85}" y2="${cy2}" stroke="${isDk?'rgba(255,255,255,.15)':'#eee'}" stroke-width="2"/>`;
+    cy2+=30;
+    if(badges.length) parts+=`<text x="${W/2}" y="${cy2}" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600" font-size="18" fill="${badgeColor}">${badges.join('  ·  ')}</text>`;
+    return parts;
+  }
+
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${totalH}" width="${W}" height="${totalH}">`;
+  if(bothFaces){
+    svg+=faceSVG(H);
+    svg+=`<g transform="rotate(180 ${W/2} ${H})">${faceSVG(0)}</g>`;
+  } else {
+    svg+=faceSVG(0);
+  }
+  svg+='</svg>';
+  return svg;
+}
+
+function downloadCardPDF(canvas, bothFaces, filename){
+  const {jsPDF}=window.jspdf;
+  const wMM=100, hMM=bothFaces?300:150;
+  const pdf=new jsPDF({orientation:hMM>wMM?'portrait':'landscape',unit:'mm',format:[wMM,hMM]});
+  pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,wMM,hMM);
+  pdf.save(filename);
+}
+
+function getCardPDFBlob(canvas, bothFaces){
+  const {jsPDF}=window.jspdf;
+  const wMM=100, hMM=bothFaces?300:150;
+  const pdf=new jsPDF({orientation:hMM>wMM?'portrait':'landscape',unit:'mm',format:[wMM,hMM]});
+  pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,wMM,hMM);
+  return pdf.output('blob');
 }
 
 /* TABLES */
@@ -3765,32 +4096,31 @@ async function loadTables(){
 function renderTablesList(){
   const list = document.getElementById('tablesList');
   if(tablesData.length === 0){
-    list.innerHTML = `<div style="text-align:center;padding:40px 20px;background:#f8fafc;border-radius:12px;color:#94a3b8">
-      <div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:6px">No tables yet</div>
-      <div style="font-size:12px;max-width:260px;margin:0 auto;line-height:1.5">Add your first table above. Customers won't be required to pick a table if you skip this step.</div>
+    list.innerHTML = `<div style="text-align:center;padding:30px 20px;background:#f8fafc;border-radius:10px;color:#94a3b8">
+      <div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:4px">No tables yet</div>
+      <div style="font-size:12px;max-width:260px;margin:0 auto;line-height:1.5">Customers won't need to pick a table if you skip this.</div>
     </div>`;
     return;
   }
-  list.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">
-    ${tablesData.map(t => `
-      <div style="position:relative;aspect-ratio:1;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:.15s" onmouseover="this.style.borderColor='#cbd5e1';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
-        <div style="font-size:22px;font-weight:800;color:#1e293b;line-height:1;text-align:center;word-break:break-word;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${escapeHtml(t.label)}</div>
-        <div style="font-size:9px;color:${t.active?'#16a34a':'#94a3b8'};font-weight:700;letter-spacing:0.4px;text-transform:uppercase">${t.active?'Active':'Inactive'}</div>
-        <div style="position:absolute;top:6px;right:6px;display:flex;gap:3px;opacity:0.7">
-          <button onclick="openEditTable('${t.id}')" style="width:24px;height:24px;border-radius:6px;background:#f1f5f9;border:none;cursor:pointer;color:#475569;display:flex;align-items:center;justify-content:center" title="Edit">
-            <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M9 2.5l2.5 2.5M2 12V9.5L9 2.5l2.5 2.5L4.5 12H2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          </button>
-          <button onclick="deleteTable('${t.id}')" style="width:24px;height:24px;border-radius:6px;background:#fef2f2;border:none;cursor:pointer;color:#dc2626;display:flex;align-items:center;justify-content:center" title="Delete">
-            <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5C5 2 5.5 2 6 2h2c.5 0 1 0 1 .5V4M3.5 4l.5 8h6l.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
-      </div>`).join('')}
+  list.innerHTML = `<div class="tbl-compact">
+    ${tablesData.map(t => `<div class="tbl-row">
+      <div class="tbl-lbl">${escapeHtml(t.label)}</div>
+      <div class="tbl-status ${t.active?'on':'off'}">${t.active?'Active':'Inactive'}</div>
+      <div class="tbl-acts">
+        <button class="tbl-edit" onclick="openEditTable('${t.id}')" title="Edit">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M9 2.5l2.5 2.5M2 12V9.5L9 2.5l2.5 2.5L4.5 12H2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="tbl-del" onclick="deleteTable('${t.id}')" title="Delete">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5C5 2 5.5 2 6 2h2c.5 0 1 0 1 .5V4M3.5 4l.5 8h6l.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>`).join('')}
   </div>
-  <div style="text-align:center;margin-top:14px;font-size:11px;color:#94a3b8">${tablesData.length} table${tablesData.length===1?'':'s'} total</div>`;
+  <div style="text-align:center;margin-top:8px;font-size:11px;color:#94a3b8">${tablesData.length} table${tablesData.length===1?'':'s'}</div>`;
 }
 
 function openAddTableSingle(){
-  const label = prompt('Table label (e.g. "1", "Bahçe 1", "VIP"):');
+  const label = prompt('Table label (e.g. "1", "Garden 1", "VIP"):');
   if(!label || !label.trim()) return;
   api('POST','/api/tables',{ label: label.trim() })
     .then(() => { loadTables(); toast('Table added'); })
