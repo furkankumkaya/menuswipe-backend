@@ -146,6 +146,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .tag-select.t-GLUTEN_FREE{background:#06B6D4;color:#fff;border-color:#06B6D4}
 .tag-select.t-HALAL{background:#84CC16;color:#fff;border-color:#84CC16}
 .tag-select.t-DAIRY_FREE{background:#64748B;color:#fff;border-color:#64748B}
+.tag-select.t-VEGETARIAN{background:#059669;color:#fff;border-color:#059669}
 .tag-select.t-PROTEIN_PLUS{background:#EC4899;color:#fff;border-color:#EC4899}
 .star-cell{padding:10px 6px;display:flex;align-items:center;justify-content:center}
 .star-btn{width:26px;height:26px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#cbd5e1;transition:.15s}
@@ -876,6 +877,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
             <div class="wiz-chip" data-val="GLUTEN_FREE">Gluten-free</div>
             <div class="wiz-chip" data-val="HALAL">Halal</div>
             <div class="wiz-chip" data-val="DAIRY_FREE">Dairy-free</div>
+            <div class="wiz-chip" data-val="VEGETARIAN">Vegetarian</div>
             <div class="wiz-chip" data-val="SPICY">Spicy</div>
             <div class="wiz-chip" data-val="PROTEIN_PLUS">Protein+</div>
           </div>
@@ -2580,6 +2582,7 @@ function tagSelectHTML(itemId, type, current){
         {val:'GLUTEN_FREE',label:'GLUTEN-FREE'},
         {val:'HALAL',label:'HALAL'},
         {val:'DAIRY_FREE',label:'DAIRY-FREE'},
+        {val:'VEGETARIAN',label:'VEGETARIAN'},
         {val:'PROTEIN_PLUS',label:'PROTEIN+'},
       ];
   const cur = current || '';
@@ -3544,12 +3547,12 @@ function buildPreview(){
   
   const TAG_LABELS = {
     NEW:'NEW',BESTSELLER:'BESTSELLER',OFFER:'OFFER',LIMITED:'LIMITED',SEASONAL:'SEASONAL',LOCAL_FOOD:'LOCAL',SOLD_OUT:'SOLD OUT',
-    SPICY:'SPICY',VEGAN:'VEGAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'
+    SPICY:'SPICY',VEGAN:'VEGAN',VEGETARIAN:'VEGETARIAN',GLUTEN_FREE:'GLUTEN-FREE',HALAL:'HALAL',DAIRY_FREE:'DAIRY-FREE',PROTEIN_PLUS:'PROTEIN+'
   };
   const TAG_COLORS = {
     NEW:'#3B82F6', BESTSELLER:'#F59E0B', OFFER:'#8B5CF6', LIMITED:'#F43F5E',
     SEASONAL:'#D97706', LOCAL_FOOD:'#047857', SOLD_OUT:'#374151',
-    SPICY:'#EF4444', VEGAN:'#22C55E', GLUTEN_FREE:'#06B6D4',
+    SPICY:'#EF4444', VEGAN:'#22C55E', VEGETARIAN:'#059669', GLUTEN_FREE:'#06B6D4',
     HALAL:'#84CC16', DAIRY_FREE:'#64748B', PROTEIN_PLUS:'#EC4899'
   };
   function tagHTML(t){
