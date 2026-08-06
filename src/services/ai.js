@@ -484,7 +484,7 @@ ALLERGEN REFERENCE DATABASE (EU 14 major allergens):
 
 async function generateDietaryAllergens(items, language = "en") {
   const langName = getLanguageName(language);
-  const VALID_DIETARY = ["SPICY","VEGAN","GLUTEN_FREE","HALAL","DAIRY_FREE","PROTEIN_PLUS"];
+  const VALID_DIETARY = ["SPICY","VEGAN","VEGETARIAN","GLUTEN_FREE","HALAL","DAIRY_FREE","PROTEIN_PLUS"];
   const VALID_ALLERGENS = ["GLUTEN","CRUSTACEANS","EGGS","FISH","PEANUTS","SOYBEANS","MILK","NUTS","CELERY","MUSTARD","SESAME","SULPHITES","LUPIN","MOLLUSCS"];
 
   const itemList = items.map(it => ({
@@ -516,7 +516,7 @@ Rules:
 - MILK: any dish with cheese, cream, butter, yogurt
 - EGGS: any breaded/battered item, fresh pasta, cakes, mayonnaise-based sauces
 - Be thorough but reasonable. A plain grilled chicken has no major allergens. A chicken parmesan has GLUTEN (breading), MILK (cheese), EGGS (breading)
-- For dietary tags: SPICY for chili/hot dishes, VEGAN for 100% plant-based, GLUTEN_FREE for naturally GF dishes (grilled meat, rice, salads without croutons), HALAL for clearly halal items, DAIRY_FREE for no dairy, PROTEIN_PLUS for high-protein (steaks, grilled chicken, fish)
+- For dietary tags: SPICY for chili/hot dishes, VEGAN for 100% plant-based (no animal products at all), VEGETARIAN for dishes without meat/fish but may contain dairy/eggs, GLUTEN_FREE for naturally GF dishes (grilled meat, rice, salads without croutons), HALAL for clearly halal items, DAIRY_FREE for no dairy, PROTEIN_PLUS for high-protein (steaks, grilled chicken, fish)
 - If truly unsure about dietary tag, use null
 - These are AI SUGGESTIONS that the restaurant owner will review. Be helpful and thorough.
 
