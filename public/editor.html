@@ -778,7 +778,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
   <!-- Sales partner return banner -->
   <div id="salesReturnBanner" style="display:none;background:#1e3a5f;padding:10px 16px;text-align:center;font-size:13px;color:#93c5fd;border-bottom:1px solid #2563eb">
     You're editing a demo menu.
-    <a href="/sales-panel.html" onclick="localStorage.removeItem('ms_sales_return')" style="color:#60a5fa;font-weight:700;margin-left:8px;text-decoration:underline">Back to Sales Panel</a>
+    <a href="/sales-panel.html" onclick="sessionStorage.removeItem('ms_sales_return')" style="color:#60a5fa;font-weight:700;margin-left:8px;text-decoration:underline">Back to Sales Panel</a>
   </div>
   <div class="topbar">
     <div class="tbtitle">
@@ -1313,8 +1313,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 const API='';
-let token=localStorage.getItem('ms_token')||'';
-let org=JSON.parse(localStorage.getItem('ms_org')||'null');
+let token=sessionStorage.getItem('ms_token')||'';
+let org=JSON.parse(sessionStorage.getItem('ms_org')||'null');
 let items=[],cats=[],branches=[];
 let editingId=null,openDescId=null,currentFilter='all';
 let photoItemId=null,activeSlot=null,pendingDeleteId=null,pendingDeleteType=null;
@@ -1384,8 +1384,8 @@ async function api(method,path,body){
     // Oturum açıkken gelen 401 = session expired → yenile
     // Login/register sırasında gelen 401 = hatalı şifre → hata mesajı göster
     if(token){
-      localStorage.removeItem('ms_token');
-      localStorage.removeItem('ms_org');
+      sessionStorage.removeItem('ms_token');
+      sessionStorage.removeItem('ms_org');
       location.reload();
       throw new Error('Session expired');
     }
@@ -1398,8 +1398,8 @@ async function api(method,path,body){
 async function apiForm(method,path,fd){
   const r=await fetch(API+path,{method,headers:{'Authorization':`Bearer ${token}`},body:fd});
   if(r.status===401){
-    localStorage.removeItem('ms_token');
-    localStorage.removeItem('ms_org');
+    sessionStorage.removeItem('ms_token');
+    sessionStorage.removeItem('ms_org');
     location.reload();
     throw new Error('Session expired');
   }
@@ -1445,7 +1445,7 @@ async function doLogin(){
   try{
     const data=await api('POST','/api/auth/login',{email,password});
     token=data.token;org=data.organization;
-    localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_token',token);sessionStorage.setItem('ms_org',JSON.stringify(org));
     startApp();
   }catch(e){
     showAuthError(e.message,['loginEmail','loginPassword']);
@@ -1467,14 +1467,14 @@ async function doRegister(){
   try{
     const data=await api('POST','/api/auth/register',{restaurantName,email,password});
     token=data.token;org=data.organization;
-    localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_token',token);sessionStorage.setItem('ms_org',JSON.stringify(org));
     startApp();
   }catch(e){
     showAuthError(e.message,['regEmail']);
     btn.disabled=false;btn.textContent='Create account';
   }
 }
-function doLogout(){localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');location.reload();}
+function doLogout(){sessionStorage.removeItem('ms_token');sessionStorage.removeItem('ms_org');location.reload();}
 
 /* ============== ONBOARDING ============== */
 const LANGUAGES = [
@@ -1592,7 +1592,7 @@ async function obSaveInfoAndNext(){
     
     const updated = await api('PATCH','/api/auth/organization', updateData);
     org = {...org, ...updated};
-    localStorage.setItem('ms_org', JSON.stringify(org));
+    sessionStorage.setItem('ms_org', JSON.stringify(org));
     obNextStep();
   }catch(e){ toast('Failed to save: '+e.message); }
 }
@@ -1657,7 +1657,7 @@ async function obSaveSettingsAndNext(){
       enabledLanguages: obSelectedTranslations,
     });
     org = {...org, ...updated};
-    localStorage.setItem('ms_org', JSON.stringify(org));
+    sessionStorage.setItem('ms_org', JSON.stringify(org));
     
     obNextStep();
   }catch(e){ toast('Failed to save: '+e.message); }
@@ -1668,7 +1668,7 @@ async function obFinish(){
   try{
     const updated = await api('PATCH','/api/auth/organization', { onboardingCompleted: true });
     org = {...org, ...updated};
-    localStorage.setItem('ms_org', JSON.stringify(org));
+    sessionStorage.setItem('ms_org', JSON.stringify(org));
     document.getElementById('onboardingScreen').style.display = 'none';
     startApp();
 
@@ -2103,7 +2103,7 @@ async function startApp(){
   
   document.getElementById('appScreen').classList.add('visible');
   // Sales partner banner
-  if(localStorage.getItem('ms_sales_return')){
+  if(sessionStorage.getItem('ms_sales_return')){
     document.getElementById('salesReturnBanner').style.display = 'block';
   }
   populateCurrencies();
@@ -2234,7 +2234,7 @@ async function saveOrg(){
     const updated=await api('PATCH','/api/auth/organization',data);
     console.log('[saveOrg] response name:', updated.name);
     org={...org,...updated};
-    localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_org',JSON.stringify(org));
     renderItems();
     toast('Saved');
   }catch(e){
@@ -2292,7 +2292,7 @@ function handleLogo(e){
   const fd=new FormData();fd.append('logo',f);
   toast('Uploading logo...',4000);
   apiForm('POST','/api/menu/_logo',fd).then(res=>{
-    org.logoUrl=res.logoUrl;localStorage.setItem('ms_org',JSON.stringify(org));
+    org.logoUrl=res.logoUrl;sessionStorage.setItem('ms_org',JSON.stringify(org));
     toast('Logo updated');
   }).catch(err=>toast('Upload failed: '+err.message));
 }
@@ -2779,7 +2779,7 @@ async function toggleOrderList(cb){
   try{
     const updated = await api('PATCH','/api/auth/organization', { orderListEnabled: cb.checked });
     org = {...org, ...updated};
-    localStorage.setItem('ms_org', JSON.stringify(org));
+    sessionStorage.setItem('ms_org', JSON.stringify(org));
     toast(cb.checked ? 'Online ordering enabled' : 'Online ordering disabled');
   }catch(e){
     toast('Failed: '+e.message);
@@ -3163,7 +3163,7 @@ async function confirmChangeMainLang(code, name){
   try{
     const updated = await api('PATCH','/api/auth/organization', { defaultLanguage: code });
     org = {...org, ...updated};
-    localStorage.setItem('ms_org', JSON.stringify(org));
+    sessionStorage.setItem('ms_org', JSON.stringify(org));
     await loadLanguages();
     toast('Main language changed to '+name);
   }catch(e){
@@ -4529,14 +4529,14 @@ async function loadAnalyticsOld(){
     // Token'ı backend'e doğrulat
     const data = await api('GET', '/api/auth/me');
     org = data.organization;
-    localStorage.setItem('ms_org', JSON.stringify(org));
+    sessionStorage.setItem('ms_org', JSON.stringify(org));
     startApp();
   } catch (e) {
     // 401 gelirse api() zaten reload yapıyor
     // Başka hata olursa login'e düş
     if (e.message !== 'Session expired') {
-      localStorage.removeItem('ms_token');
-      localStorage.removeItem('ms_org');
+      sessionStorage.removeItem('ms_token');
+      sessionStorage.removeItem('ms_org');
       document.getElementById('authScreen').style.display = '';
     }
   }

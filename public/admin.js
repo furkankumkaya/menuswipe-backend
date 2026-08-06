@@ -1,7 +1,7 @@
 // MenuSwipe Admin Panel
 const API='';
-let token=localStorage.getItem('ms_token')||'';
-let org=JSON.parse(localStorage.getItem('ms_org')||'null');
+let token=sessionStorage.getItem('ms_token')||'';
+let org=JSON.parse(sessionStorage.getItem('ms_org')||'null');
 let items=[],branches=[],cats=[],editingId=null,openDescId=null;
 let currentFilter='all',currentBranchFilter='all',photoItemId=null,activeSlot=null,pendingDeleteId=null,pendingDeleteType=null;
 let pCur=0,pCat='all';
@@ -75,8 +75,8 @@ async function doLogin(){
   try{
     const data=await api('POST','/api/auth/login',{email,password});
     token=data.token;org=data.organization;
-    localStorage.setItem('ms_token',token);
-    localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_token',token);
+    sessionStorage.setItem('ms_org',JSON.stringify(org));
     startApp();
   }catch(e){document.getElementById('authErr').textContent=e.message;}
 }
@@ -89,12 +89,12 @@ async function doRegister(){
   try{
     const data=await api('POST','/api/auth/register',{restaurantName,email,password});
     token=data.token;org=data.organization;
-    localStorage.setItem('ms_token',token);
-    localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_token',token);
+    sessionStorage.setItem('ms_org',JSON.stringify(org));
     startApp();
   }catch(e){document.getElementById('authErr').textContent=e.message;}
 }
-function doLogout(){localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');location.reload();}
+function doLogout(){sessionStorage.removeItem('ms_token');sessionStorage.removeItem('ms_org');location.reload();}
 
 function startApp(){
   document.getElementById('authScreen').style.display='none';
@@ -209,7 +209,7 @@ function debounceSaveName(){
     try{
       const updated=await api('PATCH','/api/auth/organization',{name});
       org.name=updated.name;
-      localStorage.setItem('ms_org',JSON.stringify(org));
+      sessionStorage.setItem('ms_org',JSON.stringify(org));
       toast('Name updated');
     }catch(e){toast('Failed to save name');}
   },800);
@@ -230,7 +230,7 @@ async function saveProfile(){
   try{
     const updated=await api('PATCH','/api/auth/organization',data);
     Object.assign(org,updated);
-    localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_org',JSON.stringify(org));
     fillProfileForm();
   }catch(e){}
 }
@@ -240,7 +240,7 @@ async function saveCurrency(){
   try{
     const updated=await api('PATCH','/api/auth/organization',{currency});
     org.currency=currency;
-    localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_org',JSON.stringify(org));
     renderItems();
     toast('Currency updated');
   }catch(e){toast('Failed to update currency');}
@@ -259,7 +259,7 @@ async function saveHours(){
   try{
     const updated=await api('PATCH','/api/auth/organization',{workingHours:wh});
     org.workingHours=wh;
-    localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_org',JSON.stringify(org));
   }catch(e){}
 }
 
@@ -283,7 +283,7 @@ async function handleLogo(e){
       try{
         const updated=await api('PATCH','/api/auth/organization',{logoUrl:ev.target.result});
         org.logoUrl=updated.logoUrl;
-        localStorage.setItem('ms_org',JSON.stringify(org));
+        sessionStorage.setItem('ms_org',JSON.stringify(org));
         showLogo(ev.target.result);
         toast('Logo updated ✓');
       }catch(err){toast('Failed: '+err.message);}

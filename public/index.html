@@ -34,7 +34,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#1D1616;color:#EE
 <div class="tagline">Visual menus for modern restaurants</div>
 <a href="/admin" class="btn btn-primary">Open Admin Panel</a>
 <script>
-if(localStorage.getItem('ms_token')) window.location.href='/admin';
+if(sessionStorage.getItem('ms_token')) window.location.href='/admin';
 </script>
 <script src="/pwa.js"></script>
 </body>

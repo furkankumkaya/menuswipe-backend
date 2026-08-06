@@ -117,8 +117,8 @@ async function doLogin() {
     const d = await r.json();
     if (!r.ok) { err.textContent = d.error; err.style.display = 'block'; btn.textContent = 'Sign in'; btn.disabled = false; return; }
 
-    localStorage.setItem('ms_sales_token', d.token);
-    localStorage.setItem('ms_sales_user', JSON.stringify(d.user));
+    sessionStorage.setItem('ms_sales_token', d.token);
+    sessionStorage.setItem('ms_sales_user', JSON.stringify(d.user));
     window.location.href = '/sales-panel';
   } catch (e) {
     err.textContent = 'Connection error'; err.style.display = 'block';
@@ -163,7 +163,7 @@ async function doRegister() {
 document.addEventListener('keydown', e => { if (e.key === 'Enter') { const active = document.querySelector('.panel.on'); if (active.id === 'panel-login') doLogin(); else doRegister(); } });
 
 // Auto-redirect if already logged in
-const t = localStorage.getItem('ms_sales_token');
+const t = sessionStorage.getItem('ms_sales_token');
 if (t) window.location.href = '/sales-panel';
 </script>
 </body>

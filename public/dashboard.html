@@ -365,7 +365,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 <script>
 const API = '';
-let authToken = localStorage.getItem('ms_admin_token') || '';
+let authToken = sessionStorage.getItem('ms_admin_token') || '';
 let currentPage = 1;
 let currentFilter = '';
 let currentSearch = '';
@@ -399,7 +399,7 @@ async function doLogin(){
     if(!r.ok){ err.textContent = d.error||'Login failed'; err.style.display='block'; return; }
 
     authToken = d.token;
-    localStorage.setItem('ms_admin_token', authToken);
+    sessionStorage.setItem('ms_admin_token', authToken);
     initApp();
   }catch(e){
     err.textContent = 'Connection error'; err.style.display='block';
@@ -411,7 +411,7 @@ document.addEventListener('keydown', e => {
 });
 
 function doLogout(){
-  localStorage.removeItem('ms_admin_token');
+  sessionStorage.removeItem('ms_admin_token');
   location.reload();
 }
 
@@ -436,7 +436,7 @@ async function initApp(){
       ? 'This account does not have admin access.'
       : e.message;
     document.getElementById('loginErr').style.display = 'block';
-    localStorage.removeItem('ms_admin_token');
+    sessionStorage.removeItem('ms_admin_token');
     authToken = '';
     return;
   }

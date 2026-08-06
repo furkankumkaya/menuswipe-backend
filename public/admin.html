@@ -277,7 +277,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 
 <script>
 const API='';
-let token=localStorage.getItem('ms_token')||'';
+let token=sessionStorage.getItem('ms_token')||'';
 let org=null;
 let currentTab='active';
 let allOrders=[];
@@ -302,7 +302,7 @@ async function api(method,path,body){
   if(body)opts.body=JSON.stringify(body);
   const r=await fetch(API+path,opts);
   if(r.status===401){
-    localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');
+    sessionStorage.removeItem('ms_token');sessionStorage.removeItem('ms_org');
     location.reload();throw new Error('Session expired');
   }
   const data=await r.json();
@@ -315,7 +315,7 @@ async function doLogin(){
   try{
     const data=await api('POST','/api/auth/login',{email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});
     token=data.token;org=data.organization;
-    localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_token',token);sessionStorage.setItem('ms_org',JSON.stringify(org));
     if(!org.onboardingCompleted){location.href='/editor.html';return;}
     startApp();
   }catch(e){document.getElementById('authErr').textContent=e.message;}
@@ -333,12 +333,12 @@ async function doRegister(){
       password:p,
     });
     token=data.token;org=data.organization;
-    localStorage.setItem('ms_token',token);localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_token',token);sessionStorage.setItem('ms_org',JSON.stringify(org));
     location.href='/editor.html';
   }catch(e){document.getElementById('authErrReg').textContent=e.message;}
 }
 
-function doLogout(){localStorage.removeItem('ms_token');localStorage.removeItem('ms_org');location.reload();}
+function doLogout(){sessionStorage.removeItem('ms_token');sessionStorage.removeItem('ms_org');location.reload();}
 
 function startApp(){
   document.getElementById('authScreen').style.display='none';
@@ -588,13 +588,13 @@ function toast(msg,dur=2200){
   try{
     const data=await api('GET','/api/auth/me');
     org=data.organization;
-    localStorage.setItem('ms_org',JSON.stringify(org));
+    sessionStorage.setItem('ms_org',JSON.stringify(org));
     if(!org.onboardingCompleted){location.href='/editor.html';return;}
     startApp();
   }catch(e){
     if(e.message!=='Session expired'){
-      localStorage.removeItem('ms_token');
-      localStorage.removeItem('ms_org');
+      sessionStorage.removeItem('ms_token');
+      sessionStorage.removeItem('ms_org');
       document.getElementById('authScreen').style.display='';
     }
   }

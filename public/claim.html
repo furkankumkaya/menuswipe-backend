@@ -190,8 +190,8 @@ async function doClaim(){
     }
 
     // Save token and org
-    localStorage.setItem('ms_token', d.token);
-    localStorage.setItem('ms_org', JSON.stringify(d.organization));
+    sessionStorage.setItem('ms_token', d.token);
+    sessionStorage.setItem('ms_org', JSON.stringify(d.organization));
 
     // Show success
     document.getElementById('mainState').style.display = 'none';
