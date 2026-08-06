@@ -2923,8 +2923,9 @@ function csFilterSearch(query){
 }
 
 function csPickSearch(targetId){
+  const itemId = _csSearchItemId;
   csCloseSearch();
-  if(_csSearchItemId) csAdd(_csSearchItemId, targetId);
+  if(itemId) csAdd(itemId, targetId);
 }
 
 function csOutsideClick(e){
