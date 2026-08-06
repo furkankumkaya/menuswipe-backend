@@ -131,7 +131,7 @@ router.post("/create-demo", requireSales, async (req, res, next) => {
         onboardingCompleted: false,
         qrSecret: crypto.randomBytes(16).toString("hex"),
         // Create a placeholder user for the org (sales-managed)
-        users: { create: { email: `demo-${slug}@menuswipe.local`, passwordHash: "SALES_MANAGED", name, role: "PLACEHOLDER" } },
+        users: { create: { email: `demo-${slug}-${Date.now()}@menuswipe.local`, passwordHash: "SALES_MANAGED", name, role: "PLACEHOLDER" } },
         branches: { create: { name, slug: "main", active: true } },
       },
       include: { users: true },
