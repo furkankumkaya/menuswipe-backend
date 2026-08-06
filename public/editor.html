@@ -329,20 +329,17 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .tmpl-item.on .tmpl-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--accent)}
 .qr-preview-wrap{background:#f1f0ee;border-radius:14px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:360px}
 .qr-card-preview{width:220px;border-radius:3px;box-shadow:0 2px 16px rgba(0,0,0,.12);overflow:hidden}
-.ft-toggles{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-.ft-toggle{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(142,22,22,.06);border-radius:10px;cursor:pointer;transition:.15s}
+.ft-toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ft-toggle{display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(142,22,22,.06);border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap}
 .ft-toggle:hover{background:rgba(142,22,22,.1)}
-.ft-info{flex:1;min-width:0}
-.ft-title{font-size:13px;font-weight:700;color:#1e293b}
-.ft-desc{font-size:11px;color:#94a3b8;line-height:1.4}
+.ft-info{flex:0 0 auto;min-width:0}
+.ft-title{font-size:11px;font-weight:600;color:#1e293b}
+.ft-desc{display:none}
 .ft-toggle input{display:none}
-.ft-sw{width:40px;height:24px;border-radius:12px;background:#cbd5e1;position:relative;flex-shrink:0;transition:.2s}
-.ft-sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ft-sw{width:32px;height:18px;border-radius:9px;background:#cbd5e1;position:relative;flex-shrink:0;transition:.2s}
+.ft-sw::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .ft-toggle input:checked~.ft-sw{background:var(--accent)}
-.ft-toggle input:checked~.ft-sw::after{transform:translateX(16px)}
-.tno-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}
-.tno-row input{width:60px;padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:700;text-align:center;outline:none;background:#fff}
-.tno-row input:focus{border-color:var(--accent)}
+.ft-toggle input:checked~.ft-sw::after{transform:translateX(14px)}
 .ml-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:12px}
 .link-row{display:flex;gap:8px;align-items:center;width:100%;min-width:0}
 .link-box{flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#f8fafc;font-weight:600;min-width:0}
@@ -376,6 +373,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .dl-go:disabled{opacity:.4;cursor:not-allowed}
 .tables-sec{padding:0 14px 14px}
 .tables-sec .qr-sec-hd{padding-top:14px;border-top:1px solid #e2e8f0}
+#tablesList{max-height:400px;overflow-y:auto}
 .tbl-compact{display:flex;flex-direction:column;gap:4px}
 .tbl-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border-radius:8px;transition:.15s}
 .tbl-row:hover{background:#f1f5f9}
@@ -1060,29 +1058,32 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
               <div class="qr-card-preview" id="qrPreviewCard"></div>
               <div style="font-size:11px;color:#94a3b8;text-align:center">3 mm bleed · fold line in the middle of the sheet</div>
             </div>
+            <div class="ft-toggles">
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">29 languages</div></div><input type="checkbox" id="toggleLang" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">AI Helper</div></div><input type="checkbox" id="toggleAI" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">Allergens</div></div><input type="checkbox" id="toggleAllergen" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">Swipe hint</div></div><input type="checkbox" id="toggleSwipe" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+            </div>
+            <input type="hidden" id="cardTableNo" value="">
           </div>
         </div>
-        <!-- Mid row: Feature toggles + Menu link & Print -->
+        <!-- Mid row: Tables + Menu link & Print -->
         <div class="qr-studio-mid">
           <div>
-            <div class="qr-sec-hd"><span class="qr-sec-lbl">Shown on the card</span></div>
-            <div class="ft-toggles">
-              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">29 languages</div><div class="ft-desc">Menu opens in the guest's phone language</div></div><input type="checkbox" id="toggleLang" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
-              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">AI Helper</div><div class="ft-desc">Suggests a dish when they can't decide</div></div><input type="checkbox" id="toggleAI" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
-              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">Allergen & diet filters</div><div class="ft-desc">Vegan, gluten-free, lactose-free</div></div><input type="checkbox" id="toggleAllergen" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
-              <label class="ft-toggle"><div class="ft-info"><div class="ft-title">Swipe hint</div><div class="ft-desc">Prints "swipe up · 3 photos" on the card</div></div><input type="checkbox" id="toggleSwipe" checked onchange="updateQrPreview()"><span class="ft-sw"></span></label>
+            <div class="qr-sec-hd">
+              <span class="qr-sec-lbl">Tables</span>
+              <div style="display:flex;gap:6px">
+                <button class="btn-gh" onclick="openAddTableSingle()" style="font-size:11px">+ Add</button>
+                <button class="btn-gh" onclick="openAddTablesBulk()" style="font-size:11px">Generate</button>
+              </div>
             </div>
-            <div class="tno-row">
-              <span class="qr-sec-lbl">Table No</span>
-              <input type="text" id="cardTableNo" value="" placeholder="12" oninput="updateQrPreview()">
-              <span class="ft-desc">Used by the Table No template.</span>
-            </div>
+            <div id="tablesList"></div>
           </div>
           <div>
             <div class="qr-sec-hd"><span class="qr-sec-lbl">Menu Link</span></div>
             <div class="ml-card">
               <div class="link-row"><div class="link-box" id="qrLinkBox"></div><button class="copy-btn" id="qrCopyBtn" onclick="qrCopy()">Copy</button></div>
-              <div class="ft-desc" style="margin-top:8px">The QR encodes this link. It stays the same on every card.</div>
+              <div style="font-size:11px;color:#94a3b8;line-height:1.4;margin-top:8px">The QR encodes this link. It stays the same on every card.</div>
             </div>
             <div class="qr-branch-selector" id="qrBranchSelectorWrap" style="display:none">
               <select id="qrBranchSelect" onchange="qrGenerate()"></select>
@@ -1096,17 +1097,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
           </div>
         </div>
       </div>
-      <!-- Tables List -->
-      <div class="tables-sec">
-        <div class="qr-sec-hd">
-          <span class="qr-sec-lbl">Tables</span>
-          <div style="display:flex;gap:6px">
-            <button class="btn-gh" onclick="openAddTableSingle()" style="font-size:11px">+ Add</button>
-            <button class="btn-gh" onclick="openAddTablesBulk()" style="font-size:11px">Generate</button>
-          </div>
-        </div>
-        <div id="tablesList"></div>
-      </div>
+      <!-- Tables List moved into qr-studio-mid left column -->
       <canvas id="qrCanvas" style="display:none"></canvas>
     </div>
 
