@@ -816,35 +816,33 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     </div>
 
     <!-- PHOTO OVERLAY -->
-    <div class="overlay" id="photoOverlay">
-      <div class="modal">
-        <div class="modal-handle"></div>
+    <div id="photoOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:90;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:16px;padding:20px;width:min(440px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.25)">
         <div class="m-title" id="photoTitle">Photos</div>
-        <div class="m-sub">Up to 3 photos. Customers swipe through them.</div>
+        <div class="m-sub" style="margin-bottom:12px">Up to 3 photos. Customers swipe through them.</div>
         <div class="photo-slots" id="photoSlots"></div>
         <input type="file" id="photoInp" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)"/>
-        <div class="m-row"><button class="btn-dk" onclick="closePhotoOverlay()">Done</button></div>
+        <div class="m-row" style="margin-top:14px"><button class="btn-dk" onclick="closePhotoOverlay()">Done</button></div>
       </div>
     </div>
 
     <!-- CROP OVERLAY -->
-    <div id="cropOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.8);z-index:120;align-items:center;justify-content:center">
-      <div style="background:#fff;border-radius:16px;padding:16px;width:min(400px,92vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-        <div class="modal-handle"></div>
+    <div id="cropOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:120;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:16px;padding:16px;width:min(360px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.3)">
         <div class="m-title" style="margin-bottom:4px">Crop photo</div>
-        <div class="m-sub" style="margin-bottom:10px">Drag to position, scroll to zoom. Center your dish.</div>
-        <div id="cropContainer" style="position:relative;width:100%;aspect-ratio:9/13;background:#0f172a;border-radius:12px;overflow:hidden;cursor:grab;touch-action:none;flex-shrink:0">
+        <div class="m-sub" style="margin-bottom:10px">Drag to position, scroll to zoom.</div>
+        <div id="cropContainer" style="position:relative;width:100%;aspect-ratio:9/12;background:#0f172a;border-radius:12px;overflow:hidden;cursor:grab;touch-action:none">
           <canvas id="cropCanvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
           <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
-            <div style="width:90px;height:90px;border:2px dashed rgba(255,255,255,.3);border-radius:50%"></div>
+            <div style="width:80px;height:80px;border:2px dashed rgba(255,255,255,.3);border-radius:50%"></div>
           </div>
           <div style="position:absolute;inset:0;pointer-events:none">
             <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.12)"></div>
             <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.12)"></div>
           </div>
           <div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);pointer-events:none"></div>
-          <div style="position:absolute;bottom:10px;left:10px;pointer-events:none">
-            <div style="font-size:12px;font-weight:700;color:#fff;opacity:.4" id="cropItemName"></div>
+          <div style="position:absolute;bottom:8px;left:10px;pointer-events:none">
+            <div style="font-size:11px;font-weight:700;color:#fff;opacity:.4" id="cropItemName"></div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
@@ -852,9 +850,9 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
           <input type="range" id="cropZoomSlider" min="100" max="400" value="100" style="flex:1;accent-color:var(--accent)" oninput="cropSetZoom(+this.value)">
           <span style="font-size:16px;color:#94a3b8">+</span>
         </div>
-        <div class="m-row" style="margin-top:4px">
-          <button class="btn-gh" onclick="cropCancel()">Cancel</button>
-          <button class="btn-dk" onclick="cropConfirm()">Upload</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-gh" onclick="cropCancel()" style="flex:1">Cancel</button>
+          <button class="btn-dk" onclick="cropConfirm()" style="flex:1">Upload</button>
         </div>
       </div>
     </div>
@@ -3530,8 +3528,8 @@ async function wizNext(){
 }
 
 /* PHOTOS */
-function openPhoto(id){photoItemId=id;const item=items.find(i=>i.id===id);document.getElementById('photoTitle').textContent=item.name;renderSlots();document.getElementById('photoOverlay').classList.add('open');}
-function closePhotoOverlay(){document.getElementById('photoOverlay').classList.remove('open');photoItemId=null;}
+function openPhoto(id){photoItemId=id;const item=items.find(i=>i.id===id);document.getElementById('photoTitle').textContent=item.name;renderSlots();document.getElementById('photoOverlay').style.display='flex';}
+function closePhotoOverlay(){document.getElementById('photoOverlay').style.display='none';photoItemId=null;}
 function renderSlots(){
   const item=items.find(i=>i.id===photoItemId);
   const photos=item.photos||[];
