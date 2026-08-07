@@ -822,8 +822,48 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
         <div class="m-title" id="photoTitle">Photos</div>
         <div class="m-sub">Up to 3 photos. Customers swipe through them.</div>
         <div class="photo-slots" id="photoSlots"></div>
-        <input type="file" id="photoInp" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"/>
+        <input type="file" id="photoInp" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)"/>
         <div class="m-row"><button class="btn-dk" onclick="closePhotoOverlay()">Done</button></div>
+      </div>
+    </div>
+
+    <!-- CROP OVERLAY -->
+    <div class="overlay" id="cropOverlay" style="z-index:120">
+      <div class="modal" style="max-width:520px;padding:0;overflow:hidden">
+        <div style="padding:14px 16px 0">
+          <div class="m-title">Crop photo</div>
+          <div class="m-sub">Drag to position, pinch or scroll to zoom. Center your dish.</div>
+        </div>
+        <div style="display:flex;gap:0;flex-wrap:wrap">
+          <!-- Crop area -->
+          <div style="flex:1;min-width:260px;padding:12px 16px">
+            <div id="cropContainer" style="position:relative;width:100%;aspect-ratio:9/14;background:#0f172a;border-radius:12px;overflow:hidden;cursor:grab;touch-action:none">
+              <canvas id="cropCanvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+              <!-- Center guide -->
+              <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+                <div style="width:100px;height:100px;border:2px dashed rgba(255,255,255,.35);border-radius:50%"></div>
+              </div>
+              <div style="position:absolute;inset:0;pointer-events:none">
+                <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.15)"></div>
+                <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)"></div>
+              </div>
+              <!-- Gradient overlay to show how menu looks -->
+              <div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);pointer-events:none"></div>
+              <div style="position:absolute;bottom:12px;left:12px;pointer-events:none">
+                <div style="font-size:13px;font-weight:700;color:#fff;opacity:.5" id="cropItemName"></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+              <span style="font-size:18px;color:#94a3b8">−</span>
+              <input type="range" id="cropZoomSlider" min="100" max="400" value="100" style="flex:1;accent-color:var(--accent)" oninput="cropSetZoom(+this.value)">
+              <span style="font-size:18px;color:#94a3b8">+</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:12px 16px">
+          <button class="btn-gh" onclick="cropCancel()" style="flex:1">Cancel</button>
+          <button class="btn-dk" onclick="cropConfirm()" style="flex:1">Upload</button>
+        </div>
       </div>
     </div>
 
@@ -3521,15 +3561,200 @@ async function rmPhoto(photoId,e){
   try{await api('DELETE',`/api/menu/${photoItemId}/photos/${photoId}`);item.photos=item.photos.filter(p=>p.id!==photoId);renderSlots();renderItems();}
   catch(err){toast('Delete failed');}
 }
-async function handlePhotoUpload(e){
-  const f=e.target.files[0];if(!f)return;
-  const item=items.find(i=>i.id===photoItemId);
-  if(!item||(item.photos||[]).length>=3)return;
-  toast('Uploading...',5000);
-  const fd=new FormData();fd.append('photo',f);
-  try{const photo=await apiForm('POST',`/api/menu/${photoItemId}/photos`,fd);if(!item.photos)item.photos=[];item.photos.push(photo);renderSlots();renderItems();toast('Photo uploaded ✓');}
-  catch(err){toast('Upload failed: '+err.message);}
-  e.target.value='';
+/* ============== CROP TOOL ============== */
+let _cropImg = null, _cropX = 0, _cropY = 0, _cropScale = 1;
+let _cropDragging = false, _cropLastX = 0, _cropLastY = 0;
+let _cropPinchDist = 0, _cropPinchScale = 1;
+let _cropFile = null;
+
+function handlePhotoSelect(e){
+  const f = e.target.files[0]; if(!f) return;
+  const item = items.find(i => i.id === photoItemId);
+  if(!item || (item.photos||[]).length >= 3) return;
+  _cropFile = f;
+  e.target.value = '';
+  openCropOverlay(f);
+}
+
+function openCropOverlay(file){
+  const img = new Image();
+  img.onload = () => {
+    _cropImg = img;
+    _cropScale = 1; _cropX = 0; _cropY = 0;
+    const item = items.find(i => i.id === photoItemId);
+    document.getElementById('cropItemName').textContent = item ? item.name : '';
+    document.getElementById('cropZoomSlider').value = 100;
+    document.getElementById('cropOverlay').classList.add('open');
+
+    // Size canvas
+    const container = document.getElementById('cropContainer');
+    const canvas = document.getElementById('cropCanvas');
+    const rect = container.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+
+    // Fit image to cover the crop area
+    const coverW = canvas.width / img.width;
+    const coverH = canvas.height / img.height;
+    _cropScale = Math.max(coverW, coverH);
+    _cropX = 0; _cropY = 0;
+    document.getElementById('cropZoomSlider').min = Math.round(_cropScale * 100);
+    document.getElementById('cropZoomSlider').max = Math.round(_cropScale * 400);
+    document.getElementById('cropZoomSlider').value = Math.round(_cropScale * 100);
+
+    cropDraw();
+    setupCropEvents();
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+function cropDraw(){
+  const canvas = document.getElementById('cropCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+  if(!_cropImg) return;
+  const dw = _cropImg.width * _cropScale;
+  const dh = _cropImg.height * _cropScale;
+  const dx = (W - dw) / 2 + _cropX;
+  const dy = (H - dh) / 2 + _cropY;
+  ctx.drawImage(_cropImg, dx, dy, dw, dh);
+}
+
+function cropClamp(){
+  const canvas = document.getElementById('cropCanvas');
+  if(!canvas || !_cropImg) return;
+  const W = canvas.width, H = canvas.height;
+  const dw = _cropImg.width * _cropScale;
+  const dh = _cropImg.height * _cropScale;
+  const maxX = Math.max(0, (dw - W) / 2);
+  const maxY = Math.max(0, (dh - H) / 2);
+  _cropX = Math.max(-maxX, Math.min(maxX, _cropX));
+  _cropY = Math.max(-maxY, Math.min(maxY, _cropY));
+}
+
+function cropSetZoom(val){
+  _cropScale = val / 100;
+  cropClamp();
+  cropDraw();
+}
+
+function setupCropEvents(){
+  const el = document.getElementById('cropContainer');
+
+  // Mouse drag
+  el.onmousedown = e => { _cropDragging = true; _cropLastX = e.clientX; _cropLastY = e.clientY; el.style.cursor = 'grabbing'; e.preventDefault(); };
+  window.addEventListener('mousemove', cropMouseMove);
+  window.addEventListener('mouseup', cropMouseUp);
+
+  // Mouse wheel zoom
+  el.onwheel = e => {
+    e.preventDefault();
+    const slider = document.getElementById('cropZoomSlider');
+    const min = +slider.min, max = +slider.max;
+    const delta = e.deltaY > 0 ? -5 : 5;
+    const newVal = Math.max(min, Math.min(max, Math.round(_cropScale * 100) + delta));
+    _cropScale = newVal / 100;
+    slider.value = newVal;
+    cropClamp(); cropDraw();
+  };
+
+  // Touch drag + pinch
+  el.ontouchstart = e => {
+    if(e.touches.length === 1){
+      _cropDragging = true;
+      _cropLastX = e.touches[0].clientX;
+      _cropLastY = e.touches[0].clientY;
+    } else if(e.touches.length === 2){
+      _cropPinchDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+      _cropPinchScale = _cropScale;
+    }
+    e.preventDefault();
+  };
+  el.ontouchmove = e => {
+    if(e.touches.length === 1 && _cropDragging){
+      const ratio = document.getElementById('cropCanvas').width / document.getElementById('cropContainer').getBoundingClientRect().width;
+      _cropX += (e.touches[0].clientX - _cropLastX) * ratio;
+      _cropY += (e.touches[0].clientY - _cropLastY) * ratio;
+      _cropLastX = e.touches[0].clientX;
+      _cropLastY = e.touches[0].clientY;
+      cropClamp(); cropDraw();
+    } else if(e.touches.length === 2){
+      const dist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+      const slider = document.getElementById('cropZoomSlider');
+      const min = +slider.min, max = +slider.max;
+      _cropScale = Math.max(min/100, Math.min(max/100, _cropPinchScale * (dist / _cropPinchDist)));
+      slider.value = Math.round(_cropScale * 100);
+      cropClamp(); cropDraw();
+    }
+    e.preventDefault();
+  };
+  el.ontouchend = () => { _cropDragging = false; };
+}
+
+function cropMouseMove(e){
+  if(!_cropDragging) return;
+  const ratio = document.getElementById('cropCanvas').width / document.getElementById('cropContainer').getBoundingClientRect().width;
+  _cropX += (e.clientX - _cropLastX) * ratio;
+  _cropY += (e.clientY - _cropLastY) * ratio;
+  _cropLastX = e.clientX; _cropLastY = e.clientY;
+  cropClamp(); cropDraw();
+}
+
+function cropMouseUp(){
+  _cropDragging = false;
+  const el = document.getElementById('cropContainer');
+  if(el) el.style.cursor = 'grab';
+}
+
+function cropCancel(){
+  document.getElementById('cropOverlay').classList.remove('open');
+  _cropImg = null; _cropFile = null;
+  window.removeEventListener('mousemove', cropMouseMove);
+  window.removeEventListener('mouseup', cropMouseUp);
+}
+
+async function cropConfirm(){
+  if(!_cropImg || !_cropFile) return;
+  const canvas = document.getElementById('cropCanvas');
+
+  // Create output canvas at final resolution
+  const outW = 1080, outH = Math.round(1080 * (14/9));
+  const out = document.createElement('canvas');
+  out.width = outW; out.height = outH;
+  const octx = out.getContext('2d');
+  // Draw the same view as crop canvas
+  const scaleX = outW / canvas.width;
+  const scaleY = outH / canvas.height;
+  octx.fillStyle = '#0f172a';
+  octx.fillRect(0, 0, outW, outH);
+  const dw = _cropImg.width * _cropScale * scaleX;
+  const dh = _cropImg.height * _cropScale * scaleY;
+  const dx = (outW - dw) / 2 + _cropX * scaleX;
+  const dy = (outH - dh) / 2 + _cropY * scaleY;
+  octx.drawImage(_cropImg, dx, dy, dw, dh);
+
+  // Convert to blob
+  const blob = await new Promise(r => out.toBlob(r, 'image/jpeg', 0.92));
+  document.getElementById('cropOverlay').classList.remove('open');
+  window.removeEventListener('mousemove', cropMouseMove);
+  window.removeEventListener('mouseup', cropMouseUp);
+
+  // Upload
+  toast('Uploading...', 5000);
+  const fd = new FormData();
+  fd.append('photo', blob, _cropFile.name || 'photo.jpg');
+  try {
+    const item = items.find(i => i.id === photoItemId);
+    const photo = await apiForm('POST', `/api/menu/${photoItemId}/photos`, fd);
+    if(!item.photos) item.photos = [];
+    item.photos.push(photo);
+    renderSlots(); renderItems();
+    toast('Photo uploaded');
+  } catch(err) { toast('Upload failed: ' + err.message); }
+  _cropImg = null; _cropFile = null;
 }
 
 /* BRANCHES */
