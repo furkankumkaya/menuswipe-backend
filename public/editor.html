@@ -828,8 +828,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
     </div>
 
     <!-- CROP OVERLAY -->
-    <div class="overlay" id="cropOverlay" style="z-index:120">
-      <div class="modal" style="max-width:400px;padding:16px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
+    <div id="cropOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.8);z-index:120;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:16px;padding:16px;width:min(400px,92vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
         <div class="modal-handle"></div>
         <div class="m-title" style="margin-bottom:4px">Crop photo</div>
         <div class="m-sub" style="margin-bottom:10px">Drag to position, scroll to zoom. Center your dish.</div>
@@ -3576,7 +3576,7 @@ function openCropOverlay(file){
     const item = items.find(i => i.id === photoItemId);
     document.getElementById('cropItemName').textContent = item ? item.name : '';
     document.getElementById('cropZoomSlider').value = 100;
-    document.getElementById('cropOverlay').classList.add('open');
+    document.getElementById('cropOverlay').style.display='flex';
 
     // Size canvas
     const container = document.getElementById('cropContainer');
@@ -3702,7 +3702,7 @@ function cropMouseUp(){
 }
 
 function cropCancel(){
-  document.getElementById('cropOverlay').classList.remove('open');
+  document.getElementById('cropOverlay').style.display='none';
   _cropImg = null; _cropFile = null;
   window.removeEventListener('mousemove', cropMouseMove);
   window.removeEventListener('mouseup', cropMouseUp);
@@ -3730,7 +3730,7 @@ async function cropConfirm(){
 
   // Convert to blob
   const blob = await new Promise(r => out.toBlob(r, 'image/jpeg', 0.92));
-  document.getElementById('cropOverlay').classList.remove('open');
+  document.getElementById('cropOverlay').style.display='none';
   window.removeEventListener('mousemove', cropMouseMove);
   window.removeEventListener('mouseup', cropMouseUp);
 
